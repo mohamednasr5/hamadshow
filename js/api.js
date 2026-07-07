@@ -446,16 +446,23 @@
    *
    * @returns {Promise<boolean>} `true` if re-authentication succeeded.
    */
-  API.prototype.authenticate = function () {
+  API.prototype.authenticate = function (serverUrl, username, password) {
+    // Allow explicit credentials (used by _checkAuth) or fall back to stored settings
     var settings = Config.loadSettings();
+    var srv = serverUrl || settings.serverUrl;
+    var usr = username  || settings.username;
+    var pwd = password  || settings.password;
 
-    if (!settings.serverUrl || !settings.username || !settings.password) {
+    if (!srv || !usr || !pwd) {
       return Promise.resolve(false);
     }
 
     var self = this;
-    return this.login(settings.serverUrl, settings.username, settings.password)
-      .then(function () { return true; })
+    return this.login(srv, usr, pwd)
+      .then(function (userInfo) {
+        // login() returns the user_info object directly
+        return userInfo;  // return full user_info so caller can inspect it
+      })
       .catch(function () { return false; });
   };
 

@@ -254,10 +254,11 @@
 
       api.authenticate(serverUrl, username, password)
         .then(function (result) {
-          if (result && result.user_info) {
+          // authenticate() → login() returns user_info directly
+          if (result && (result.auth === 1 || result.username || result.status === 'Active')) {
             self._isAuthenticated = true;
             self._demoMode = false;
-            StorageManager.saveUser(result.user_info);
+            StorageManager.saveUser(result);
             resolve(true);
           } else {
             self._isAuthenticated = false;
@@ -437,21 +438,22 @@
     btn.classList.add('loading');
     btn.disabled = true;
 
-    // Attempt authentication
-    var api = new API();
+    // Attempt authentication — use login() which takes server/user/pass directly
+    var api = self._apiInstance || new API();
     self._apiInstance = api;
 
-    api.authenticate(server, username, password)
-      .then(function (result) {
+    api.login(server, username, password)
+      .then(function (userInfo) {
         btn.classList.remove('loading');
         btn.disabled = false;
 
-        if (result && result.user_info && result.user_info.auth === 1) {
+        // login() returns the sanitized user_info object directly
+        if (userInfo && (userInfo.auth === 1 || userInfo.username)) {
           // Success
           self._isAuthenticated = true;
           self._demoMode = false;
 
-          // Save credentials
+          // Save credentials to settings
           var settings = Config.loadSettings();
           settings.serverUrl = server;
           settings.username  = remember ? username : '';
@@ -459,12 +461,13 @@
           Config.saveSettings(settings);
           self._settings = settings;
 
-          StorageManager.saveUser(result.user_info);
-          api.setCredentials(server, username, password);
+          StorageManager.saveUser(userInfo);
 
+          // Show the app
+          document.getElementById('app').style.display = '';
           self._hideLogin();
           self._renderHomePage();
-          self._showToast('Welcome back, ' + Utils.sanitize(result.user_info.username || username) + '!', 'success');
+          self._showToast('Welcome back, ' + Utils.sanitize(userInfo.username || username) + '!', 'success');
         } else {
           self._handleLoginError('Invalid credentials. Please check your details and try again.');
         }
@@ -692,7 +695,7 @@
    */
   App.prototype._fetchHeroItems = function () {
     if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getVodStreams()
+    return this._apiInstance.getMovies()
       .then(function (streams) {
         // Pick 5 high-rated items
         var sorted = (streams || []).sort(function (a, b) { return (b.rating || 0) - (a.rating || 0); });
@@ -721,7 +724,7 @@
    */
   App.prototype._fetchMovies = function () {
     if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getVodStreams()
+    return this._apiInstance.getMovies()
       .then(function (streams) {
         return (streams || []).map(function (s) {
           return {
@@ -749,7 +752,7 @@
    */
   App.prototype._fetchSeries = function () {
     if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getSeriesList()
+    return this._apiInstance.getSeries()
       .then(function (items) {
         return (items || []).map(function (s) {
           return {
