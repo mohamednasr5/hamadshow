@@ -110,6 +110,8 @@
     /** @private */ this._moviesCache = [];
     /** @private */ this._seriesCache = [];
     /** @private */ this._channelsCache = [];
+    /** @private */ this._firebaseInstance = null;
+    /** @private */ this._loginBound = false;
   }
 
   // ===========================================================================
@@ -176,6 +178,25 @@
     self._adminInstance = new Admin();
     self._adminInstance.init();
 
+    //    Firebase
+    var FirebaseDB = (global[NAMESPACE] && global[NAMESPACE].FirebaseDB) || null;
+    if (FirebaseDB) {
+      self._firebaseInstance = new FirebaseDB();
+      self._firebaseInstance.init().then(function (ready) {
+        if (ready) {
+          console.info('[App] Firebase is ready.');
+
+          // Listen for remote credential changes (admin updated them)
+          self._firebaseInstance.on('credentialsChanged', function (creds) {
+            if (creds && creds.serverUrl && creds.username && creds.password) {
+              console.info('[App] Credentials updated from Firebase — reconnecting...');
+              self._tryFirebaseLogin(creds);
+            }
+          });
+        }
+      });
+    }
+
     self._updateSplashProgress(40);
 
     // 4. Listen for router navigation
@@ -236,44 +257,113 @@
   App.prototype._checkAuth = function () {
     var self = this;
     return new Promise(function (resolve, reject) {
-      var settings = Config.loadSettings();
-      var serverUrl = settings.serverUrl || '';
-      var username  = settings.username || '';
-      var password  = settings.password || '';
 
-      if (!serverUrl || !username || !password) {
-        self._isAuthenticated = false;
-        self._demoMode = true;
-        resolve(false);
+      // ── Priority 1: Try Firebase credentials ──
+      if (self._firebaseInstance && self._firebaseInstance.isReady()) {
+        self._firebaseInstance.getCredentials().then(function (fbCreds) {
+          if (fbCreds && fbCreds.serverUrl && fbCreds.username && fbCreds.password) {
+            console.info('[App] Found credentials in Firebase, attempting login...');
+            self._tryFirebaseLogin(fbCreds).then(resolve).catch(function () {
+              // Firebase creds failed, try local
+              self._checkLocalAuth(resolve);
+            });
+          } else {
+            // No Firebase creds, try local
+            self._checkLocalAuth(resolve);
+          }
+        }).catch(function () {
+          self._checkLocalAuth(resolve);
+        });
         return;
       }
 
-      // Attempt API login
-      var api = new API();
-      self._apiInstance = api;
+      // ── Priority 2: Try local storage credentials ──
+      self._checkLocalAuth(resolve);
+    });
+  };
 
-      api.authenticate(serverUrl, username, password)
-        .then(function (result) {
-          // authenticate() → login() returns user_info directly
-          if (result && (result.auth === 1 || result.username || result.status === 'Active')) {
-            self._isAuthenticated = true;
-            self._demoMode = false;
-            StorageManager.saveUser(result);
-            resolve(true);
-          } else {
-            self._isAuthenticated = false;
-            self._demoMode = true;
-            resolve(false);
-          }
-        })
-        .catch(function () {
-          // API connection failed — fall back to demo mode
-          console.warn('[App] API authentication failed; entering demo mode.');
+  /**
+   * Try login using local stored credentials.
+   * @private
+   */
+  App.prototype._checkLocalAuth = function (resolve) {
+    var self = this;
+    var settings = Config.loadSettings();
+    var serverUrl = settings.serverUrl || '';
+    var username  = settings.username || '';
+    var password  = settings.password || '';
+
+    if (!serverUrl || !username || !password) {
+      self._isAuthenticated = false;
+      self._demoMode = true;
+      resolve(false);
+      return;
+    }
+
+    var api = new API();
+    self._apiInstance = api;
+
+    api.login(serverUrl, username, password)
+      .then(function (userInfo) {
+        if (userInfo && (userInfo.auth === 1 || userInfo.username || userInfo.status === 'Active')) {
+          self._isAuthenticated = true;
+          self._demoMode = false;
+          StorageManager.saveUser(userInfo);
+          resolve(true);
+        } else {
           self._isAuthenticated = false;
           self._demoMode = true;
           resolve(false);
-        });
-    });
+        }
+      })
+      .catch(function () {
+        console.warn('[App] Local auth failed; entering demo mode.');
+        self._isAuthenticated = false;
+        self._demoMode = true;
+        resolve(false);
+      });
+  };
+
+  /**
+   * Try login using Firebase credentials (also saves locally as backup).
+   * @private
+   * @param {Object} creds - { serverUrl, username, password }
+   * @returns {Promise<boolean>}
+   */
+  App.prototype._tryFirebaseLogin = function (creds) {
+    var self = this;
+    var api = self._apiInstance || new API();
+    self._apiInstance = api;
+
+    return api.login(creds.serverUrl, creds.username, creds.password)
+      .then(function (userInfo) {
+        if (userInfo && (userInfo.auth === 1 || userInfo.username || userInfo.status === 'Active')) {
+          self._isAuthenticated = true;
+          self._demoMode = false;
+          StorageManager.saveUser(userInfo);
+
+          // Also save locally as backup
+          var settings = Config.loadSettings();
+          settings.serverUrl = creds.serverUrl;
+          settings.username  = creds.username;
+          settings.password  = creds.password;
+          Config.saveSettings(settings);
+          self._settings = settings;
+
+          // Show the app if login screen is visible
+          document.getElementById('app').style.display = '';
+          self._hideLogin();
+          self._renderHomePage();
+          self._showToast('Connected via Firebase!', 'success');
+
+          return true;
+        }
+        return false;
+      })
+      .catch(function (err) {
+        console.warn('[App] Firebase login failed:', err && err.message);
+        return false;
+      });
   };
 
   // ===========================================================================
@@ -334,7 +424,34 @@
    */
   App.prototype._showLogin = function () {
     var existing = document.getElementById('login-screen');
-    if (existing) { existing.classList.add('active'); return; }
+    if (existing) { existing.classList.add('active'); }
+
+    // ALWAYS bind the form submit handler (even if login screen already exists in HTML)
+    if (!self._loginBound) {
+      self._loginBound = true;
+      setTimeout(function () {
+        var form = document.getElementById('login-form');
+        if (form) {
+          form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            self._handleLogin(e);
+          });
+          console.info('[App] Login form submit handler bound.');
+        }
+      }, 50);
+    }
+
+    if (existing) {
+      // Prefill from local settings or Firebase cache
+      var settings = Config.loadSettings();
+      var serverInput = document.getElementById('login-server');
+      var userInput   = document.getElementById('login-username');
+      var passInput   = document.getElementById('login-password');
+      if (serverInput && settings.serverUrl && !serverInput.value) serverInput.value = settings.serverUrl;
+      if (userInput && settings.username && !userInput.value) userInput.value = settings.username;
+      if (passInput && settings.password && !passInput.value) passInput.value = settings.password;
+      return;
+    }
 
     var el = document.createElement('div');
     el.id = 'login-screen';
@@ -380,11 +497,7 @@
     if (settings.username)  document.getElementById('login-username').value = settings.username;
     if (settings.password)  document.getElementById('login-password').value = settings.password;
 
-    // Bind form submit
-    document.getElementById('login-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      self._handleLogin(e);
-    });
+    // Form submit is already bound above via _loginBound flag
 
     // Allow demo mode bypass
     var footer = el.querySelector('.login-footer');
@@ -453,7 +566,7 @@
           self._isAuthenticated = true;
           self._demoMode = false;
 
-          // Save credentials to settings
+          // Save credentials to local settings
           var settings = Config.loadSettings();
           settings.serverUrl = server;
           settings.username  = remember ? username : '';
@@ -462,6 +575,17 @@
           self._settings = settings;
 
           StorageManager.saveUser(userInfo);
+
+          // Save credentials to Firebase (so all devices auto-connect)
+          if (self._firebaseInstance && self._firebaseInstance.isReady()) {
+            self._firebaseInstance.saveCredentials({
+              serverUrl: server,
+              username:  username,
+              password:  password
+            }).catch(function (err) {
+              console.warn('[App] Firebase save failed (non-critical):', err && err.message);
+            });
+          }
 
           // Show the app
           document.getElementById('app').style.display = '';
