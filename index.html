@@ -80,6 +80,12 @@
           <!-- Install Banner -->
           <div id="install-banner" class="hidden"></div>
 
+          <!-- Source Indicator (Firebase / Xtream) -->
+          <div id="source-indicator" class="hidden"></div>
+
+          <!-- Content Type Tabs (Live / Movies / Series) -->
+          <div id="content-type-tabs" class="hidden"></div>
+
           <!-- Welcome -->
           <div id="welcome-section">
             <div class="welcome">
@@ -185,6 +191,9 @@
 
   </div>
 
+  <!-- HLS.js for m3u8 streaming support -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+
   <script src="./app.js"></script>
   <script>
     // Hide splash after app renders
@@ -230,7 +239,6 @@
       // Update live tv title
       const title = document.getElementById('live-tv-title');
       if (title) title.textContent = lang === 'ar' ? 'بث مباشر' : 'Live TV';
-      // Update splash sub
     };
   </script>
 </body>

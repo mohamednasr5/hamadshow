@@ -3,7 +3,7 @@
    من برمجة وتطوير المهندس محمد حماد
    ═══════════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = "hammadshow-v1";
+const CACHE_NAME = "hammadshow-v2";
 
 const PRECACHE_URLS = [
   "./",
@@ -15,6 +15,7 @@ const PRECACHE_URLS = [
   "./icons/icon-512.png",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js",
+  "https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js",
 ];
 
 // Install — precache core assets
@@ -50,8 +51,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Firebase SDK files — cache first
-  if (url.hostname.includes("gstatic.com") || url.hostname.includes("googleapis.com")) {
+  // Xtream Codes servers — always network
+  if (url.pathname.includes("player_api.php") ||
+      url.pathname.includes("/live/") ||
+      url.pathname.includes("/movie/") ||
+      url.pathname.includes("/series/")) {
+    return;
+  }
+
+  // Firebase SDK / HLS.js files — cache first
+  if (url.hostname.includes("gstatic.com") ||
+      url.hostname.includes("googleapis.com") ||
+      url.hostname.includes("cdn.jsdelivr.net")) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
