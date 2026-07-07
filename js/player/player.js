@@ -126,6 +126,7 @@
     }
 
     _on(el, event, handler, opts) {
+      if (!el) return;
       el.addEventListener(event, handler, opts);
       if (!this.listeners[event]) this.listeners[event] = [];
       this.listeners[event].push({el, handler});
