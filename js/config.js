@@ -24,7 +24,7 @@
     appName: 'Hamad Show',
     primaryColor: '#e50914',
     secondaryColor: '#8b5cf6',
-    language: 'en',
+    language: 'ar',
     theme: 'dark',
   });
 

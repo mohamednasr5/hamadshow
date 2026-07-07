@@ -192,3 +192,110 @@
   --shadow-button: 0 4px 16px attr(data-primary-color);
   --shadow-button-hover: 0 6px 24px attr(data-primary-color);
 }
+
+/* ═══════════════════════════════════════════════════
+   RTL (Arabic) Support
+   ═══════════════════════════════════════════════════ */
+[dir="rtl"] {
+  --font-primary: 'Noto Sans Arabic', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-heading: 'Noto Sans Arabic', 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+[dir="rtl"] .input-group { flex-direction: row-reverse; }
+[dir="rtl"] .input-icon { margin-right: 0; margin-left: 12px; }
+[dir="rtl"] .login-logo { text-align: right; }
+[dir="rtl"] .section-link { flex-direction: row-reverse; }
+[dir="rtl"] .hero-content { text-align: right; }
+[dir="rtl"] .hero-actions { justify-content: flex-start; }
+[dir="rtl"] .card-info { text-align: right; }
+[dir="rtl"] .settings-item { flex-direction: row-reverse; gap: 16px; }
+[dir="rtl"] .settings-label, [dir="rtl"] .settings-desc { text-align: right; }
+[dir="rtl"] .profile-header { text-align: center; }
+[dir="rtl"] .fav-detail-btn, [dir="rtl"] .hero-fav-btn, [dir="rtl"] .hero-info-btn { margin-left: 0; margin-right: 8px; }
+[dir="rtl"] .detail-nav { flex-direction: row-reverse; }
+[dir="rtl"] .search-input-wrapper { flex-direction: row-reverse; }
+[dir="rtl"] .search-icon-left { margin-right: 0; margin-left: 12px; }
+[dir="rtl"] .scroll-row { direction: ltr; }
+[dir="rtl"] .notif-panel { right: auto; left: 0; transform: translateX(-100%); }
+[dir="rtl"] .notif-panel.active { transform: translateX(0); }
+[dir="rtl"] .episode-item { flex-direction: row-reverse; }
+[dir="rtl"] .ep-info { text-align: right; }
+[dir="rtl"] .page-header h1 { text-align: right; }
+[dir="rtl"] .filters-row { direction: rtl; }
+[dir="rtl"] .toast { direction: rtl; text-align: right; }
+[dir="rtl"] .install-prompt { flex-direction: row-reverse; text-align: right; }
+[dir="rtl"] .content-card .badge { left: auto; right: 8px; }
+[dir="rtl"] .content-card .fav-btn { right: auto; left: 8px; }
+[dir="rtl"] .progress-ring { right: auto; left: 8px; }
+[dir="rtl"] .scroll-top-btn { left: auto; right: 16px; }
+
+/* ── Additional RTL Fixes ── */
+[dir="rtl"] .hero-content {
+  right: var(--space-xl);
+  left: var(--space-xl);
+  text-align: right;
+}
+[dir="rtl"] .hero-gradient {
+  background:
+    linear-gradient(to left, rgba(10,10,15,.95) 0%, rgba(10,10,15,.6) 40%, transparent 70%),
+    linear-gradient(to top, var(--bg-primary) 0%, transparent 40%),
+    linear-gradient(to bottom, rgba(10,10,15,.3) 0%, transparent 20%);
+}
+[dir="rtl"] .hero-banner .hero-content {
+  right: var(--space-xl);
+}
+[dir="rtl"] .detail-header .detail-poster-row {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+[dir="rtl"] .detail-header .detail-info {
+  text-align: right;
+}
+[dir="rtl"] .detail-header .detail-nav {
+  flex-direction: row-reverse;
+}
+[dir="rtl"] .detail-actions {
+  justify-content: flex-start;
+}
+[dir="rtl"] .content-grid {
+  direction: rtl;
+}
+[dir="rtl"] .section-link svg {
+  transform: scaleX(-1);
+}
+[dir="rtl"] .badge {
+  position: absolute;
+  left: auto;
+  right: 8px;
+}
+[dir="rtl"] .bottom-nav .nav-item.active::before {
+  right: 50%;
+  transform: translateX(50%);
+}
+[dir="rtl"] .input-field {
+  padding: 12px 42px 12px var(--space-md);
+}
+[dir="rtl"] .search-bar .search-input {
+  padding: 12px 44px 12px 44px;
+}
+[dir="rtl"] .search-bar .search-icon-left {
+  right: 14px;
+  left: auto;
+}
+[dir="rtl"] .search-bar .voice-search-btn,
+[dir="rtl"] .search-bar .search-clear-btn {
+  right: auto;
+  left: 6px;
+}
+[dir="rtl"] .settings-item {
+  flex-direction: row-reverse;
+}
+[dir="rtl"] .profile-page {
+  text-align: right;
+}
+[dir="rtl"] .episode-item .ep-info {
+  text-align: right;
+}
+[dir="rtl"] .epg-item {
+  flex-direction: row-reverse;
+  text-align: right;
+}

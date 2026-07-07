@@ -128,6 +128,19 @@
     // 1. Load config
     self._settings = Config.loadSettings();
     self._applyTheme(self._settings);
+    // Apply language (default Arabic)
+    var startLang = self._settings.language || 'ar';
+    var isAr = startLang === 'ar';
+    document.documentElement.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', startLang);
+    document.documentElement.style.setProperty('--font-primary', isAr
+      ? "'Noto Sans Arabic', 'Inter', 'Segoe UI', system-ui, sans-serif"
+      : "'Inter', 'Segoe UI', system-ui, sans-serif");
+    document.documentElement.style.setProperty('--font-heading', isAr
+      ? "'Noto Sans Arabic', 'Inter', 'Segoe UI', system-ui, sans-serif"
+      : "'Inter', 'Segoe UI', system-ui, sans-serif");
+    var headerApp = document.getElementById('header-app-name');
+    if (headerApp) headerApp.textContent = isAr ? 'حمد شو' : 'Hamad Show';
 
     // 2. Show splash
     self._showSplash();
@@ -423,6 +436,7 @@
    * @private
    */
   App.prototype._showLogin = function () {
+    var self = this;
     var existing = document.getElementById('login-screen');
     if (existing) { existing.classList.add('active'); }
 
@@ -462,7 +476,7 @@
         '<div class="login-logo">' +
           '<div class="logo-icon">' + svg('movie') + '</div>' +
           '<h2>' + Utils.sanitize(self._settings.appName || Config.DEFAULT_SETTINGS.appName) + '</h2>' +
-          '<p>Sign in to start streaming</p>' +
+          '<p>' + (self._t ? self._t('login_subtitle') : 'Sign in to start streaming') + '</p>' +
         '</div>' +
         '<form class="login-form" id="login-form" novalidate>' +
           '<div class="login-error" id="login-error">' + svg('close', 'sm') + '<span id="login-error-text"></span></div>' +
@@ -496,8 +510,6 @@
     if (settings.serverUrl) document.getElementById('login-server').value = settings.serverUrl;
     if (settings.username)  document.getElementById('login-username').value = settings.username;
     if (settings.password)  document.getElementById('login-password').value = settings.password;
-
-    // Form submit is already bound above via _loginBound flag
 
     // Allow demo mode bypass
     var footer = el.querySelector('.login-footer');
@@ -637,8 +649,8 @@
     navItems.forEach(function (item) {
       item.addEventListener('click', function (e) {
         e.preventDefault();
-        var route = item.getAttribute('data-route') || '/';
-        self._routerInstance.navigate(route);
+        var page = item.getAttribute('data-page') || item.getAttribute('data-route') || 'home';
+        self._routerInstance.navigate('/' + page);
       });
     });
   };
@@ -728,9 +740,9 @@
   App.prototype._updateActiveNav = function (page) {
     var navItems = document.querySelectorAll('.bottom-nav .nav-item');
     navItems.forEach(function (item) {
-      var route = item.getAttribute('data-route') || '';
-      var routeBase = route.replace(/^\/+|\/+$/g, '').split('/')[0] || 'home';
-      if (routeBase === page || (page === 'home' && routeBase === '')) {
+      var navPage = item.getAttribute('data-page') || item.getAttribute('data-route') || '';
+      var navBase = navPage.replace(/^\/+|\/+$/g, '').split('/')[0] || 'home';
+      if (navBase === page || (page === 'home' && navBase === '')) {
         item.classList.add('active');
       } else {
         item.classList.remove('active');
@@ -780,10 +792,10 @@
 
     // Show skeletons initially
     sectionsEl.innerHTML =
-      self._buildSectionSkeleton('Trending Now') +
-      self._buildSectionSkeleton('Recently Added') +
-      self._buildSectionSkeleton('Popular Series') +
-      self._buildSectionSkeleton('Live Channels');
+      self._buildSectionSkeleton(self._t('trending_now')) +
+      self._buildSectionSkeleton(self._t('recently_added')) +
+      self._buildSectionSkeleton(self._t('popular_series')) +
+      self._buildSectionSkeleton(self._t('live_channels'));
 
     // Fetch data in parallel
     var heroPromise = self._fetchHeroItems();
@@ -818,8 +830,9 @@
    * @returns {Promise<Array>}
    */
   App.prototype._fetchHeroItems = function () {
-    if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getMovies()
+    var self = this;
+    if (!self._apiInstance) return Promise.resolve([]);
+    return self._apiInstance.getMovies()
       .then(function (streams) {
         // Pick 5 high-rated items
         var sorted = (streams || []).sort(function (a, b) { return (b.rating || 0) - (a.rating || 0); });
@@ -827,8 +840,8 @@
           return {
             id: s.stream_id,
             name: s.name || 'Untitled',
-            poster: s.stream_icon || '',
-            backdrop: s.stream_icon || '',
+            poster: self._getImageUrl(s.stream_icon),
+            backdrop: self._getImageUrl(s.stream_icon),
             rating: s.rating || null,
             year: s.year || '',
             genre: s.category_id || '',
@@ -847,22 +860,25 @@
    * @returns {Promise<Array>}
    */
   App.prototype._fetchMovies = function () {
-    if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getMovies()
+    var self = this;
+    if (!self._apiInstance) return Promise.resolve([]);
+    return self._apiInstance.getMovies()
       .then(function (streams) {
-        return (streams || []).map(function (s) {
+        self._moviesRawCache = streams || [];
+        return self._moviesRawCache.map(function (s) {
           return {
             id: s.stream_id,
             name: s.name || 'Untitled',
-            poster: s.stream_icon || '',
+            poster: self._getImageUrl(s.stream_icon),
+            backdrop: self._getImageUrl(s.stream_icon),
             rating: s.rating || null,
             year: s.year || '',
             genre: s.category_id || '',
             duration: s.duration || '',
             description: s.plot || '',
             type: 'movie',
-            streamUrl: s.url || '',
-            streamType: s.container_extension || '',
+            containerExtension: s.container_extension || 'mp4',
+            streamType: s.container_extension || 'mp4',
           };
         });
       })
@@ -875,14 +891,16 @@
    * @returns {Promise<Array>}
    */
   App.prototype._fetchSeries = function () {
-    if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getSeries()
+    var self = this;
+    if (!self._apiInstance) return Promise.resolve([]);
+    return self._apiInstance.getSeries()
       .then(function (items) {
-        return (items || []).map(function (s) {
+        self._seriesRawCache = items || [];
+        return self._seriesRawCache.map(function (s) {
           return {
             id: s.series_id || s.stream_id,
             name: s.name || 'Untitled',
-            poster: s.cover || '',
+            poster: self._getImageUrl(s.cover),
             rating: s.rating || null,
             year: s.year || '',
             genre: s.category_id || '',
@@ -900,19 +918,20 @@
    * @returns {Promise<Array>}
    */
   App.prototype._fetchChannels = function () {
-    if (!this._apiInstance) return Promise.resolve([]);
-    return this._apiInstance.getLiveStreams()
+    var self = this;
+    if (!self._apiInstance) return Promise.resolve([]);
+    return self._apiInstance.getLiveStreams()
       .then(function (streams) {
-        return (streams || []).map(function (s) {
+        self._channelsRawCache = streams || [];
+        return self._channelsRawCache.map(function (s) {
           return {
             id: s.stream_id,
             name: s.name || 'Untitled',
-            poster: s.stream_icon || '',
+            poster: self._getImageUrl(s.stream_icon),
             rating: null,
             year: '',
             genre: s.category_id || '',
             type: 'live',
-            streamUrl: s.url || '',
             epgChannelId: s.epg_channel_id || '',
           };
         });
@@ -936,29 +955,29 @@
     // Continue Watching
     var continueItems = self._historyInstance ? self._historyInstance.getContinueWatching() : [];
     if (continueItems.length > 0) {
-      html += self._buildScrollSection('Continue Watching', '/profile', continueItems, 'wide');
+      html += self._buildScrollSection(self._t('continue_watching'), '/profile', continueItems, 'wide');
     }
 
     // Trending
     var trending = movies.slice(0, 15);
     if (trending.length > 0) {
-      html += self._buildScrollSection('Trending Now', '/movies', trending, 'poster');
+      html += self._buildScrollSection(self._t('trending_now'), '/movies', trending, 'poster');
     }
 
     // Recently Added Movies
     var recentMovies = movies.slice().reverse().slice(0, 15);
     if (recentMovies.length > 0) {
-      html += self._buildScrollSection('Recently Added Movies', '/movies', recentMovies, 'poster');
+      html += self._buildScrollSection(self._t('recently_added'), '/movies', recentMovies, 'poster');
     }
 
     // Popular Series
     if (series.length > 0) {
-      html += self._buildScrollSection('Popular Series', '/series', series.slice(0, 15), 'poster');
+      html += self._buildScrollSection(self._t('popular_series'), '/series', series.slice(0, 15), 'poster');
     }
 
     // Live Channels
     if (channels.length > 0) {
-      html += self._buildChannelSection('Live Channels', '/livetv', channels.slice(0, 20));
+      html += self._buildChannelSection(self._t('live_channels'), '/livetv', channels.slice(0, 20));
     }
 
     // Sports channels (try to filter)
@@ -967,7 +986,7 @@
       return name.indexOf('sport') !== -1;
     });
     if (sports.length > 0) {
-      html += self._buildChannelSection('Sports', '/livetv', sports.slice(0, 15));
+      html += self._buildChannelSection(self._t('sports'), '/livetv', sports.slice(0, 15));
     }
 
     // Kids content (filter by name)
@@ -976,7 +995,7 @@
       return name.indexOf('kid') !== -1 || name.indexOf('cartoon') !== -1 || name.indexOf('animation') !== -1;
     });
     if (kids.length > 0) {
-      html += self._buildScrollSection('Kids', '/movies', kids.slice(0, 15), 'poster');
+      html += self._buildScrollSection(self._t('kids'), '/movies', kids.slice(0, 15), 'poster');
     }
 
     // Arabic content
@@ -985,7 +1004,7 @@
       return name.indexOf('arab') !== -1 || name.indexOf('埃及') !== -1 || name.indexOf('ال') !== -1;
     });
     if (arabic.length > 0) {
-      html += self._buildScrollSection('Arabic Content', '/movies', arabic.slice(0, 15), 'poster');
+      html += self._buildScrollSection(self._t('arabic_content'), '/movies', arabic.slice(0, 15), 'poster');
     }
 
     // English content
@@ -994,14 +1013,14 @@
       return /^[a-z]/.test(name);
     });
     if (english.length > 0) {
-      html += self._buildScrollSection('English Content', '/movies', english.slice(0, 15), 'poster');
+      html += self._buildScrollSection(self._t('english_content'), '/movies', english.slice(0, 15), 'poster');
     }
 
     // Recommended (random selection)
     var all = movies.concat(series);
     var recommended = all.sort(function () { return 0.5 - Math.random(); }).slice(0, 15);
     if (recommended.length > 0) {
-      html += self._buildScrollSection('Recommended For You', '/movies', recommended, 'poster');
+      html += self._buildScrollSection(self._t('recommended'), '/movies', recommended, 'poster');
     }
 
     el.innerHTML = html || '<div class="empty-state" style="padding-top:60px;">' + svg('movie') + '<p class="empty-title" style="margin-top:16px;">No content available</p></div>';
@@ -1063,7 +1082,7 @@
     return '<div class="section">' +
       '<div class="section-header">' +
         '<h2 class="section-title">' + Utils.sanitize(title) + '</h2>' +
-        '<a class="section-link" href="#' + seeAllRoute + '">See All ' + svg('chevronRight', 'sm') + '</a>' +
+        '<a class="section-link" href="#' + seeAllRoute + '">' + self._t('see_all') + ' ' + svg('chevronRight', 'sm') + '</a>' +
       '</div>' +
       '<div class="scroll-row' + wideClass + '">' + cardsHtml + '</div>' +
     '</div>';
@@ -1177,7 +1196,7 @@
             (duration ? '<span>' + duration + '</span>' : '') +
           '</div>' +
           '<div class="hero-actions">' +
-            '<button class="btn btn-primary btn-lg hero-play-btn" data-id="' + item.id + '" data-type="' + (item.type || 'movie') + '">' + svg('play') + ' Play Now</button>' +
+            '<button class="btn btn-primary btn-lg hero-play-btn" data-id="' + item.id + '" data-type="' + (item.type || 'movie') + '">' + svg('play') + ' ' + (self._t('play_now') || 'شاهد الآن') + '</button>' +
             '<button class="btn btn-secondary hero-fav-btn' + (isFav ? ' active' : '') + '" data-fav-id="' + item.id + '" data-fav-type="' + (item.type || 'movie') + '" data-fav-name="' + Utils.sanitize(item.name) + '" data-fav-poster="' + Utils.sanitize(item.poster || '') + '">' +
               (isFav ? svg('heart') : svg('heart')) + '</button>' +
             '<button class="btn btn-glass hero-info-btn" data-info-id="' + item.id + '" data-info-type="' + (item.type || 'movie') + '">' + svg('info') + '</button>' +
@@ -1230,7 +1249,7 @@
         if (self._favoritesInstance) {
           var nowFav = self._favoritesInstance.toggle({ id: id, type: type, name: name, poster: poster });
           favBtn.classList.toggle('active', nowFav);
-          self._showToast(nowFav ? 'Added to favorites' : 'Removed from favorites', nowFav ? 'success' : 'info');
+          self._showToast(nowFav ? (self._t('added_favorites') || 'تمت الإضافة للمفضلة') : (self._t('removed_favorites') || 'تمت الإزالة من المفضلة'), nowFav ? 'success' : 'info');
         }
       });
     }
@@ -1292,7 +1311,7 @@
     container.innerHTML =
       '<div class="movies-page page active" id="page-movies">' +
         '<div class="page-header">' +
-          '<h1>Movies</h1>' +
+          '<h1>' + self._t('movies') + '</h1>' +
           '<select class="chip sort-select" id="movies-sort" style="appearance:auto;padding-right:12px;">' +
             '<option value="az">A — Z</option>' +
             '<option value="za">Z — A</option>' +
@@ -1391,7 +1410,7 @@
     container.innerHTML =
       '<div class="series-page page active" id="page-series">' +
         '<div class="page-header">' +
-          '<h1>Series</h1>' +
+          '<h1>' + self._t('series') + '</h1>' +
           '<select class="chip sort-select" id="series-sort" style="appearance:auto;padding-right:12px;">' +
             '<option value="az">A — Z</option>' +
             '<option value="za">Z — A</option>' +
@@ -1470,7 +1489,7 @@
     container.innerHTML =
       '<div class="livetv-page page active" id="page-livetv">' +
         '<div class="page-header">' +
-          '<h1>Live TV</h1>' +
+          '<h1>' + self._t('live_tv') + '</h1>' +
         '</div>' +
         '<div class="filters-row" id="livetv-filters">' + chipsHtml + '</div>' +
         '<div class="content-grid" id="livetv-grid" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr));">' + gridHtml + '</div>' +
@@ -1712,7 +1731,7 @@
     container.innerHTML =
       '<div class="favorites-page page active" id="page-favorites">' +
         '<div class="page-header">' +
-          '<h1>Favorites</h1>' +
+          '<h1>' + self._t('favorites') + '</h1>' +
         '</div>' +
         '<div class="fav-tabs" id="fav-tabs">' +
           '<button class="chip active" data-fav-filter="all">All</button>' +
@@ -1789,7 +1808,7 @@
 
     container.innerHTML =
       '<div class="settings-page page active" id="page-settings">' +
-        '<div class="page-header"><h1>Settings</h1></div>' +
+        '<div class="page-header"><h1>' + self._t('settings') + '</h1></div>' +
 
         // Account group
         '<div class="settings-group">' +
@@ -1823,8 +1842,11 @@
             '<div class="toggle' + (isDark ? ' active' : '') + '" id="toggle-theme"><div class="toggle-knob"></div></div>' +
           '</div>' +
           '<div class="settings-item" id="setting-language">' +
-            '<div><div class="settings-label">Language</div><div class="settings-desc">App display language</div></div>' +
-            '<span style="color:var(--text-tertiary);">English ' + svg('chevronRight', 'sm') + '</span>' +
+            '<div><div class="settings-label">' + (self._t('language') || 'Language') + '</div></div>' +
+            '<select class="chip" id="lang-select" style="appearance:auto;">' +
+              '<option value="ar"' + ((self._settings.language || 'ar') === 'ar' ? ' selected' : '') + '>العربية</option>' +
+              '<option value="en"' + ((self._settings.language) === 'en' ? ' selected' : '') + '>English</option>' +
+            '</select>' +
           '</div>' +
         '</div>' +
 
@@ -1877,6 +1899,15 @@
         Config.saveSettings(s);
         document.documentElement.setAttribute('data-theme', s.theme);
         themeToggle.classList.toggle('active', s.theme === 'dark');
+      });
+    }
+
+    // Bind language select
+    var langSelect = document.getElementById('lang-select');
+    if (langSelect) {
+      langSelect.addEventListener('change', function () {
+        self._setLanguage(langSelect.value);
+        self._showToast(self._t(langSelect.value === 'ar' ? 'language_changed_ar' : 'language_changed_en'), 'success');
       });
     }
 
@@ -1965,7 +1996,7 @@
           var gradient = Utils.getGradientColor(h.type || 'movie');
           return '<div class="episode-item" data-id="' + h.id + '" data-type="' + (h.type || 'movie') + '">' +
             '<div style="width:80px;height:50px;border-radius:var(--radius-sm);background:' + gradient + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
-              (h.poster ? '<img src="' + Utils.sanitize(h.poster) + '" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);" onerror="this.style.display=\'none\'">' : svg('movie', 'sm')) +
+              (h.poster ? '<img src="' + Utils.sanitize(h.poster) + '" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' : svg('movie', 'sm')) +
             '</div>' +
             '<div class="ep-info">' +
               '<div class="ep-title">' + Utils.truncate(Utils.sanitize(h.name || ''), 50) + '</div>' +
@@ -2062,7 +2093,7 @@
     container.innerHTML =
       '<div class="page active" id="page-movie-detail">' +
         '<div class="detail-header">' +
-          (backdrop ? '<img class="detail-backdrop" src="' + Utils.sanitize(backdrop) + '" alt="" onerror="this.style.display=\'none\'">' : '<div class="detail-backdrop" style="background:' + Utils.getGradientColor('movie') + ';"></div>') +
+          (backdrop ? '<img class="detail-backdrop" src="' + Utils.sanitize(backdrop) + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' : '<div class="detail-backdrop" style="background:' + Utils.getGradientColor('movie') + ';"></div>') +
           '<div class="detail-gradient"></div>' +
           '<div class="detail-nav">' +
             '<button class="btn btn-glass btn-icon" id="detail-back">' + svg('back') + '</button>' +
@@ -2070,7 +2101,7 @@
           '</div>' +
           '<div class="detail-info">' +
             '<div class="detail-poster-row">' +
-              '<img class="detail-poster" src="' + Utils.sanitize(movie.poster || '') + '" alt="' + Utils.sanitize(movie.name) + '" onerror="this.style.display=\'none\'">' +
+              '<img class="detail-poster" src="' + Utils.sanitize(movie.poster || '') + '" alt="' + Utils.sanitize(movie.name) + '" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' +
               '<div style="flex:1;min-width:0;">' +
                 '<h1 class="detail-title">' + Utils.sanitize(movie.name) + '</h1>' +
                 '<div class="detail-meta">' +
@@ -2083,10 +2114,10 @@
             '</div>' +
           '</div>' +
           '<div class="detail-actions">' +
-            '<button class="btn btn-primary btn-lg detail-play-btn">' + svg('play') + ' Play Now</button>' +
+            '<button class="btn btn-primary btn-lg detail-play-btn">' + svg('play') + ' ' + (self._t('play_now') || 'شاهد الآن') + '</button>' +
           '</div>' +
           (movie.description ? '<div style="padding:16px;"><p style="font-size:var(--fs-sm);color:var(--text-secondary);line-height:1.7;">' + Utils.sanitize(movie.description) + '</p></div>' : '') +
-          '<div style="padding:0 16px 40px;"><h3 style="margin-bottom:12px;">Similar Movies</h3><div class="content-grid" id="similar-movies-grid"></div></div>' +
+          '<div style="padding:0 16px 40px;"><h3 style="margin-bottom:12px;">' + (self._t('similar_movies') || 'أفلام مشابهة') + '</h3>'<div class="content-grid" id="similar-movies-grid"></div></div>' +
         '</div>' +
       '</div>';
 
@@ -2108,7 +2139,7 @@
       favBtn.addEventListener('click', function () {
         var nowFav = self._favoritesInstance.toggle({ id: movie.id, type: 'movie', name: movie.name, poster: movie.poster });
         favBtn.classList.toggle('active', nowFav);
-        self._showToast(nowFav ? 'Added to favorites' : 'Removed from favorites', nowFav ? 'success' : 'info');
+        self._showToast(nowFav ? (self._t('added_favorites') || 'تمت الإضافة للمفضلة') : (self._t('removed_favorites') || 'تمت الإزالة من المفضلة'), nowFav ? 'success' : 'info');
       });
     }
 
@@ -2151,7 +2182,7 @@
     ];
 
     var seasonTabsHtml = seasons.map(function (s, i) {
-      return '<button class="chip' + (i === 0 ? ' active' : '') + '" data-season="' + s.season_number + '">Season ' + s.season_number + '</button>';
+      return '<button class="chip' + (i === 0 ? ' active' : '') + '" data-season="' + s.season_number + '">' + (self._t('season') || 'الموسم') + ' ' + s.season_number + '</button>';
     }).join('');
 
     var episodesHtml = seasons.length > 0
@@ -2159,18 +2190,18 @@
           return '<div class="episode-item" data-ep="' + (i + 1) + '">' +
             '<div class="ep-thumb" style="background:' + Utils.getGradientColor('series') + ';display:flex;align-items:center;justify-content:center;">' + svg('play', 'sm') + '</div>' +
             '<div class="ep-info">' +
-              '<div class="ep-title">Episode ' + (i + 1) + (ep.title ? ': ' + Utils.sanitize(ep.title) : '') + '</div>' +
+              '<div class="ep-title">' + (self._t('episode') || 'الحلقة') + ' ' + (i + 1) + (ep.title ? ': ' + Utils.sanitize(ep.title) : '') + '</div>' +
               '<div class="ep-meta">' + (ep.duration || '45m') + '</div>' +
               (ep.description ? '<div class="ep-desc">' + Utils.truncate(Utils.sanitize(ep.description), 100) + '</div>' : '') +
             '</div>' +
           '</div>';
         }).join('')
-      : '<p style="padding:16px;color:var(--text-tertiary);">No episodes available.</p>';
+      : '<p style="padding:16px;color:var(--text-tertiary);">' + (self._t('no_content') || 'لا يوجد محتوى متاح') + '</p>';
 
     container.innerHTML =
       '<div class="page active" id="page-series-detail">' +
         '<div class="detail-header">' +
-          '<img class="detail-backdrop" src="' + Utils.sanitize(series.poster || '') + '" alt="" onerror="this.style.display=\'none\'">' +
+          '<img class="detail-backdrop" src="' + Utils.sanitize(series.poster || '') + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' +
           '<div class="detail-gradient"></div>' +
           '<div class="detail-nav">' +
             '<button class="btn btn-glass btn-icon" id="detail-back">' + svg('back') + '</button>' +
@@ -2178,14 +2209,14 @@
           '</div>' +
           '<div class="detail-info">' +
             '<div class="detail-poster-row">' +
-              '<img class="detail-poster" src="' + Utils.sanitize(series.poster || '') + '" alt="' + Utils.sanitize(series.name) + '" onerror="this.style.display=\'none\'">' +
+              '<img class="detail-poster" src="' + Utils.sanitize(series.poster || '') + '" alt="' + Utils.sanitize(series.name) + '" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' +
               '<div style="flex:1;min-width:0;">' +
                 '<h1 class="detail-title">' + Utils.sanitize(series.name) + '</h1>' +
                 '<div class="detail-meta">' +
                   '<span>' + svg('star', 'sm') + ' ' + rating + '</span>' +
                   (series.year ? '<span>' + series.year + '</span>' : '') +
                   '<span class="badge badge-secondary">Series</span>' +
-                  '<span>' + seasons.length + ' Season' + (seasons.length !== 1 ? 's' : '') + '</span>' +
+                  '<span>' + seasons.length + ' ' + (self._t('season') || 'موسم') + '</span>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -2206,7 +2237,7 @@
       favBtn.addEventListener('click', function () {
         var nowFav = self._favoritesInstance.toggle({ id: series.id, type: 'series', name: series.name, poster: series.poster });
         favBtn.classList.toggle('active', nowFav);
-        self._showToast(nowFav ? 'Added to favorites' : 'Removed from favorites', nowFav ? 'success' : 'info');
+        self._showToast(nowFav ? (self._t('added_favorites') || 'تمت الإضافة للمفضلة') : (self._t('removed_favorites') || 'تمت الإزالة من المفضلة'), nowFav ? 'success' : 'info');
       });
     }
 
@@ -2223,7 +2254,7 @@
             return '<div class="episode-item" data-ep="' + (i + 1) + '">' +
               '<div class="ep-thumb" style="background:' + Utils.getGradientColor('series') + ';display:flex;align-items:center;justify-content:center;">' + svg('play', 'sm') + '</div>' +
               '<div class="ep-info">' +
-                '<div class="ep-title">Episode ' + (i + 1) + (ep.title ? ': ' + Utils.sanitize(ep.title) : '') + '</div>' +
+                '<div class="ep-title">' + (self._t('episode') || 'الحلقة') + ' ' + (i + 1) + (ep.title ? ': ' + Utils.sanitize(ep.title) : '') + '</div>' +
                 '<div class="ep-meta">' + (ep.duration || '45m') + '</div>' +
               '</div>' +
             '</div>';
@@ -2231,6 +2262,97 @@
         }
       });
     });
+
+    // Bind episode clicks — play episode
+    container.addEventListener('click', function (e) {
+      var epItem = e.target.closest('.episode-item[data-ep-id]');
+      if (epItem) {
+        var epId = epItem.getAttribute('data-ep-id');
+        var epExt = epItem.getAttribute('data-ep-ext') || 'mp4';
+        var epTitle = epItem.querySelector('.ep-title');
+        var epNum = epItem.getAttribute('data-ep');
+        if (epId) {
+          self._openPlayerForEpisode(series.id, epId, epExt, {
+            title: (epTitle ? epTitle.textContent : (self._t('episode') || 'الحلقة') + ' ' + epNum)
+          });
+        }
+      }
+    });
+
+    // If not demo mode, try to fetch real episodes from API
+    if (!self._demoMode && self._apiInstance && typeof self._apiInstance.getSeriesInfo === 'function') {
+      self._apiInstance.getSeriesInfo(series.id).then(function (info) {
+        if (!info || !info.episodes) return;
+        var realSeasons = [];
+        var seasonKeys = Object.keys(info.episodes).sort(function (a, b) { return Number(a) - Number(b); });
+        seasonKeys.forEach(function (seasonNum) {
+          var epList = info.episodes[seasonNum];
+          if (Array.isArray(epList)) {
+            realSeasons.push({
+              season_number: Number(seasonNum),
+              name: (self._t('season') || 'الموسم') + ' ' + seasonNum,
+              episodes: epList.map(function (ep, i) {
+                return {
+                  id: ep.id || ep.episode_id,
+                  title: ep.title || (''),
+                  container_extension: ep.container_extension || ep.extension || 'mp4',
+                  duration: ep.info && ep.info.duration ? ep.info.duration + 'm' : '',
+                  description: ep.info && ep.info.plot ? ep.info.plot : '',
+                };
+              })
+            });
+          }
+        });
+        if (realSeasons.length > 0) {
+          // Re-render with real data
+          var tabsEl = document.getElementById('season-tabs');
+          var epListEl = document.getElementById('episode-list');
+          if (tabsEl) {
+            tabsEl.innerHTML = realSeasons.map(function (s, i) {
+              return '<button class="chip' + (i === 0 ? ' active' : '') + '" data-season="' + s.season_number + '">' + (self._t('season') || 'الموسم') + ' ' + s.season_number + '</button>';
+            }).join('');
+            tabsEl.querySelectorAll('.chip').forEach(function (tab) {
+              tab.addEventListener('click', function () {
+                tabsEl.querySelectorAll('.chip').forEach(function (t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                var sn = parseInt(tab.getAttribute('data-season'), 10);
+                var season = realSeasons.find(function (s) { return s.season_number === sn; });
+                if (season && epListEl) {
+                  epListEl.innerHTML = season.episodes.map(function (ep, i) {
+                    var eid = ep.id || '';
+                    var eext = ep.container_extension || 'mp4';
+                    return '<div class="episode-item" data-ep="' + (i + 1) + '" data-ep-id="' + Utils.sanitize(eid) + '" data-ep-ext="' + Utils.sanitize(eext) + '">' +
+                      '<div class="ep-thumb" style="background:' + Utils.getGradientColor('series') + ';display:flex;align-items:center;justify-content:center;">' + svg('play', 'sm') + '</div>' +
+                      '<div class="ep-info">' +
+                        '<div class="ep-title">' + (self._t('episode') || 'الحلقة') + ' ' + (i + 1) + (ep.title ? ': ' + Utils.sanitize(ep.title) : '') + '</div>' +
+                        '<div class="ep-meta">' + (ep.duration || '45m') + '</div>' +
+                        (ep.description ? '<div class="ep-desc">' + Utils.truncate(Utils.sanitize(ep.description), 100) + '</div>' : '') +
+                      '</div>' +
+                    '</div>';
+                  }).join('');
+                }
+              });
+            });
+          }
+          if (epListEl && realSeasons.length > 0 && realSeasons[0].episodes) {
+            epListEl.innerHTML = realSeasons[0].episodes.map(function (ep, i) {
+              var eid = ep.id || '';
+              var eext = ep.container_extension || 'mp4';
+              return '<div class="episode-item" data-ep="' + (i + 1) + '" data-ep-id="' + Utils.sanitize(eid) + '" data-ep-ext="' + Utils.sanitize(eext) + '">' +
+                '<div class="ep-thumb" style="background:' + Utils.getGradientColor('series') + ';display:flex;align-items:center;justify-content:center;">' + svg('play', 'sm') + '</div>' +
+                '<div class="ep-info">' +
+                  '<div class="ep-title">' + (self._t('episode') || 'الحلقة') + ' ' + (i + 1) + (ep.title ? ': ' + Utils.sanitize(ep.title) : '') + '</div>' +
+                  '<div class="ep-meta">' + (ep.duration || '45m') + '</div>' +
+                  (ep.description ? '<div class="ep-desc">' + Utils.truncate(Utils.sanitize(ep.description), 100) + '</div>' : '') +
+                '</div>' +
+              '</div>';
+            }).join('');
+          }
+        }
+      }).catch(function (err) {
+        console.warn('[App] Could not fetch series info:', err);
+      });
+    }
 
     self._setupRippleEffects();
   };
@@ -2260,7 +2382,7 @@
       '<div class="page active" id="page-channel-detail">' +
         '<div class="detail-header">' +
           '<div class="detail-backdrop" style="background:' + Utils.getGradientColor('live') + ';display:flex;align-items:center;justify-content:center;">' +
-            (channel.poster ? '<img src="' + Utils.sanitize(channel.poster) + '" style="width:80px;height:80px;border-radius:var(--radius-md);object-fit:cover;" onerror="this.style.display=\'none\'">' : '') +
+            (channel.poster ? '<img src="' + Utils.sanitize(channel.poster) + '" style="width:80px;height:80px;border-radius:var(--radius-md);object-fit:cover;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' : '') +
           '</div>' +
           '<div class="detail-gradient"></div>' +
           '<div class="detail-nav">' +
@@ -2274,10 +2396,10 @@
             '</div>' +
           '</div>' +
           '<div class="detail-actions">' +
-            '<button class="btn btn-primary btn-lg detail-play-btn">' + svg('play') + ' Watch Now</button>' +
+            '<button class="btn btn-primary btn-lg detail-play-btn">' + svg('play') + ' ' + (self._t('play_now') || 'شاهد الآن') + '</button>' +
           '</div>' +
           '<div class="epg-bar" id="epg-timeline" style="padding-bottom:100px;">' +
-            '<h3 style="margin-bottom:12px;">Program Guide</h3>' +
+            '<h3 style="margin-bottom:12px;">' + (self._t('live_channels') || 'دليل البرامج') + '</h3>' +
             epgItems.map(function (epg) {
               return '<div class="epg-item">' +
                 '<div class="epg-time' + (epg.now ? ' epg-now' : '') + '">' + epg.time + '</div>' +
@@ -2344,8 +2466,8 @@
     }
 
     var posterImg = item.poster
-      ? '<img class="poster" data-src="' + Utils.sanitize(item.poster) + '" alt="' + Utils.sanitize(item.name || '') + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
-        '<div class="card-overlay" style="display:none;align-items:center;justify-content:center;">' + svg('movie') + '</div>'
+      ? '<img class="poster" data-src="' + Utils.sanitize(item.poster) + '" alt="' + Utils.sanitize(item.name || '') + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+        '<div class="card-overlay" style="display:none;align-items:center;justify-content:center;">' + svg(type === 'live' ? 'tv' : type === 'series' ? 'tv' : 'movie') + '</div>'
       : '<div class="poster" style="display:flex;align-items:center;justify-content:center;background:' + gradient + ';">' + svg(type === 'live' ? 'tv' : type === 'series' ? 'tv' : 'movie') + '</div>';
 
     var favBtnHtml = '<button class="fav-btn' + (isFav ? ' active' : '') + '" data-fav-id="' + item.id + '" data-fav-type="' + type + '" data-fav-name="' + Utils.sanitize(item.name || '') + '" data-fav-poster="' + Utils.sanitize(item.poster || '') + '">' + (isFav ? svg('heart') : svg('heart')) + '</button>';
@@ -2379,7 +2501,7 @@
   App.prototype._createChannelCard = function (channel) {
     var self = this;
     var logoHtml = channel.poster
-      ? '<img class="channel-logo" data-src="' + Utils.sanitize(channel.poster) + '" alt="' + Utils.sanitize(channel.name || '') + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+      ? '<img class="channel-logo" data-src="' + Utils.sanitize(channel.poster) + '" alt="' + Utils.sanitize(channel.name || '') + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
         '<div style="display:none;width:56px;height:56px;border-radius:var(--radius-md);background:var(--bg-tertiary);align-items:center;justify-content:center;">' + svg('tv', 'sm') + '</div>'
       : '<div style="width:56px;height:56px;border-radius:var(--radius-md);background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;">' + svg('tv', 'sm') + '</div>';
 
@@ -2591,21 +2713,66 @@
    * @private
    * @param {Object} movie
    */
+
+  /**
+   * Open the player for a series episode.
+   * @private
+   * @param {string|number} seriesId
+   * @param {string|number} episodeId
+   * @param {string} extension
+   * @param {Object} episodeInfo  { title, containerExtension }
+   */
+  App.prototype._openPlayerForEpisode = function (seriesId, episodeId, extension, episodeInfo) {
+    var self = this;
+    if (!self._playerInstance || typeof self._playerInstance.play !== 'function') return;
+
+    var urls = [];
+    try {
+      if (self._apiInstance && self._apiInstance.isAuthenticated && self._apiInstance.isAuthenticated()) {
+        var ext = extension || 'mp4';
+        urls = self._apiInstance.getStreamUrls(episodeId, 'series', ext);
+      }
+    } catch (e) {
+      console.warn('[App] Error building episode stream URL:', e);
+    }
+
+    if (!urls.length && self._demoMode) {
+      urls = ['https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'];
+    }
+
+    if (urls.length > 0) {
+      var title = (episodeInfo && episodeInfo.title) || (self._t('episode') || 'الحلقة');
+      console.info('[App] Playing episode:', title, 'URLs:', urls.map(function(u){return u.substring(0,60)+'...';}));
+      self._playerInstance.playWithFallback(urls, { title: title, id: episodeId, type: 'series', seriesId: seriesId });
+    } else {
+      self._showToast(self._t ? self._t('no_stream_url') : 'لا يوجد رابط بث متاح', 'warning');
+    }
+  };
+
   App.prototype._openPlayerForMovie = function (movie) {
     var self = this;
-    if (self._playerInstance && typeof self._playerInstance.play === 'function') {
-      var url = movie.streamUrl || movie.url || '';
-      if (!url && self._apiInstance && self._apiInstance.getStreamUrl) {
-        url = self._apiInstance.getStreamUrl(movie.id, 'movie');
+    if (!self._playerInstance || typeof self._playerInstance.play !== 'function') return;
+
+    var urls = [];
+    try {
+      if (self._apiInstance && self._apiInstance.isAuthenticated && self._apiInstance.isAuthenticated()) {
+        var ext = movie.containerExtension || movie.streamType || 'mp4';
+        urls = self._apiInstance.getStreamUrls(movie.id, 'movie', ext);
       }
-      if (!url && self._demoMode) {
-        url = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-      }
-      if (url) {
-        self._playerInstance.play(url, { title: movie.name, poster: movie.poster, id: movie.id, type: 'movie' });
-      } else {
-        self._showToast('No stream URL available for this content.', 'warning');
-      }
+    } catch (e) {
+      console.warn('[App] Error building stream URL:', e);
+    }
+
+    if (!urls.length && self._demoMode) {
+      urls = ['https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'];
+    }
+
+    if (urls.length > 0) {
+      console.info('[App] Playing movie:', movie.name, 'URLs:', urls.map(function(u){return u.substring(0,60)+'...';}));
+      // Play with fallback URLs
+      self._playerInstance.playWithFallback(urls, { title: movie.name, poster: movie.poster, id: movie.id, type: 'movie' });
+    } else {
+      self._showToast(self._t ? self._t('no_stream_url') : 'لا يوجد رابط بث متاح', 'warning');
     }
   };
 
@@ -2616,21 +2783,30 @@
    */
   App.prototype._openPlayerForChannel = function (channelId) {
     var self = this;
-    if (self._playerInstance && typeof self._playerInstance.play === 'function') {
-      var url = '';
-      if (self._apiInstance && typeof self._apiInstance.getStreamUrl === 'function') {
-        url = self._apiInstance.getStreamUrl(channelId, 'live');
+    if (!self._playerInstance || typeof self._playerInstance.play !== 'function') return;
+
+    var urls = [];
+    try {
+      if (self._apiInstance && typeof self._apiInstance.getStreamUrls === 'function') {
+        urls = self._apiInstance.getStreamUrls(channelId, 'live');
+      } else if (self._apiInstance && typeof self._apiInstance.getStreamUrl === 'function') {
+        urls = [self._apiInstance.getStreamUrl(channelId, 'live')];
       }
-      if (!url && self._demoMode) {
-        url = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-      }
-      if (url) {
-        var channels = self._demoMode ? self._getDemoChannels() : self._channelsCache;
-        var ch = channels.find(function (c) { return String(c.id) === String(channelId); });
-        self._playerInstance.play(url, { title: (ch && ch.name) || 'Live Channel', poster: (ch && ch.poster) || '', id: channelId, type: 'live' });
-      } else {
-        self._showToast('No stream URL available for this channel.', 'warning');
-      }
+    } catch (e) {
+      console.warn('[App] Error building live stream URL:', e);
+    }
+
+    if (!urls.length && self._demoMode) {
+      urls = ['https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'];
+    }
+
+    if (urls.length > 0) {
+      var channels = self._demoMode ? self._getDemoChannels() : self._channelsCache;
+      var ch = channels.find(function (c) { return String(c.id) === String(channelId); });
+      console.info('[App] Playing channel:', (ch && ch.name), 'URLs:', urls.map(function(u){return u.substring(0,60)+'...';}));
+      self._playerInstance.playWithFallback(urls, { title: (ch && ch.name) || (self._t('live_tv') || 'قناة مباشرة'), poster: (ch && ch.poster) || '', id: channelId, type: 'live' });
+    } else {
+      self._showToast(self._t ? self._t('no_stream_url') : 'لا يوجد رابط بث متاح', 'warning');
     }
   };
 
@@ -2762,7 +2938,7 @@
         var favPoster = favBtn.getAttribute('data-fav-poster');
         var nowFav = self._favoritesInstance.toggle({ id: favId, type: favType, name: favName, poster: favPoster });
         favBtn.classList.toggle('active', nowFav);
-        self._showToast(nowFav ? 'Added to favorites' : 'Removed from favorites', nowFav ? 'success' : 'info');
+        self._showToast(nowFav ? (self._t('added_favorites') || 'تمت الإضافة للمفضلة') : (self._t('removed_favorites') || 'تمت الإزالة من المفضلة'), nowFav ? 'success' : 'info');
         return;
       }
 
@@ -2814,12 +2990,23 @@
    * @param {string} path
    * @returns {string}
    */
-  App.prototype._getImageUrl = function (path) {
-    if (!path) return '';
-    if (path.indexOf('http') === 0 || path.indexOf('//') === 0) return path;
-    var base = Config.getApiBaseUrl();
-    if (!base) return path;
-    return base + path.replace(/^\/+/, '/');
+  App.prototype._getImageUrl = function (imgPath) {
+    if (!imgPath) return '';
+    var p = String(imgPath).trim();
+    if (!p) return '';
+    // Already a full URL — upgrade http to https to avoid mixed-content blocking
+    if (/^https?:\/\//i.test(p)) {
+      return p.replace(/^http:\/\//i, 'https://');
+    }
+    if (/^\/\//i.test(p)) {
+      return 'https:' + p;
+    }
+    // Use API instance server URL first, then Config fallback
+    var base = (this._apiInstance && this._apiInstance._serverUrl) || Config.getApiBaseUrl();
+    if (!base) return p;
+    base = base.replace(/\/+$/, '').replace(/^http:\/\//i, 'https://');
+    if (p.charAt(0) !== '/') p = '/' + p;
+    return base + p;
   };
 
   /**
@@ -2874,6 +3061,214 @@
         break;
     }
     return sorted;
+  };
+
+
+  // ===========================================================================
+  //  SECTION 20 — INTERNATIONALIZATION (Arabic / English)
+  // ===========================================================================
+
+  App.prototype._i18n = {
+    ar: {
+      app_name: 'حمد شو',
+      home: 'الرئيسية',
+      movies: 'أفلام',
+      series: 'مسلسلات',
+      live_tv: 'القنوات المباشرة',
+      search: 'البحث',
+      favorites: 'المفضلة',
+      settings: 'الإعدادات',
+      profile: 'حسابي',
+      sign_in: 'تسجيل الدخول',
+      sign_in_to_start: 'سجّل دخولك لبدء المشاهدة',
+      server_url: 'رابط السيرفر',
+      username: 'اسم المستخدم',
+      password: 'كلمة المرور',
+      remember_me: 'تذكرني',
+      invalid_credentials: 'بيانات الدخول غير صحيحة',
+      connection_failed: 'فشل الاتصال. تحقق من رابط السيرفر.',
+      fill_all_fields: 'يرجى ملء جميع الحقول',
+      trending_now: 'الأكثر رواجاً',
+      recently_added: 'أضيف مؤخراً',
+      popular_series: 'مسلسلات شهيرة',
+      live_channels: 'القنوات المباشرة',
+      sports: 'رياضة',
+      kids: 'أطفال',
+      arabic_content: 'محتوى عربي',
+      english_content: 'محتوى إنجليزي',
+      recommended: 'مقترح لك',
+      continue_watching: 'متابعة المشاهدة',
+      see_all: 'عرض الكل',
+      play_now: 'شاهد الآن',
+      no_content: 'لا يوجد محتوى متاح',
+      no_results: 'لا توجد نتائج',
+      try_different: 'جرب كلمة بحث مختلفة',
+      search_placeholder: 'ابحث عن أفلام، مسلسلات، قنوات...',
+      no_favorites: 'لا توجد مفضلات بعد',
+      tap_heart: 'اضغط على أيقونة القلب لإضافة المحتوى هنا',
+      watch_history: 'سجل المشاهدة',
+      no_history: 'لا يوجد سجل مشاهدة بعد',
+      watched: 'تمت مشاهدته',
+      logout: 'تسجيل الخروج',
+      logout_confirm: 'هل أنت متأكد من تسجيل الخروج؟',
+      logged_out: 'تم تسجيل الخروج بنجاح',
+      account: 'الحساب',
+      player: 'المشغل',
+      appearance: 'المظهر',
+      notifications: 'الإشعارات',
+      storage: 'التخزين',
+      about: 'حول التطبيق',
+      dark_theme: 'الوضع الداكن',
+      toggle_dark_light: 'التبديل بين الوضع الداكن والفاتح',
+      auto_play_next: 'تشغيل الحلقة التالية تلقائياً',
+      auto_play_desc: 'تشغيل الحلقة التالية تلقائياً',
+      streaming_quality: 'جودة البث',
+      push_notifications: 'الإشعارات',
+      receive_updates: 'تلقي تحديثات عن المحتوى الجديد',
+      clear_cache: 'مسح التخزين المؤقت',
+      free_storage: 'تحرير مساحة التخزين',
+      cache_cleared: 'تم مسح التخزين المؤقت',
+      admin_dashboard: 'لوحة الإدارة',
+      admin_desc: 'إعدادات السيرفر والمظهر والتصنيفات',
+      demo_mode: 'وضع تجريبي',
+      demo_welcome: 'مرحباً بك في الوضع التجريبي — استكشف التطبيق بمحتوى نموذجي!',
+      continue_demo: 'المتابعة في الوضع التجريبي',
+      welcome_back: 'مرحباً بعودتك',
+      connected_firebase: 'تم الاتصال عبر فايربيز!',
+      added_favorites: 'تمت الإضافة للمفضلة',
+      removed_favorites: 'تمت الإزالة من المفضلة',
+      no_stream_url: 'لا يوجد رابط بث متاح',
+      all: 'الكل',
+      language: 'اللغة',
+      season: 'الموسم',
+      episode: 'الحلقة',
+      live: 'مباشر',
+      similar_movies: 'أفلام مشابهة',
+      movie_not_found: 'الفيلم غير موجود',
+      series_not_found: 'المسلسل غير موجود',
+      channel_not_found: 'القناة غير موجودة',
+      offline_title: 'أنت غير متصل بالإنترنت',
+      offline_desc: 'تحقق من اتصال الإنترنت وحاول مرة أخرى',
+      try_again: 'حاول مرة أخرى',
+      install_app: 'تثبيت حمد شو',
+      install_desc: 'أضف التطبيق للشاشة الرئيسية لأفضل تجربة',
+      language_changed_ar: 'تم تغيير اللغة إلى العربية',
+      language_changed_en: 'Language changed to English',
+    },
+    en: {
+      app_name: 'Hamad Show',
+      home: 'Home',
+      movies: 'Movies',
+      series: 'Series',
+      live_tv: 'Live TV',
+      search: 'Search',
+      favorites: 'Favorites',
+      settings: 'Settings',
+      profile: 'Profile',
+      sign_in: 'Sign In',
+      sign_in_to_start: 'Sign in to start streaming',
+      server_url: 'Server URL',
+      username: 'Username',
+      password: 'Password',
+      remember_me: 'Remember me',
+      invalid_credentials: 'Invalid credentials. Please check your details.',
+      connection_failed: 'Connection failed. Check your server URL.',
+      fill_all_fields: 'Please fill in all fields.',
+      trending_now: 'Trending Now',
+      recently_added: 'Recently Added',
+      popular_series: 'Popular Series',
+      live_channels: 'Live Channels',
+      sports: 'Sports',
+      kids: 'Kids',
+      arabic_content: 'Arabic Content',
+      english_content: 'English Content',
+      recommended: 'Recommended For You',
+      continue_watching: 'Continue Watching',
+      see_all: 'See All',
+      play_now: 'Play Now',
+      no_content: 'No content available',
+      no_results: 'No results found',
+      try_different: 'Try a different search term.',
+      search_placeholder: 'Search movies, series, channels...',
+      no_favorites: 'No favorites yet',
+      tap_heart: 'Tap the heart icon on any content to add it here.',
+      watch_history: 'Watch History',
+      no_history: 'No watch history yet.',
+      watched: 'Watched',
+      logout: 'Logout',
+      logout_confirm: 'Are you sure you want to log out?',
+      logged_out: 'Logged out successfully.',
+      account: 'Account',
+      player: 'Player',
+      appearance: 'Appearance',
+      notifications: 'Notifications',
+      storage: 'Storage',
+      about: 'About',
+      dark_theme: 'Dark Theme',
+      toggle_dark_light: 'Toggle between dark and light mode',
+      auto_play_next: 'Auto-play Next Episode',
+      auto_play_desc: 'Automatically play the next episode',
+      streaming_quality: 'Streaming Quality',
+      push_notifications: 'Push Notifications',
+      receive_updates: 'Receive updates about new content',
+      clear_cache: 'Clear Cache',
+      free_storage: 'Free up storage space',
+      cache_cleared: 'Cache cleared successfully.',
+      admin_dashboard: 'Admin Dashboard',
+      admin_desc: 'Configure server, appearance, and categories',
+      demo_mode: 'Demo Mode',
+      demo_welcome: 'Welcome to Demo Mode — explore with sample content!',
+      continue_demo: 'Continue in Demo Mode',
+      welcome_back: 'Welcome back',
+      connected_firebase: 'Connected via Firebase!',
+      added_favorites: 'Added to favorites',
+      removed_favorites: 'Removed from favorites',
+      no_stream_url: 'No stream URL available.',
+      all: 'All',
+      language: 'Language',
+      season: 'Season',
+      episode: 'Episode',
+      live: 'LIVE',
+      similar_movies: 'Similar Movies',
+      movie_not_found: 'Movie not found',
+      series_not_found: 'Series not found',
+      channel_not_found: 'Channel not found',
+      offline_title: "You're Offline",
+      offline_desc: 'Check your internet connection and try again.',
+      try_again: 'Try Again',
+      install_app: 'Install Hamad Show',
+      install_desc: 'Add to home screen for the best experience',
+      language_changed_ar: 'Language changed to Arabic',
+      language_changed_en: 'Language changed to English',
+      program_guide: 'دليل البرامج',
+      watch_now: 'شاهد الآن',
+      episode_play_error: 'تعذر تشغيل الحلقة',
+    }
+  };
+
+  App.prototype._t = function (key) {
+    var lang = (this._settings && this._settings.language) || 'ar';
+    var dict = this._i18n && this._i18n[lang];
+    if (!dict) dict = this._i18n && this._i18n['ar'];
+    return (dict && dict[key]) || key;
+  };
+
+  App.prototype._setLanguage = function (lang) {
+    var self = this;
+    self._settings.language = lang;
+    Config.saveSettings(self._settings);
+    var isArabic = lang === 'ar';
+    document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.style.setProperty('--font-primary', isArabic
+      ? "'Noto Sans Arabic', 'Inter', 'Segoe UI', system-ui, sans-serif"
+      : "'Inter', 'Segoe UI', system-ui, sans-serif");
+    document.documentElement.style.setProperty('--font-heading', isArabic
+      ? "'Noto Sans Arabic', 'Inter', 'Segoe UI', system-ui, sans-serif"
+      : "'Inter', 'Segoe UI', system-ui, sans-serif");
+    var headerName = document.getElementById('header-app-name');
+    if (headerName) headerName.textContent = self._t('app_name');
+    self._renderHomePage();
   };
 
   // ===========================================================================

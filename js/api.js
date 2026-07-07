@@ -806,7 +806,9 @@
       throw new Error('Invalid stream type "' + type + '". Expected: ' + validTypes.join(', '));
     }
 
-    var ext = (extension || 'm3u8').replace(/^\./, '');
+    // For live streams, default to m3u8 (HLS); for VOD, use provided extension or mp4
+    var defaultExt = type === 'live' ? 'm3u8' : 'mp4';
+    var ext = (extension || defaultExt).replace(/^\./, '');
     var base = this._serverUrl.replace(/\/+$/, '');
 
     return (
@@ -815,6 +817,38 @@
       encodeURIComponent(this._password) + '/' +
       encodeURIComponent(streamId) + '.' + ext
     );
+  };
+
+  /**
+   * Build multiple possible stream URLs for fallback尝试.
+   * Returns an array of URLs to try in order.
+   *
+   * @param  {number|string} streamId
+   * @param  {string}        type       'live', 'movie', 'series'
+   * @param  {string}        [extension]
+   * @returns {string[]}
+   */
+  API.prototype.getStreamUrls = function (streamId, type, extension) {
+    var urls = [];
+    if (type === 'live') {
+      // Try m3u8 first (HLS), then ts
+      urls.push(this.getStreamUrl(streamId, 'live', 'm3u8'));
+      urls.push(this.getStreamUrl(streamId, 'live', 'ts'));
+    } else if (type === 'movie') {
+      var ext = (extension || 'mp4').replace(/^\./, '');
+      urls.push(this.getStreamUrl(streamId, 'movie', ext));
+      // If not mp4/m4v/mov, also try mp4 as fallback
+      if (ext !== 'mp4' && ext !== 'm4v' && ext !== 'mov') {
+        urls.push(this.getStreamUrl(streamId, 'movie', 'mp4'));
+      }
+    } else if (type === 'series') {
+      var ext2 = (extension || 'mp4').replace(/^\./, '');
+      urls.push(this.getStreamUrl(streamId, 'series', ext2));
+      if (ext2 !== 'mp4' && ext2 !== 'm4v' && ext2 !== 'mov') {
+        urls.push(this.getStreamUrl(streamId, 'series', 'mp4'));
+      }
+    }
+    return urls;
   };
 
   /**

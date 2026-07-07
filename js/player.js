@@ -1919,6 +1919,75 @@
     // =======================================================================
 
     /**
+     * Play a stream with fallback URLs — tries each URL in order until one works.
+     * @param {string[]} urls      Array of stream URLs to try.
+     * @param {Object}   metadata  Playback metadata.
+     */
+    async playWithFallback(urls, metadata) {
+      if (!Array.isArray(urls) || urls.length === 0) {
+        console.error('[Player] playWithFallback() requires a non-empty URLs array.');
+        this.emit('error', { message: 'No stream URLs provided.' });
+        return;
+      }
+
+      const self = this;
+      const tryNext = async (index) => {
+        if (index >= urls.length) {
+          console.error('[Player] All stream URLs failed.');
+          self._showLoading(false);
+          self.emit('error', { message: 'All stream URLs failed.' });
+          return;
+        }
+
+        const url = urls[index];
+        console.info('[Player] Trying URL ' + (index + 1) + '/' + urls.length + ':', url.substring(0, 80) + '...');
+
+        // Timeout — if no data loads in 15s, try next URL
+        let timedOut = false;
+        const timeout = setTimeout(() => {
+          timedOut = true;
+          console.warn('[Player] URL ' + (index + 1) + ' timed out, trying next...');
+          self._destroyHLS();
+          self._video.removeAttribute('src');
+          self._video.load();
+          tryNext(index + 1);
+        }, 15000);
+
+        // Clear timeout when data starts loading
+        const onData = () => {
+          if (timedOut) return;
+          clearTimeout(timeout);
+          console.info('[Player] URL ' + (index + 1) + ' — data loading successfully.');
+        };
+        self._video.addEventListener('loadeddata', onData, { once: true });
+
+        // For HLS, clear timeout on manifest parse
+        const originalPlay = self.play.bind(self);
+        try {
+          await originalPlay(url, metadata);
+          // If HLS, listen for manifest parsed
+          if (self._isHLS(url) && self._hls) {
+            self._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              if (timedOut) return;
+              clearTimeout(timeout);
+              console.info('[Player] HLS manifest parsed successfully.');
+            });
+          }
+        } catch (e) {
+          if (timedOut) return;
+          clearTimeout(timeout);
+          console.warn('[Player] Exception for URL ' + (index + 1) + ':', e);
+          self._destroyHLS();
+          self._video.removeAttribute('src');
+          self._video.load();
+          tryNext(index + 1);
+        }
+      };
+
+      tryNext(0);
+    }
+
+    /**
      * Load and play a stream URL.
      *
      * @param {string}      url       Stream URL (can be .m3u8, .mp4, etc.)
@@ -1999,8 +2068,13 @@
       } else {
         // Direct video source
         this._video.src = url;
+        this._video.addEventListener('loadeddata', () => {
+          console.info('[Player] Video data loaded successfully.');
+          this._showLoading(false);
+        }, { once: true });
         this._video.play().catch(() => {
           // Autoplay may be blocked
+          console.warn('[Player] Autoplay blocked or video error.');
           this._showLoading(false);
         });
       }
