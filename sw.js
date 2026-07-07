@@ -1,68 +1,215 @@
-const CACHE_NAME="hammadshow-v7";
-const PRECACHE_URLS=[
-  "./","./index.html","./setup.html","./style.css","./app.js","./manifest.json",
-  "./icons/icon-192.png","./icons/icon-512.png",
-  "./icons/icon-maskable-192.png","./icons/icon-maskable-512.png",
-  "https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js",
-  "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
-  "https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"
+const CACHE_NAME = 'nasr-live-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/css/app.css',
+  '/manifest.json',
+  '/lang/ar.json',
+  '/lang/en.json',
+  '/js/utils/i18n.js',
+  '/js/utils/crypto.js',
+  '/js/utils/focus-engine.js',
+  '/js/services/database.js',
+  '/js/services/xtream-api.js',
+  '/js/services/auth.js',
+  '/js/components/ui.js',
+  '/js/components/cards.js',
+  '/js/components/epg.js',
+  '/js/player/player.js',
+  '/js/pages/home.js',
+  '/js/pages/live-tv.js',
+  '/js/pages/movies.js',
+  '/js/pages/series.js',
+  '/js/pages/favorites.js',
+  '/js/pages/search.js',
+  '/js/pages/settings.js',
+  '/js/app.js'
 ];
 
-self.addEventListener("install",e=>{
-  e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(PRECACHE_URLS).catch(err=>{console.warn("[SW] Precache miss:",err)})));
+const DYNAMIC_CACHE = 'nasr-live-dynamic-v1';
+const IMAGE_CACHE = 'nasr-live-images-v1';
+const MAX_DYNAMIC_ENTRIES = 100;
+const MAX_IMAGE_ENTRIES = 200;
+
+// Install - cache static assets
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('Some static assets failed to cache:', err);
+        return cache.addAll(STATIC_ASSETS.filter((url) => url === '/'));
+      });
+    })
+  );
   self.skipWaiting();
 });
 
-self.addEventListener("activate",e=>{
-  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));
+// Activate - clean old caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((name) => name !== CACHE_NAME && name !== DYNAMIC_CACHE && name !== IMAGE_CACHE)
+          .map((name) => caches.delete(name))
+      );
+    })
+  );
   self.clients.claim();
 });
 
-self.addEventListener("fetch",e=>{
-  const u=new URL(e.request.url);
-  const isStream=u.pathname.includes("player_api.php")||u.pathname.includes("/live/")||u.pathname.includes("/movie/")||u.pathname.includes("/series/");
-  const isFirebase=u.hostname.includes("firebaseio.com")||u.hostname.includes("googleapis.com");
+// Fetch - network first for API, cache first for static
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  const reqUrl = event.request.url;
 
-  // Never cache streams and API calls
-  if(isStream)return;
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') return;
 
-  // Firebase: network-first (realtime data)
-  if(isFirebase){
-    e.respondWith(fetch(e.request).then(r=>{
-      if(r.ok){const cl=r.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,cl))}
-      return r;
-    }).catch(()=>caches.match(e.request)));
+  // Skip Firebase and cross-origin API requests
+  if (url.hostname.includes('firebaseio.com') ||
+      url.hostname.includes('googleapis.com') ||
+      url.hostname.includes('firebaseapp.com')) {
     return;
   }
 
-  // CDN libs: stale-while-revalidate
-  const isCDN=u.hostname.includes("cdn.jsdelivr.net")||u.hostname.includes("gstatic.com");
-  if(isCDN){
-    e.respondWith(caches.match(e.request).then(cached=>{
-      const fetchPromise=fetch(e.request).then(r=>{
-        if(r.ok){const cl=r.clone();caches.open(CACHE_NAME).then(ca=>ca.put(e.request,cl))}
-        return r;
-      }).catch(()=>cached);
-      return cached||fetchPromise;
-    }));
+  // Image caching strategy
+  if (reqUrl.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)/i)) {
+    event.respondWith(cacheImage(event.request));
     return;
   }
 
-  // App assets: cache-first
-  if(u.origin===self.location.origin){
-    e.respondWith(caches.match(e.request).then(cached=>{
-      if(cached)return cached;
-      return fetch(e.request).then(r=>{
-        if(r.ok){const cl=r.clone();caches.open(CACHE_NAME).then(ca=>ca.put(e.request,cl))}
-        return r;
-      }).catch(()=>new Response("Offline",{status:503}));
-    }));
+  // Xtream API / stream URLs - network only, no cache
+  if (url.pathname.includes('player_api') ||
+      url.pathname.includes('/live/') ||
+      url.pathname.includes('/movie/') ||
+      url.pathname.includes('/series/')) {
+    event.respondWith(fetch(event.request).catch(() => new Response('Offline', {status: 503})));
     return;
   }
 
-  // Everything else: network with cache fallback
-  e.respondWith(fetch(e.request).then(r=>{
-    if(r.ok){const cl=r.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,cl))}
-    return r;
-  }).catch(()=>caches.match(e.request)));
+  // Static assets - cache first, then network
+  if (url.origin === self.location.origin) {
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }
+
+  // Everything else - network first
+  event.respondWith(networkFirst(event.request));
 });
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    // Return offline page for navigation requests
+    if (request.mode === 'navigate') {
+      const cached = await caches.match('/index.html');
+      if (cached) return cached;
+    }
+    return new Response('Offline', {status: 503});
+  }
+}
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, response.clone());
+      trimCache(DYNAMIC_CACHE, MAX_DYNAMIC_ENTRIES);
+    }
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response('Offline', {status: 503});
+  }
+}
+
+async function cacheImage(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(IMAGE_CACHE);
+      cache.put(request, response.clone());
+      trimCache(IMAGE_CACHE, MAX_IMAGE_ENTRIES);
+    }
+    return response;
+  } catch (err) {
+    return new Response('', {status: 404});
+  }
+}
+
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxEntries) {
+    const deleteCount = keys.length - maxEntries;
+    const deletePromises = keys.slice(0, deleteCount).map((key) => cache.delete(key));
+    await Promise.all(deletePromises);
+  }
+}
+
+// Push notification handler
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'NASR LIVE';
+  const options = {
+    body: data.body || 'New content available',
+    icon: '/assets/icons/icon-192.png',
+    badge: '/assets/icons/icon-72.png',
+    vibrate: [100, 50, 100],
+    data: { url: data.url || '/' }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({type: 'window', includeUncontrolled: true}).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});
+
+// Background sync
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-favorites') {
+    event.waitUntil(syncFavorites());
+  }
+  if (event.tag === 'sync-history') {
+    event.waitUntil(syncHistory());
+  }
+});
+
+async function syncFavorites() {
+  // Sync local favorites with server when back online
+  console.log('Syncing favorites...');
+}
+
+async function syncHistory() {
+  // Sync watch history with server when back online
+  console.log('Syncing watch history...');
+}
