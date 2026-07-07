@@ -26,7 +26,7 @@
   // ---------------------------------------------------------------------------
 
   /** Path to the service worker file (relative to the app root). */
-  const SW_PATH = '/sw.js';
+  const SW_PATH = 'service-worker.js';
 
   /** CSS class for the offline overlay page. */
   const OFFLINE_PAGE_CLASS = 'offline-page';
@@ -145,8 +145,12 @@
         this.emit('installed', {});
       });
 
-      // --- Service Worker ---
-      this.registerServiceWorker();
+      // --- Service Worker (skip if index.html already registered one) ---
+      if (navigator.serviceWorker.controller) {
+        console.info('[OfflineManager] SW already active, skipping registration.');
+      } else {
+        this.registerServiceWorker();
+      }
 
       // --- Periodic SW update check ---
       this._updateCheckTimer = setInterval(() => {
@@ -249,9 +253,7 @@
       }
 
       try {
-        const registration = await navigator.serviceWorker.register(SW_PATH, {
-          scope: '/',
-        });
+        const registration = await navigator.serviceWorker.register(SW_PATH);
 
         this._swRegistration = registration;
 

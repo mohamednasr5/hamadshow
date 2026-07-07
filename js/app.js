@@ -163,11 +163,13 @@
     self._searchInstance = new SearchManager();
     self._searchInstance.init();
 
-    //    Player
-    self._playerInstance = new Player();
+    //    Player (container must be resolved BEFORE construction)
     var playerContainer = document.getElementById('player-container') || document.querySelector('.player-container');
     if (playerContainer) {
-      self._playerInstance.init(playerContainer);
+      self._playerInstance = new Player(playerContainer);
+    } else {
+      console.warn('[HamadShow] Player container not found — player disabled.');
+      self._playerInstance = null;
     }
 
     //    Admin
