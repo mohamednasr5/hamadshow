@@ -1,113 +1,15 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   hammadshow — Service Worker
-   من برمجة وتطوير المهندس محمد حماد
-   ═══════════════════════════════════════════════════════════════════════ */
-
-const CACHE_NAME = "hammadshow-v2";
-
-const PRECACHE_URLS = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
-  "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js",
-  "https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js",
-];
-
-// Install — precache core assets
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_URLS);
-    })
-  );
-  self.skipWaiting();
-});
-
-// Activate — clean old caches
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((names) =>
-      Promise.all(
-        names
-          .filter((n) => n !== CACHE_NAME)
-          .map((n) => caches.delete(n))
-      )
-    )
-  );
-  self.clients.claim();
-});
-
-// Fetch — network first for API, cache first for assets
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-
-  // Firebase Realtime Database — always network
-  if (url.hostname.includes("firebaseio.com")) {
-    return;
+const CACHE_NAME="hammadshow-v3";
+const PRECACHE_URLS=["./","./index.html","./style.css","./app.js","./manifest.json","./icons/icon-192.png","./icons/icon-512.png","https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js","https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js","https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"];
+self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(PRECACHE_URLS)));self.skipWaiting()});
+self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(n=>Promise.all(n.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim()});
+self.addEventListener("fetch",e=>{
+  const u=new URL(e.request.url);
+  if(u.hostname.includes("firebaseio.com")||u.pathname.includes("player_api.php")||u.pathname.includes("/live/")||u.pathname.includes("/movie/")||u.pathname.includes("/series/"))return;
+  if(u.hostname.includes("gstatic.com")||u.hostname.includes("googleapis.com")||u.hostname.includes("cdn.jsdelivr.net")){
+    e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{if(r.ok){const cl=r.clone();caches.open(CACHE_NAME).then(ca=>ca.put(e.request,cl))}return r})));return;
   }
-
-  // Xtream Codes servers — always network
-  if (url.pathname.includes("player_api.php") ||
-      url.pathname.includes("/live/") ||
-      url.pathname.includes("/movie/") ||
-      url.pathname.includes("/series/")) {
-    return;
+  if(u.origin===self.location.origin){
+    e.respondWith(caches.open(CACHE_NAME).then(c=>c.match(e.request).then(ca=>{const fp=fetch(e.request).then(r=>{if(r.ok)c.put(e.request,r.clone());return r}).catch(()=>ca);return ca||fp})));return;
   }
-
-  // Firebase SDK / HLS.js files — cache first
-  if (url.hostname.includes("gstatic.com") ||
-      url.hostname.includes("googleapis.com") ||
-      url.hostname.includes("cdn.jsdelivr.net")) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(event.request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
-  // App assets — stale-while-revalidate
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) =>
-        cache.match(event.request).then((cached) => {
-          const fetchPromise = fetch(event.request)
-            .then((response) => {
-              if (response.ok) {
-                cache.put(event.request, response.clone());
-              }
-              return response;
-            })
-            .catch(() => cached);
-          return cached || fetchPromise;
-        })
-      )
-    );
-    return;
-  }
-
-  // Everything else — network first, fallback to cache
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
+  e.respondWith(fetch(e.request).then(r=>{if(r.ok){const cl=r.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,cl))}return r}).catch(()=>caches.match(e.request)));
 });

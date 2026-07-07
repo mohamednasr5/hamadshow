@@ -1,1682 +1,642 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   hammadshow — App JavaScript (with Xtream Codes Support)
+   hammadshow v2 — App JS (Xtream Only + PiP Player + Screenshot)
    من برمجة وتطوير المهندس محمد حماد
    ═══════════════════════════════════════════════════════════════════════ */
 
-// ── FIREBASE CONFIG ─────────────────────────────────────────────────
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAfImJ7x3pe0GYSrl7hDz_sMb_GarcpJ9E",
-  authDomain: "nasr-live.firebaseapp.com",
-  databaseURL: "https://nasr-live-default-rtdb.firebaseio.com",
-  projectId: "nasr-live",
-  storageBucket: "nasr-live.firebasestorage.app",
-  messagingSenderId: "215945991656",
-  appId: "1:215945991656:web:41ea1faa18496ff86cc05d",
-};
-
 // ── TRANSLATIONS ─────────────────────────────────────────────────────
-const i18n = {
-  ar: {
-    appName: "hammadshow",
-    developer: "من برمجة وتطوير المهندس محمد حماد",
-    home: "الرئيسية",
-    categories: "التصنيفات",
-    favorites: "المفضلة",
-    settings: "الإعدادات",
-    search: "بحث...",
-    liveTV: "بث مباشر",
-    allChannels: "جميع القنوات",
-    noChannels: "لا توجد قنوات متاحة",
-    noChannelsSub: "سيتم عرض القنوات عند إضافتها من لوحة التحكم",
-    noFavorites: "لا توجد عناصر في المفضلة",
-    noFavoritesSub: "أضف قنواك المفضلة للوصول السريع",
-    welcome: "مرحباً بك في hammadshow",
-    welcomeSub: "استمتع بأفضل تجربة بث مباشر",
-    featured: "مميز",
-    viewAll: "عرض الكل",
-    channelCount: "قناة",
-    channels: "قنوات",
-    language: "اللغة",
-    arabic: "العربية",
-    english: "English",
-    version: "الإصدار",
-    availableChannels: "القنوات المتاحة",
-    categoriesCount: "التصنيفات",
-    appSettings: "إعدادات التطبيق",
-    developerInfo: "معلومات المطور",
-    followUs: "تابعنا",
-    about: "حول التطبيق",
-    aboutText: "hammadshow هو تطبيق بث مباشر متكامل يدعم ربط سيرفرات Xtream Codes مع دعم كامل للغة العربية والإنجليزية.",
-    aboutTextEn: "hammadshow is a comprehensive streaming app that supports Xtream Codes servers with full Arabic and English language support.",
-    allRightsReserved: "جميع الحقوق محفوظة",
-    installApp: "تثبيت التطبيق",
-    installSub: "أضف hammadshow إلى شاشتك الرئيسية",
-    installBtn: "تثبيت",
-    developerName: "المهندس محمد حماد",
-    developerRole: "مبرمج ومطور تطبيقات",
-    back: "رجوع",
-    close: "إغلاق",
-    nowPlaying: "يعمل الآن",
-    // Xtream Codes translations
-    xtreamCodes: "Xtream Codes",
-    xtreamLogin: "تسجيل دخول Xtream Codes",
-    xtreamUrl: "رابط السيرفر",
-    xtreamUrlPlaceholder: "http://example.com:8080",
-    xtreamUser: "اسم المستخدم",
-    xtreamUserPlaceholder: "username",
-    xtreamPass: "كلمة المرور",
-    xtreamPassPlaceholder: "password",
-    xtreamConnect: "اتصال",
-    xtreamDisconnect: "قطع الاتصال",
-    xtreamConnecting: "جاري الاتصال...",
-    xtreamConnected: "متصل بالسيرفر",
-    xtreamDisconnected: "غير متصل",
-    xtreamError: "فشل الاتصال — تحقق من البيانات",
-    xtreamServerInfo: "معلومات السيرفر",
-    xtreamStatus: "الحالة",
-    xtreamActive: "نشط",
-    xtreamExpired: "منتهي الصلاحية",
-    xtreamExpiry: "تاريخ الانتهاء",
-    xtreamMaxConn: "الحد الأقصى للاتصالات",
-    xtreamActiveConn: "الاتصالات النشطة",
-    dataSource: "مصدر البيانات",
-    dataSourceFirebase: "Firebase",
-    dataSourceXtream: "Xtream Codes",
-    live: "مباشر",
-    movies: "أفلام",
-    series: "مسلسلات",
-    noXtream: "لم يتم الاتصال بسيرفر Xtream",
-    noXtreamSub: "اذهب إلى الإعدادات لتسجيل الدخول",
-    xtreamLoading: "جاري تحميل المحتوى...",
-    episode: "الحلقة",
-    season: "الموسم",
-    episodes: "الحلقات",
-    seasons: "المواسم",
-    play: "تشغيل",
-    year: "السنة",
-    rating: "التقييم",
-    genre: "النوع",
-    added: "أُضيف",
-    noEpisodes: "لا توجد حلقات متاحة",
-  },
-  en: {
-    appName: "hammadshow",
-    developer: "Developed by Engineer Mohamed Hammad",
-    home: "Home",
-    categories: "Categories",
-    favorites: "Favorites",
-    settings: "Settings",
-    search: "Search...",
-    liveTV: "Live TV",
-    allChannels: "All Channels",
-    noChannels: "No channels available",
-    noChannelsSub: "Channels will appear once added from the control panel",
-    noFavorites: "No favorites yet",
-    noFavoritesSub: "Add your favorite channels for quick access",
-    welcome: "Welcome to hammadshow",
-    welcomeSub: "Enjoy the best streaming experience",
-    featured: "Featured",
-    viewAll: "View All",
-    channelCount: "Channels",
-    channels: "Channels",
-    language: "Language",
-    arabic: "العربية",
-    english: "English",
-    version: "Version",
-    availableChannels: "Available Channels",
-    categoriesCount: "Categories",
-    appSettings: "App Settings",
-    developerInfo: "Developer Info",
-    followUs: "Follow Us",
-    about: "About",
-    aboutText: "hammadshow هو تطبيق بث مباشر متكامل يدعم ربط سيرفرات Xtream Codes مع دعم كامل للغة العربية والإنجليزية.",
-    aboutTextEn: "hammadshow is a comprehensive streaming app that supports Xtream Codes servers with full Arabic and English language support.",
-    allRightsReserved: "All rights reserved",
-    installApp: "Install App",
-    installSub: "Add hammadshow to your home screen",
-    installBtn: "Install",
-    developerName: "Engineer Mohamed Hammad",
-    developerRole: "App Developer",
-    back: "Back",
-    close: "Close",
-    nowPlaying: "Now Playing",
-    // Xtream Codes translations
-    xtreamCodes: "Xtream Codes",
-    xtreamLogin: "Xtream Codes Login",
-    xtreamUrl: "Server URL",
-    xtreamUrlPlaceholder: "http://example.com:8080",
-    xtreamUser: "Username",
-    xtreamUserPlaceholder: "username",
-    xtreamPass: "Password",
-    xtreamPassPlaceholder: "password",
-    xtreamConnect: "Connect",
-    xtreamDisconnect: "Disconnect",
-    xtreamConnecting: "Connecting...",
-    xtreamConnected: "Connected to server",
-    xtreamDisconnected: "Disconnected",
-    xtreamError: "Connection failed — check your credentials",
-    xtreamServerInfo: "Server Info",
-    xtreamStatus: "Status",
-    xtreamActive: "Active",
-    xtreamExpired: "Expired",
-    xtreamExpiry: "Expiry Date",
-    xtreamMaxConn: "Max Connections",
-    xtreamActiveConn: "Active Connections",
-    dataSource: "Data Source",
-    dataSourceFirebase: "Firebase",
-    dataSourceXtream: "Xtream Codes",
-    live: "Live",
-    movies: "Movies",
-    series: "Series",
-    noXtream: "Not connected to Xtream server",
-    noXtreamSub: "Go to Settings to login",
-    xtreamLoading: "Loading content...",
-    episode: "Episode",
-    season: "Season",
-    episodes: "Episodes",
-    seasons: "Seasons",
-    play: "Play",
-    year: "Year",
-    rating: "Rating",
-    genre: "Genre",
-    added: "Added",
-    noEpisodes: "No episodes available",
-  },
-};
+const i18n={
+ar:{
+  live:"بث مباشر",movies:"أفلام",series:"مسلسلات",favorites:"المفضلة",
+  history:"المشاهدات",recent:"مضاف حديث",search:"بحث...",
+  noChannels:"لا توجد قنوات",noFavs:"لا توجد عناصر في المفضلة",
+  noFavsSub:"أضف عناصرك المفضلة",noHistory:"لا يوجد سجل مشاهدات",
+  noHistorySub:"ستظهر هنا القنوات والمقاطع التي تشاهدها",
+  noRecent:"لا يوجد محتوى مضاف حديثاً",
+  watchAll:"عرض الكل",channel:"قناة",channels:"قنوات",
+  allChannels:"جميع القنوات",episode:"الحلقة",season:"الموسم",
+  episodes:"حلقات",seasons:"مواسم",back:"رجوع",close:"إغلاق",
+  settings:"الإعدادات",language:"اللغة",arabic:"العربية",english:"English",
+  xtreamCodes:"Xtream Codes",xtreamUrl:"رابط السيرفر",
+  xtreamUrlPh:"http://example.com:8080",xtreamUser:"اسم المستخدم",
+  xtreamUserPh:"username",xtreamPass:"كلمة المرور",xtreamPassPh:"password",
+  connect:"اتصال",disconnect:"قطع الاتصال",connecting:"جاري الاتصال...",
+  connected:"متصل",error:"فشل الاتصال",status:"الحالة",
+  active:"نشط",expired:"منتهي",expiry:"انتهاء في",maxConn:"أقصى اتصال",
+  activeConn:"اتصال نشط",about:"حول",developer:"من برمجة وتطوير المهندس محمد حماد",
+  devName:"المهندس محمد حماد",devRole:"مبرمج ومطور تطبيقات",
+  followUs:"تابعنا",version:"الإصدار",clearHistory:"مسح السجل",
+  today:"اليوم",yesterday:"أمس",daysAgo:"منذ يوم",minsAgo:"منذ دقيقة",
+},
+en:{
+  live:"Live TV",movies:"Movies",series:"Series",favorites:"Favorites",
+  history:"Watched",recent:"Recently Added",search:"Search...",
+  noChannels:"No channels available",noFavs:"No favorites yet",
+  noFavsSub:"Add your favorite items",noHistory:"No watch history",
+  noHistorySub:"Channels and videos you watch will appear here",
+  noRecent:"No recently added content",
+  watchAll:"View All",channel:"channel",channels:"channels",
+  allChannels:"All Channels",episode:"Episode",season:"Season",
+  episodes:"Episodes",seasons:"Seasons",back:"Back",close:"Close",
+  settings:"Settings",language:"Language",arabic:"العربية",english:"English",
+  xtreamCodes:"Xtream Codes",xtreamUrl:"Server URL",
+  xtreamUrlPh:"http://example.com:8080",xtreamUser:"Username",
+  xtreamUserPh:"username",xtreamPass:"Password",xtreamPassPh:"password",
+  connect:"Connect",disconnect:"Disconnect",connecting:"Connecting...",
+  connected:"Connected",error:"Connection failed",status:"Status",
+  active:"Active",expired:"Expired",expiry:"Expires",maxConn:"Max Conn.",
+  activeConn:"Active Conn.",about:"About",developer:"Developed by Engineer Mohamed Hammad",
+  devName:"Engineer Mohamed Hammad",devRole:"App Developer",
+  followUs:"Follow Us",version:"Version",clearHistory:"Clear History",
+  today:"Today",yesterday:"Yesterday",daysAgo:"days ago",minsAgo:"min ago",
+}};
 
 // ── SVG ICONS ───────────────────────────────────────────────────────
-const ICONS = {
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-  grid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>`,
-  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
-  heartFilled: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
-  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
-  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
-  play: `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
-  x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
-  arrowLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
-  arrowRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19 7-7-7-7"/><path d="M5 12h14"/></svg>`,
-  globe: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`,
-  tv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>`,
-  heartEmpty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
-  info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
-  star: `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  facebook: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
-  download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
-  link: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
-  film: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>`,
-  clapperboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>`,
-  wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
-  wifiOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
-  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
-  loader: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+const I={
+  tv:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>`,
+  film:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`,
+  clap:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>`,
+  heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  heartF:`<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+  play:`<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+  pause:`<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`,
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+  arrowL:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
+  arrowR:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19 7-7-7-7"/><path d="M5 12h14"/></svg>`,
+  star:`<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+  wifi:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
+  wifiOff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`,
+  loader:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+  globe:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`,
+  info:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
+  facebook:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
 };
 
-// ── APP STATE ───────────────────────────────────────────────────────
-const state = {
-  locale: "ar",
-  activeTab: "home",
-  selectedCategory: null,
-  searchQuery: "",
-  settings: {},
-  categories: [],
-  allChannels: [],
-  banners: [],
-  favorites: new Set(),
-  currentChannel: null,
-  playerOpen: false,
-  loading: true,
-  unsubs: [],
-  deferredPrompt: null,
-  // Xtream Codes state
-  dataSource: "firebase",
-  xtreamConfig: { url: "", user: "", pass: "" },
-  xtreamConnected: false,
-  xtreamConnecting: false,
-  xtreamInfo: null,
-  xtreamCategories: { live: [], vod: [], series: [] },
-  xtreamStreams: { live: [], vod: [], series: [] },
-  xtreamContentType: "live",
-  xtreamLoading: false,
+// ── STATE ───────────────────────────────────────────────────────────
+const S={
+  locale:"ar",activeTab:"live",selectedCat:null,searchQ:"",
+  xtConfig:{url:"",user:"",pass:""},xtConnected:false,xtConnecting:false,
+  xtInfo:null,xtServerInfo:null,
+  xtCats:{live:[],vod:[],series:[]},xtStreams:{live:[],vod:[],series:[]},
+  xtLoading:false,
+  favs:new Set(),history:[],maxHistory:50,
+  current:null,playerOpen:false,settingsOpen:false,
+  controlsTimer:null,controlsVisible:false,
+  hlsInst:null,
 };
 
 // ── HELPERS ─────────────────────────────────────────────────────────
-function t(key) { return i18n[state.locale][key] || key; }
-function isRTL() { return state.locale === "ar"; }
-function escHtml(str) {
-  if (!str) return "";
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
+const t=k=>i18n[S.locale][k]||k;
+const isRTL=()=>S.locale==="ar";
+const esc=s=>{if(!s)return"";const d=document.createElement("div");d.textContent=s;return d.innerHTML};
+function save(k,v){localStorage.setItem("hs-"+k,JSON.stringify(v))}
+function load(k,d){try{const v=localStorage.getItem("hs-"+k);return v?JSON.parse(v):d}catch(e){return d}}
+function saveFavs(){save("favs",[...S.favs])}
+function loadFavs(){S.favs=new Set(load("favs",[]))}
+function saveHistory(){save("hist",S.history)}
+function loadHistory(){S.history=load("hist",[])}
+function addHistory(item){
+  S.history=S.history.filter(h=>h.id!==item.id);
+  S.history.unshift({id:item.id,name:item.name,logo:item.logo||"",type:item.type,url:item.url,urlTs:item.urlTs||"",ts:Date.now()});
+  if(S.history.length>S.maxHistory)S.history=S.history.slice(0,S.maxHistory);
+  saveHistory();
 }
-function getChannelName(ch) {
-  if (ch._xtream) return ch.name || "";
-  return isRTL() && ch.nameAr ? ch.nameAr : ch.name;
-}
-function getCategoryName(cat) {
-  if (cat._xtream) return cat.category_name || cat.name || "";
-  return isRTL() ? (cat.nameAr || cat.name) : (cat.nameEn || cat.name);
-}
-function getChannelDesc(ch) {
-  if (ch._xtream) return ch.plot || ch.name || "";
-  return isRTL() && ch.descriptionAr ? ch.descriptionAr : (ch.description || "");
-}
+function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/60000),h=Math.floor(d/3600000),dy=Math.floor(d/86400000);if(m<1)return" ";if(m<60)return m+" "+t("minsAgo");if(h<24)return t("yesterday");if(dy<7)return dy+" "+t("daysAgo");return new Date(ts).toLocaleDateString(isRTL()?"ar-EG":"en-US")}
+function formatTime(s){if(isNaN(s)||!isFinite(s))return"0:00";const m=Math.floor(s/60),sec=Math.floor(s%60);return m+":"+(sec<10?"0":"")+sec}
 
-function saveFavorites() {
-  localStorage.setItem("hs-favs", JSON.stringify([...state.favorites]));
+// ── XTREAM API ──────────────────────────────────────────────────────
+function xtBase(){let u=S.xtConfig.url.trim().replace(/\/+$/,"");if(!u.startsWith("http"))u="http://"+u;return u}
+async function xtFetch(action){
+  const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
+  let ep=`${b}/player_api.php?username=${u}&password=${p}`;if(action)ep+=`&action=${action}`;
+  const r=await fetch(ep);if(!r.ok)throw new Error(r.status);return r.json();
 }
-function loadFavorites() {
-  try {
-    const s = localStorage.getItem("hs-favs");
-    if (s) state.favorites = new Set(JSON.parse(s));
-  } catch(e) {}
-}
-function saveLocale() {
-  localStorage.setItem("hs-locale", state.locale);
-}
-function loadLocale() {
-  const s = localStorage.getItem("hs-locale");
-  if (s === "en" || s === "ar") state.locale = s;
-}
-function saveXtreamConfig() {
-  localStorage.setItem("hs-xtream", JSON.stringify(state.xtreamConfig));
-}
-function loadXtreamConfig() {
-  try {
-    const s = localStorage.getItem("hs-xtream");
-    if (s) state.xtreamConfig = JSON.parse(s);
-  } catch(e) {}
-}
-function saveDataSource() {
-  localStorage.setItem("hs-datasource", state.dataSource);
-}
-function loadDataSource() {
-  const s = localStorage.getItem("hs-datasource");
-  if (s === "firebase" || s === "xtream") state.dataSource = s;
-}
-
-function toggleFav(id) {
-  if (state.favorites.has(id)) state.favorites.delete(id);
-  else state.favorites.add(id);
-  saveFavorites();
-  renderAll();
-}
-
-// Get active channels based on data source
-function getActiveChannels() {
-  if (state.dataSource === "xtream" && state.xtreamConnected) {
-    return state.xtreamStreams[state.xtreamContentType] || [];
-  }
-  return state.allChannels;
-}
-function getActiveCategories() {
-  if (state.dataSource === "xtream" && state.xtreamConnected) {
-    return state.xtreamCategories[state.xtreamContentType] || [];
-  }
-  return state.categories;
-}
-
-// ── FIREBASE ────────────────────────────────────────────────────────
-let db = null;
-let firebaseLoaded = false;
-const firebase = { database: {} };
-
-async function loadFirebase() {
-  if (firebaseLoaded) return true;
-  try {
-    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js");
-    const { getDatabase, ref, onValue, off } = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js");
-    const app = initializeApp(FIREBASE_CONFIG);
-    db = getDatabase(app);
-    firebase.database = { ref, onValue, off };
-    firebaseLoaded = true;
-    return true;
-  } catch(e) {
-    console.warn("Firebase load error:", e);
-    return false;
-  }
-}
-
-function subscribeSettings(cb) {
-  if (!db) return;
-  const { ref, onValue, off } = firebase.database;
-  const r = ref(db, "settings");
-  const unsub = onValue(r, snap => cb(snap.val() || {}));
-  state.unsubs.push(() => off(r));
-}
-function subscribeCategories(cb) {
-  if (!db) return;
-  const { ref, onValue, off } = firebase.database;
-  const r = ref(db, "categories");
-  const unsub = onValue(r, snap => {
-    const d = snap.val();
-    if (!d) { cb([]); return; }
-    const list = Object.entries(d).map(([k,v]) => ({
-      id: k, name: v.name||"", nameAr: v.nameAr||v.name||"", nameEn: v.nameEn||v.name||"",
-      icon: v.icon||"", order: v.order??0, visible: v.visible!==false
-    }));
-    list.sort((a,b) => a.order - b.order);
-    cb(list);
-  });
-  state.unsubs.push(() => off(r));
-}
-function subscribeChannels(cb) {
-  if (!db) return;
-  const { ref, onValue, off } = firebase.database;
-  const r = ref(db, "channels");
-  const unsub = onValue(r, snap => {
-    const d = snap.val();
-    if (!d) { cb([]); return; }
-    const channels = [];
-    Object.entries(d).forEach(([catId, catData]) => {
-      if (catData && typeof catData === "object") {
-        Object.entries(catData).forEach(([k,v]) => {
-          channels.push({
-            id: k, name: v.name||"", nameAr: v.nameAr||v.name||"",
-            url: v.url||v.streamUrl||"", logo: v.logo||v.icon||"",
-            category: catId, type: v.type||"live",
-            description: v.description||"", descriptionAr: v.descriptionAr||""
-          });
-        });
-      }
-    });
-    cb(channels);
-  });
-  state.unsubs.push(() => off(r));
-}
-function subscribeBanners(cb) {
-  if (!db) return;
-  const { ref, onValue, off } = firebase.database;
-  const r = ref(db, "banners");
-  const unsub = onValue(r, snap => {
-    const d = snap.val();
-    if (!d) { cb([]); return; }
-    const list = Object.entries(d).map(([k,v]) => ({
-      id: k, title: v.title||"", titleAr: v.titleAr||v.title||"", titleEn: v.titleEn||v.title||"",
-      imageUrl: v.imageUrl||v.image||"", order: v.order??0, active: v.active!==false
-    }));
-    list.sort((a,b) => a.order - b.order);
-    cb(list.filter(b => b.active));
-  });
-  state.unsubs.push(() => off(r));
-}
-
-// ── XTREAM CODES API ────────────────────────────────────────────────
-function xtreamBaseUrl() {
-  let url = state.xtreamConfig.url.trim().replace(/\/+$/, "");
-  if (!url.startsWith("http")) url = "http://" + url;
-  return url;
-}
-
-async function xtreamFetch(action) {
-  const base = xtreamBaseUrl();
-  const u = encodeURIComponent(state.xtreamConfig.user);
-  const p = encodeURIComponent(state.xtreamConfig.pass);
-  let endpoint = `${base}/player_api.php?username=${u}&password=${p}`;
-  if (action) endpoint += `&action=${action}`;
-  const resp = await fetch(endpoint, { timeout: 15000 });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const data = await resp.json();
-  return data;
-}
-
-async function xtreamLogin() {
-  const { url, user, pass } = state.xtreamConfig;
-  if (!url || !user || !pass) return false;
-
-  state.xtreamConnecting = true;
-  state.xtreamConnected = false;
-  renderSettingsTab();
-
-  try {
-    const data = await xtreamFetch(null);
-
-    if (data.user_info && data.user_info.auth === 1) {
-      state.xtreamInfo = data.user_info;
-      state.xtreamServerInfo = data.server_info;
-      state.xtreamConnected = true;
-      state.xtreamConnecting = false;
-      saveXtreamConfig();
-      renderSettingsTab();
-
-      // Load categories first, then streams
-      await xtreamLoadAllContent();
-      return true;
-    } else {
-      state.xtreamConnecting = false;
-      renderSettingsTab();
-      return false;
+async function xtLogin(){
+  if(!S.xtConfig.url||!S.xtConfig.user||!S.xtConfig.pass)return false;
+  S.xtConnecting=true;S.xtConnected=false;renderSettings();
+  try{
+    const d=await xtFetch(null);
+    if(d.user_info&&d.user_info.auth===1){
+      S.xtInfo=d.user_info;S.xtServerInfo=d.server_info;S.xtConnected=true;S.xtConnecting=false;
+      save("xtc",S.xtConfig);renderSettings();await xtLoadAll();return true;
     }
-  } catch(e) {
-    console.error("Xtream login error:", e);
-    state.xtreamConnecting = false;
-    state.xtreamConnected = false;
-    renderSettingsTab();
-    return false;
-  }
+    S.xtConnecting=false;renderSettings();return false;
+  }catch(e){console.error(e);S.xtConnecting=false;S.xtConnected=false;renderSettings();return false}
 }
-
-async function xtreamDisconnect() {
-  state.xtreamConnected = false;
-  state.xtreamInfo = null;
-  state.xtreamServerInfo = null;
-  state.xtreamCategories = { live: [], vod: [], series: [] };
-  state.xtreamStreams = { live: [], vod: [], series: [] };
-  if (state.dataSource === "xtream") {
-    state.dataSource = "firebase";
-    saveDataSource();
-  }
-  renderAll();
+async function xtDisconnect(){
+  S.xtConnected=false;S.xtInfo=null;S.xtServerInfo=null;
+  S.xtCats={live:[],vod:[],series:[]};S.xtStreams={live:[],vod:[],series:[]};
+  S.xtLoading=false;renderAll();
 }
-
-async function xtreamLoadAllContent() {
-  state.xtreamLoading = true;
-  renderAll();
-  try {
-    // Load all categories in parallel
-    const [liveCats, vodCats, seriesCats] = await Promise.all([
-      xtreamFetch("get_live_categories").catch(() => []),
-      xtreamFetch("get_vod_categories").catch(() => []),
-      xtreamFetch("get_series_categories").catch(() => []),
-    ]);
-
-    state.xtreamCategories.live = (Array.isArray(liveCats) ? liveCats : []).map(c => ({
-      ...c, _xtream: true, id: String(c.category_id), name: c.category_name
-    }));
-    state.xtreamCategories.vod = (Array.isArray(vodCats) ? vodCats : []).map(c => ({
-      ...c, _xtream: true, id: String(c.category_id), name: c.category_name
-    }));
-    state.xtreamCategories.series = (Array.isArray(seriesCats) ? seriesCats : []).map(c => ({
-      ...c, _xtream: true, id: String(c.category_id), name: c.category_name
-    }));
-
-    // Load streams in parallel
-    const [liveStreams, vodStreams, seriesStreams] = await Promise.all([
-      xtreamFetch("get_live_streams").catch(() => []),
-      xtreamFetch("get_vod_streams").catch(() => []),
-      xtreamFetch("get_series").catch(() => []),
-    ]);
-
-    const base = xtreamBaseUrl();
-    const user = encodeURIComponent(state.xtreamConfig.user);
-    const pass = encodeURIComponent(state.xtreamConfig.pass);
-
-    state.xtreamStreams.live = (Array.isArray(liveStreams) ? liveStreams : []).map(s => ({
-      ...s, _xtream: true,
-      id: "xt_live_" + s.stream_id,
-      name: s.name || "",
-      logo: s.stream_icon || "",
-      category: String(s.category_id),
-      type: "live",
-      url: `${base}/live/${user}/${pass}/${s.stream_id}.m3u8`,
-      urlTs: `${base}/live/${user}/${pass}/${s.stream_id}.ts`,
-      description: s.epg_channel_id || "",
-    }));
-
-    state.xtreamStreams.vod = (Array.isArray(vodStreams) ? vodStreams : []).map(s => ({
-      ...s, _xtream: true,
-      id: "xt_vod_" + s.stream_id,
-      name: s.name || "",
-      logo: s.stream_icon || "",
-      category: String(s.category_id),
-      type: "vod",
-      url: `${base}/movie/${user}/${pass}/${s.stream_id}.${s.container_extension || "mp4"}`,
-      description: s.plot || "",
-      rating: s.rating || "",
-      year: s.year || "",
-      genre: s.genre || "",
-      added: s.added || "",
-    }));
-
-    state.xtreamStreams.series = (Array.isArray(seriesStreams) ? seriesStreams : []).map(s => ({
-      ...s, _xtream: true,
-      id: "xt_series_" + s.series_id,
-      name: s.name || "",
-      logo: s.cover || "",
-      category: String(s.category_id),
-      type: "series",
-      seriesId: s.series_id,
-      description: s.plot || "",
-      rating: s.rating || "",
-      year: s.releaseDate || "",
-      genre: s.genre || "",
-      cast: s.cast || "",
-    }));
-
-    state.xtreamLoading = false;
-    renderAll();
-  } catch(e) {
-    console.error("Xtream load content error:", e);
-    state.xtreamLoading = false;
-    renderAll();
-  }
+async function xtLoadAll(){
+  S.xtLoading=true;renderAll();
+  try{
+    const[lC,vC,sC]=await Promise.all([xtFetch("get_live_categories").catch(()=>[]),xtFetch("get_vod_categories").catch(()=>[]),xtFetch("get_series_categories").catch(()=>[])]);
+    S.xtCats.live=(Array.isArray(lC)?lC:[]).map(c=>({...c,_xt:1,id:String(c.category_id),name:c.category_name}));
+    S.xtCats.vod=(Array.isArray(vC)?vC:[]).map(c=>({...c,_xt:1,id:String(c.category_id),name:c.category_name}));
+    S.xtCats.series=(Array.isArray(sC)?sC:[]).map(c=>({...c,_xt:1,id:String(c.category_id),name:c.category_name}));
+    const[lS,vS,sS]=await Promise.all([xtFetch("get_live_streams").catch(()=>[]),xtFetch("get_vod_streams").catch(()=>[]),xtFetch("get_series").catch(()=>[])]);
+    const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
+    S.xtStreams.live=(Array.isArray(lS)?lS:[]).map(s=>({...s,_xt:1,id:"xl_"+s.stream_id,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"live",url:`${b}/live/${u}/${p}/${s.stream_id}.m3u8`,urlTs:`${b}/live/${u}/${p}/${s.stream_id}.ts`,description:""}));
+    S.xtStreams.vod=(Array.isArray(vS)?vS:[]).map(s=>({...s,_xt:1,id:"xv_"+s.stream_id,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"vod",url:`${b}/movie/${u}/${p}/${s.stream_id}.${s.container_extension||"mp4"}`,description:s.plot||"",rating:s.rating||"",year:s.year||"",genre:s.genre||"",added:s.added||""}));
+    S.xtStreams.series=(Array.isArray(sS)?sS:[]).map(s=>({...s,_xt:1,id:"xs_"+s.series_id,name:s.name||"",logo:s.cover||"",category:String(s.category_id),type:"series",seriesId:s.series_id,description:s.plot||"",rating:s.rating||"",year:s.releaseDate||"",genre:s.genre||"",cast:s.cast||"",added:s.added||""}));
+    S.xtLoading=false;renderAll();
+  }catch(e){console.error(e);S.xtLoading=false;renderAll()}
 }
-
-async function xtreamGetSeriesInfo(seriesId) {
-  try {
-    const data = await xtreamFetch("get_series_info&series_id=" + seriesId);
-    return data;
-  } catch(e) {
-    console.error("Error getting series info:", e);
-    return null;
-  }
-}
-
-function xtreamStreamUrl(ch) {
-  if (!ch._xtream) return ch.url;
-  return ch.url;
-}
+async function xtSeriesInfo(sid){try{return await xtFetch("get_series_info&series_id="+sid)}catch(e){return null}}
 
 // ── HLS PLAYER ──────────────────────────────────────────────────────
-let hlsInstance = null;
-
-function playStream(url, videoEl) {
-  // Destroy previous HLS instance
-  if (hlsInstance) {
-    hlsInstance.destroy();
-    hlsInstance = null;
-  }
-
-  if (url.includes(".m3u8")) {
-    if (typeof Hls !== "undefined" && Hls.isSupported()) {
-      hlsInstance = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-      });
-      hlsInstance.loadSource(url);
-      hlsInstance.attachMedia(videoEl);
-      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-        videoEl.play().catch(() => {});
-      });
-      hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            // Try .ts fallback for Xtream live streams
-            const ch = state.currentChannel;
-            if (ch && ch.urlTs) {
-              hlsInstance.destroy();
-              hlsInstance = null;
-              videoEl.src = ch.urlTs;
-              videoEl.play().catch(() => {});
-            }
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-            hlsInstance.recoverMediaError();
-          } else {
-            hlsInstance.destroy();
-            hlsInstance = null;
-          }
-        }
-      });
-    } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
-      // Native HLS (Safari)
-      videoEl.src = url;
-      videoEl.play().catch(() => {});
-    } else {
-      // Fallback to .ts
-      const ch = state.currentChannel;
-      if (ch && ch.urlTs) {
-        videoEl.src = ch.urlTs;
-        videoEl.play().catch(() => {});
-      }
-    }
-  } else {
-    // Direct URL (mp4, mkv, ts, etc.)
-    videoEl.src = url;
-    videoEl.play().catch(() => {});
-  }
+function playStream(url,video){
+  if(S.hlsInst){S.hlsInst.destroy();S.hlsInst=null}
+  if(url.includes(".m3u8")){
+    if(typeof Hls!=="undefined"&&Hls.isSupported()){
+      S.hlsInst=new Hls({enableWorker:true,lowLatencyMode:true});
+      S.hlsInst.loadSource(url);S.hlsInst.attachMedia(video);
+      S.hlsInst.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));
+      S.hlsInst.on(Hls.Events.ERROR,(ev,d)=>{if(d.fatal){if(d.type===Hls.ErrorTypes.NETWORK_ERROR&&S.current&&S.current.urlTs){S.hlsInst.destroy();S.hlsInst=null;video.src=S.current.urlTs;video.play().catch(()=>{})}else if(d.type===Hls.ErrorTypes.MEDIA_ERROR)S.hlsInst.recoverMediaError();else{S.hlsInst.destroy();S.hlsInst=null}}});
+    }else if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=url;video.play().catch(()=>{})}
+    else if(S.current&&S.current.urlTs){video.src=S.current.urlTs;video.play().catch(()=>{})}
+  }else{video.src=url;video.play().catch(()=>{})}
 }
 
 // ── RENDERING ───────────────────────────────────────────────────────
+function renderNavLabels(){document.querySelectorAll(".nav-label").forEach(el=>{const tb=el.dataset.tab;if(tb)el.textContent=t(tb)})}
 
-function renderHeader() {
-  const el = document.getElementById("header-info");
-  if (!el) return;
-  el.innerHTML = `
-    <h1>${state.settings.appName || t("appName")}</h1>
-    <p>${t("developer")}</p>
-  `;
+function renderLiveTab(){
+  const el=document.getElementById("tab-live");if(!el)return;
+  if(!S.xtConnected){el.innerHTML=`<div style="padding:16px;max-width:500px;margin:0 auto">
+    <div class="hero-grid">
+      <div class="hero-card hc-live" onclick="App.switchTab('live')"><div class="hero-icon">${I.tv}</div><div class="hero-label">${t("live")}</div></div>
+      <div class="hero-card hc-movies" onclick="App.switchTab('movies')"><div class="hero-icon">${I.film}</div><div class="hero-label">${t("movies")}</div></div>
+      <div class="hero-card hc-series" onclick="App.switchTab('series')"><div class="hero-icon">${I.clap}</div><div class="hero-label">${t("series")}</div></div>
+      <div class="hero-card hc-recent" onclick="App.switchTab('recent')"><div class="hero-icon">${I.plus}</div><div class="hero-label">${t("recent")}</div></div>
+    </div>
+    <div class="empty-state"><div class="empty-icon">${I.wifiOff}</div><div class="empty-title">${t("noChannels")}</div><div class="empty-sub">${t("noHistorySub")}</div></div>
+  </div>`;return}
+  // 4 hero cards
+  let html=`<div style="padding:16px;max-width:1200px;margin:0 auto">
+    <div class="hero-grid">
+      <div class="hero-card hc-live" onclick="App.switchTab('live')"><div class="hero-icon">${I.tv}</div><div class="hero-label">${t("live")}</div><div class="hero-sub">${S.xtStreams.live.length} ${t("channels")}</div></div>
+      <div class="hero-card hc-movies" onclick="App.switchTab('movies')"><div class="hero-icon">${I.film}</div><div class="hero-label">${t("movies")}</div><div class="hero-sub">${S.xtStreams.vod.length}</div></div>
+      <div class="hero-card hc-series" onclick="App.switchTab('series')"><div class="hero-icon">${I.clap}</div><div class="hero-label">${t("series")}</div><div class="hero-sub">${S.xtStreams.series.length}</div></div>
+      <div class="hero-card hc-recent" onclick="App.switchTab('recent')"><div class="hero-icon">${I.plus}</div><div class="hero-label">${t("recent")}</div></div>
+    </div>
+    <div class="search-wrap"><div class="search-wrap-inner" style="position:relative">${I.search}<input class="search-input" type="text" placeholder="${t("search")}" value="${esc(S.searchQ)}" oninput="App.onSearch(this.value)"></div></div>`;
+  // Cat pills
+  const cats=S.xtCats.live;
+  if(cats.length>0&&!S.searchQ){
+    html+=`<div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px" class="no-scroll">`;
+    html+=`<button class="cat-pill-quick ${!S.selectedCat?'cpq-active':''}" onclick="App.selectCat(null)" style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:${!S.selectedCat?'var(--grad)':'rgba(255,255,255,.04)'};border:1px solid ${!S.selectedCat?'transparent':'rgba(255,255,255,.06)'};color:${!S.selectedCat?'#fff':'var(--sub)'};font-size:12px;font-weight:600;white-space:nowrap">${t("allChannels")}</button>`;
+    cats.slice(0,15).forEach(c=>{html+=`<button class="cat-pill-quick ${S.selectedCat===c.id?'cpq-active':''}" onclick="App.selectCat('${c.id}')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;background:${S.selectedCat===c.id?'var(--grad)':'rgba(255,255,255,.04)'};border:1px solid ${S.selectedCat===c.id?'transparent':'rgba(255,255,255,.06)'};color:${S.selectedCat===c.id?'#fff':'var(--sub)'};font-size:12px;font-weight:600;white-space:nowrap">${esc(c.name)}</button>`});
+    html+=`</div>`;
+  }
+  // Channels
+  let channels=S.xtStreams.live;
+  if(S.selectedCat)channels=channels.filter(c=>c.category===S.selectedCat);
+  if(S.searchQ){const q=S.searchQ.toLowerCase();channels=channels.filter(c=>(c.name||"").toLowerCase().includes(q))}
+  if(S.xtLoading){html+=`<div class="skel-grid">${Array(6).fill('<div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>').join("")}</div>`}
+  else if(channels.length===0){html+=`<div class="empty-state"><div class="empty-icon">${I.tv}</div><div class="empty-title">${t("noChannels")}</div></div>`}
+  else{html+=`<div class="channel-grid">${channels.slice(0,60).map(c=>chCardHTML(c)).join("")}</div>`}
+  html+=`</div>`;el.innerHTML=html;
+  fixSearchIcon(el);
 }
 
-function renderNavLabels() {
-  document.querySelectorAll(".nav-label").forEach(el => {
-    const tab = el.dataset.tab;
-    if (tab) el.textContent = t(tab);
+function renderMoviesTab(){
+  const el=document.getElementById("tab-movies");if(!el)return;
+  if(!S.xtConnected){el.innerHTML=emptyNoXtream();return}
+  let html=`<div style="padding:16px 0;max-width:1200px;margin:0 auto">
+    <h2 style="font-size:17px;font-weight:800;margin-bottom:14px;padding:0 16px">${t("movies")}</h2>
+    <div style="padding:0 16px;margin-bottom:14px"><div class="search-wrap"><div class="search-wrap-inner" style="position:relative">${I.search}<input class="search-input" type="text" placeholder="${t("search")}" value="${esc(S.searchQ)}" oninput="App.onSearch(this.value)"></div></div></div>`;
+  if(S.searchQ){
+    const q=S.searchQ.toLowerCase();
+    const filtered=S.xtStreams.vod.filter(c=>(c.name||"").toLowerCase().includes(q));
+    if(filtered.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.film}</div><div class="empty-title">${t("noChannels")}</div></div>`;
+    else html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px">${filtered.slice(0,60).map(c=>posterCardHTML(c)).join("")}</div>`;
+  }else{
+    const cats=S.xtCats.vod;
+    if(S.xtLoading){html+=Array(3).fill('<div class="folder-section"><div class="folder-header"><div class="section-bar" style="width:60%;height:14px;border-radius:4px;background:var(--card2)"></div></div><div class="poster-scroll no-scroll">'+Array(4).fill('<div class="skel-poster"><div class="skel-poster-thumb"></div></div>').join("")+'</div></div>').join("")}
+    else if(cats.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.film}</div><div class="empty-title">${t("noChannels")}</div></div>`;
+    else{
+      cats.forEach(cat=>{
+        const items=S.xtStreams.vod.filter(c=>c.category===cat.category_id);
+        if(items.length===0)return;
+        const arrow=isRTL()?I.arrowL:I.arrowR;
+        html+=`<div class="folder-section">
+          <div class="folder-header"><div class="section-bar"></div><h3>${esc(cat.category_name)}</h3><span class="section-count">(${items.length})</span>
+          <button class="watch-all-btn" onclick="App.openFolder('vod','${cat.category_id}','${esc(cat.category_name)}')">${t("watchAll")} ${arrow}</button></div>
+          <div class="poster-scroll no-scroll">${items.slice(0,20).map(c=>posterCardHTML(c)).join("")}</div></div>`;
+      });
+    }
+  }
+  html+=`</div>`;el.innerHTML=html;fixSearchIcon(el);
+}
+
+function renderSeriesTab(){
+  const el=document.getElementById("tab-series");if(!el)return;
+  if(!S.xtConnected){el.innerHTML=emptyNoXtream();return}
+  let html=`<div style="padding:16px 0;max-width:1200px;margin:0 auto">
+    <h2 style="font-size:17px;font-weight:800;margin-bottom:14px;padding:0 16px">${t("series")}</h2>
+    <div style="padding:0 16px;margin-bottom:14px"><div class="search-wrap"><div class="search-wrap-inner" style="position:relative">${I.search}<input class="search-input" type="text" placeholder="${t("search")}" value="${esc(S.searchQ)}" oninput="App.onSearch(this.value)"></div></div></div>`;
+  if(S.searchQ){
+    const q=S.searchQ.toLowerCase();const filtered=S.xtStreams.series.filter(c=>(c.name||"").toLowerCase().includes(q));
+    if(filtered.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.clap}</div><div class="empty-title">${t("noChannels")}</div></div>`;
+    else html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px">${filtered.slice(0,60).map(c=>posterCardHTML(c)).join("")}</div>`;
+  }else{
+    const cats=S.xtCats.series;
+    if(S.xtLoading)html+=Array(3).fill('<div class="folder-section"><div class="folder-header"><div style="width:60%;height:14px;border-radius:4px;background:var(--card2)"></div></div><div class="poster-scroll no-scroll">'+Array(4).fill('<div class="skel-poster"><div class="skel-poster-thumb"></div></div>').join("")+'</div></div>').join("");
+    else if(cats.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.clap}</div><div class="empty-title">${t("noChannels")}</div></div>`;
+    else{
+      cats.forEach(cat=>{
+        const items=S.xtStreams.series.filter(c=>c.category===cat.category_id);
+        if(items.length===0)return;
+        const arrow=isRTL()?I.arrowL:I.arrowR;
+        html+=`<div class="folder-section">
+          <div class="folder-header"><div class="section-bar" style="background:linear-gradient(to bottom,#D53F8C,#B83280)"></div><h3>${esc(cat.category_name)}</h3><span class="section-count">(${items.length})</span>
+          <button class="watch-all-btn" onclick="App.openFolder('series','${cat.category_id}','${esc(cat.category_name)}')">${t("watchAll")} ${arrow}</button></div>
+          <div class="poster-scroll no-scroll">${items.slice(0,20).map(c=>posterCardHTML(c)).join("")}</div></div>`;
+      });
+    }
+  }
+  html+=`</div>`;el.innerHTML=html;fixSearchIcon(el);
+}
+
+function renderFavoritesTab(){
+  const el=document.getElementById("tab-favorites");if(!el)return;
+  const all=[...S.xtStreams.live,...S.xtStreams.vod,...S.xtStreams.series];
+  const favs=all.filter(c=>S.favs.has(c.id));
+  let html=`<div style="padding:16px;max-width:1200px;margin:0 auto">
+    <h2 style="font-size:17px;font-weight:800;margin-bottom:14px">${t("favorites")}</h2>`;
+  if(favs.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.heart}</div><div class="empty-title">${t("noFavs")}</div><div class="empty-sub">${t("noFavsSub")}</div></div>`;
+  else{
+    const isVod=favs[0]&&favs[0].type==="vod";
+    html+=`<div class="${isVod?'poster-grid':'channel-grid'}" ${isVod?'style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"':''}>${favs.map(c=>isVod?posterCardHTML(c):chCardHTML(c)).join("")}</div>`;
+  }
+  html+=`</div>`;el.innerHTML=html;
+}
+
+function renderHistoryTab(){
+  const el=document.getElementById("tab-history");if(!el)return;
+  let html=`<div style="padding:16px;max-width:800px;margin:0 auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h2 style="font-size:17px;font-weight:800">${t("history")}</h2>
+      ${S.history.length>0?`<button style="font-size:11px;color:var(--r);font-weight:600;display:flex;align-items:center;gap:4px" onclick="App.clearHistory()">${I.trash} ${t("clearHistory")}</button>`:""}
+    </div>`;
+  if(S.history.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.clock}</div><div class="empty-title">${t("noHistory")}</div><div class="empty-sub">${t("noHistorySub")}</div></div>`;
+  else S.history.forEach(h=>{
+    html+=`<div class="history-item" onclick="App.playById('${esc(h.id)}')">
+      <div class="history-thumb">${h.logo?`<img src="${esc(h.logo)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='${I.tv}'">`:(h.type==="vod"||h.type==="series"?I.film:I.tv)}</div>
+      <div class="history-info"><div class="history-name">${esc(h.name)}</div><div class="history-time">${timeAgo(h.ts)}</div></div>
+      <div class="history-play">${I.play}</div></div>`;
   });
-  // Fav badge
-  const badge = document.getElementById("fav-badge");
-  if (badge) {
-    const allCh = getActiveChannels();
-    const count = allCh.filter(c => state.favorites.has(c.id)).length;
-    badge.textContent = count > 99 ? "99+" : count;
-    badge.style.display = count > 0 ? "flex" : "none";
-  }
+  html+=`</div>`;el.innerHTML=html;
 }
 
-function renderSearch() {
-  const el = document.getElementById("search-input");
-  if (el) {
-    el.placeholder = t("search");
-    el.value = state.searchQuery;
-  }
+function renderRecentTab(){
+  const el=document.getElementById("tab-recent");if(!el)return;
+  if(!S.xtConnected){el.innerHTML=emptyNoXtream();return}
+  const all=[...S.xtStreams.vod.map(c=>({...c,_type:"vod"})),...S.xtStreams.series.map(c=>({...c,_type:"series"}))];
+  all.sort((a,b)=>(parseInt(b.added)||0)-(parseInt(a.added)||0));
+  const recent=all.filter(c=>c.added).slice(0,60);
+  let html=`<div style="padding:16px 0;max-width:1200px;margin:0 auto">
+    <h2 style="font-size:17px;font-weight:800;margin-bottom:14px;padding:0 16px">${t("recent")}</h2>`;
+  if(recent.length===0)html+=`<div class="empty-state"><div class="empty-icon">${I.plus}</div><div class="empty-title">${t("noRecent")}</div></div>`;
+  else html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px">${recent.map(c=>posterCardHTML(c)).join("")}</div>`;
+  html+=`</div>`;el.innerHTML=html;
 }
 
-function renderWelcome() {
-  const el = document.getElementById("welcome-section");
-  if (!el) return;
-  if (state.dataSource === "xtream" && state.xtreamConnected) return;
-  const msg = state.settings["welcomeMessage" + (isRTL() ? "Ar" : "En")] || t("welcome");
-  el.innerHTML = `
-    <div class="welcome">
-      <h2>${msg}</h2>
-      <p>${t("welcomeSub")}</p>
-    </div>
-  `;
+// Folder detail (all items in a category)
+function renderFolderDetail(type,catId,catName){
+  const el=document.getElementById("tab-"+(type==="vod"?"movies":"series"));if(!el)return;
+  const streams=type==="vod"?S.xtStreams.vod:S.xtStreams.series;
+  let items=streams.filter(c=>String(c.category)===String(catId));
+  if(S.searchQ){const q=S.searchQ.toLowerCase();items=items.filter(c=>(c.name||"").toLowerCase().includes(q))}
+  const arrow=isRTL()?I.arrowR:I.arrowL;
+  let html=`<div style="padding:16px;max-width:1200px;margin:0 auto">
+    <button class="back-btn" onclick="App.switchTab('${type==="vod"?"movies":"series"}')">${arrow} ${type==="vod"?t("movies"):t("series")}</button>
+    <h2 style="font-size:17px;font-weight:800;margin-bottom:14px">${esc(catName)} <span style="color:var(--muted);font-size:13px">(${items.length})</span></h2>
+    <div style="margin-bottom:14px"><div class="search-wrap"><div class="search-wrap-inner" style="position:relative">${I.search}<input class="search-input" type="text" placeholder="${t("search")}" value="${esc(S.searchQ)}" oninput="App.onSearch(this.value)"></div></div></div>`;
+  if(items.length>0)html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${items.map(c=>posterCardHTML(c)).join("")}</div>`;
+  else html+=`<div class="empty-state"><div class="empty-icon">${I.tv}</div><div class="empty-title">${t("noChannels")}</div></div>`;
+  html+=`</div>`;el.innerHTML=html;fixSearchIcon(el);
 }
 
-function renderBanners() {
-  const el = document.getElementById("banners-section");
-  if (!el) return;
-  if (state.dataSource === "xtream" || state.banners.length === 0) { el.classList.add("hidden"); return; }
-  el.classList.remove("hidden");
-  el.innerHTML = `
-    <div class="banners-track no-scroll">
-      ${state.banners.map(b => `
-        <div class="banner-card">
-          ${b.imageUrl ? `<img src="${escHtml(b.imageUrl)}" alt="" loading="lazy">` : ""}
-          <div class="banner-overlay">
-            <div class="banner-badge">${t("featured")}</div>
-            <div class="banner-title">${escHtml(isRTL() ? b.titleAr : (b.titleEn || b.title))}</div>
-          </div>
+// Series detail (seasons/episodes)
+async function renderSeriesDetail(seriesId){
+  const el=document.getElementById("tab-series");
+  const s=S.xtStreams.series.find(x=>x.seriesId==seriesId);if(!s||!el)return;
+  const arrow=isRTL()?I.arrowR:I.arrowL;
+  el.innerHTML=`<div style="padding:16px;max-width:800px;margin:0 auto">
+    <button class="back-btn" onclick="App.switchTab('series')">${arrow} ${t("series")}</button>
+    <div class="series-hero">
+      <div class="series-cover">${s.logo?`<img src="${esc(s.logo)}" alt="" onerror="this.parentElement.innerHTML='${I.clap}'">`:I.clap}</div>
+      <div class="series-info">
+        <div class="series-title">${esc(s.name)}</div>
+        <div class="series-meta-row">
+          ${s.rating?`<span class="series-tag"><span style="color:#F59E0B;display:inline-flex">${I.star} ${esc(s.rating)}</span></span>`:""}
+          ${s.year?`<span class="series-tag">${esc(s.year)}</span>`:""}
+          ${s.genre?`<span class="series-tag">${esc(s.genre)}</span>`:""}
         </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderCategoryPills() {
-  const el = document.getElementById("cat-pills");
-  if (!el) return;
-  if (state.dataSource === "xtream" && state.xtreamConnected) {
-    // Show content type tabs for Xtream
-    const cats = getActiveCategories();
-    if (cats.length === 0) { el.classList.add("hidden"); return; }
-    el.classList.remove("hidden");
-    el.innerHTML = `
-      <div class="cat-pills no-scroll">
-        <button class="cat-pill ${state.selectedCategory === null ? "cat-pill-active" : ""}" onclick="App.selectCategory(null)">${t("allChannels")}</button>
-        ${cats.slice(0, 20).map(c => `
-          <button class="cat-pill ${state.selectedCategory === c.id ? "cat-pill-active" : ""}" onclick="App.selectCategory('${c.id}')">${escHtml(getCategoryName(c))}</button>
-        `).join("")}
-      </div>
-    `;
-    return;
-  }
-  const cats = state.categories.filter(c => c.visible);
-  if (cats.length === 0) { el.classList.add("hidden"); return; }
-  el.classList.remove("hidden");
-  el.innerHTML = `
-    <div class="cat-pills no-scroll">
-      ${cats.map(c => `
-        <button class="cat-pill" onclick="App.openCategory('${c.id}')">${escHtml(getCategoryName(c))}</button>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderContentTypeTabs() {
-  const el = document.getElementById("content-type-tabs");
-  if (!el) return;
-  if (state.dataSource !== "xtream" || !state.xtreamConnected) {
-    el.innerHTML = "";
-    el.classList.add("hidden");
-    return;
-  }
-  el.classList.remove("hidden");
-  const types = [
-    { key: "live", icon: ICONS.tv, label: t("live") },
-    { key: "vod", icon: ICONS.film, label: t("movies") },
-    { key: "series", icon: ICONS.clapperboard, label: t("series") },
-  ];
-  el.innerHTML = `
-    <div class="content-type-tabs">
-      ${types.map(tp => `
-        <button class="content-type-tab ${state.xtreamContentType === tp.key ? "ctt-active" : ""}" onclick="App.setContentType('${tp.key}')">
-          <span class="ctt-icon">${tp.icon}</span>
-          <span>${tp.label}</span>
-        </button>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderSourceIndicator() {
-  const el = document.getElementById("source-indicator");
-  if (!el) return;
-  if (!state.xtreamConnected) { el.innerHTML = ""; el.classList.add("hidden"); return; }
-  el.classList.remove("hidden");
-  const isFB = state.dataSource === "firebase";
-  el.innerHTML = `
-    <div class="source-switcher">
-      <button class="source-btn ${isFB ? "source-active" : ""}" onclick="App.setDataSource('firebase')">
-        ${ICONS.info} ${t("dataSourceFirebase")}
-      </button>
-      <button class="source-btn ${!isFB ? "source-active" : ""}" onclick="App.setDataSource('xtream')">
-        ${ICONS.wifi} ${t("dataSourceXtream")}
-      </button>
-    </div>
-  `;
-}
-
-function channelCardHTML(ch, horizontal = false) {
-  const name = getChannelName(ch);
-  const isFav = state.favorites.has(ch.id);
-  const favIcon = isFav ? ICONS.heartFilled : ICONS.heart;
-  const favClass = isFav ? "active" : "";
-  const isSeries = ch._xtream && ch.type === "series";
-  const safeId = escHtml(ch.id);
-  const logoImg = ch.logo ? `<img src="${escHtml(ch.logo)}" alt="${escHtml(name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ch-thumb-icon" style="display:none">${isSeries ? ICONS.clapperboard : ICONS.tv}</div>` : `<div class="ch-thumb-icon">${isSeries ? ICONS.clapperboard : ICONS.tv}</div>`;
-  const playAction = isSeries ? `App.openSeries(${ch.seriesId})` : `App.play('${safeId}')`;
-
-  if (horizontal) {
-    return `
-      <div class="ch-card-h">
-        <div class="ch-thumb" onclick="${playAction}">
-          ${logoImg}
-          <div class="ch-play-overlay" onclick="${playAction}">
-            <div class="ch-play-btn">${isSeries ? ICONS.info : ICONS.play}</div>
-          </div>
-        </div>
-        <div class="ch-info">
-          <div class="ch-name">${escHtml(name)}</div>
-          <div class="ch-meta">
-            ${ch._xtream && ch.type === "live" ? `<span class="ch-live-badge"><span class="ch-live-dot"></span>LIVE</span>` : ""}
-            <button class="ch-fav-btn ${favClass}" onclick="event.stopPropagation();App.toggleFav('${safeId}')">
-              ${favIcon}
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="ch-card">
-      <div class="ch-thumb" onclick="${playAction}">
-        ${logoImg}
-        ${ch._xtream && ch.type === "live" ? `<div class="ch-live-badge"><span class="ch-live-dot"></span>LIVE</div>` : ""}
-        <div class="ch-play-overlay" onclick="${playAction}">
-          <div class="ch-play-btn">${isSeries ? ICONS.info : ICONS.play}</div>
-        </div>
-      </div>
-      <div class="ch-info">
-        <div class="ch-name">${escHtml(name)}</div>
-        <button class="ch-fav-btn ${favClass}" onclick="event.stopPropagation();App.toggleFav('${safeId}')">
-          ${favIcon}
-        </button>
+        ${s.description?`<p class="series-desc">${esc(s.description)}</p>`:""}
       </div>
     </div>
-  `;
-}
-
-function renderHomeChannels() {
-  const el = document.getElementById("home-channels");
-  if (!el) return;
-
-  // Xtream mode
-  if (state.dataSource === "xtream" && state.xtreamConnected) {
-    if (state.xtreamLoading) {
-      el.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.loader}</div>
-          <div class="empty-title">${t("xtreamLoading")}</div>
-        </div>
-      `;
-      return;
-    }
-
-    let channels = getActiveChannels();
-    if (state.selectedCategory) {
-      channels = channels.filter(c => String(c.category) === String(state.selectedCategory));
-    }
-    if (state.searchQuery.trim()) {
-      const q = state.searchQuery.toLowerCase();
-      channels = channels.filter(c => (c.name || "").toLowerCase().includes(q));
-    }
-
-    if (channels.length === 0) {
-      el.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.tv}</div>
-          <div class="empty-title">${t("noChannels")}</div>
-        </div>
-      `;
-      return;
-    }
-
-    if (state.xtreamContentType === "series") {
-      el.innerHTML = `<div class="channel-grid">${channels.slice(0, 60).map(c => channelCardHTML(c)).join("")}</div>`;
-    } else {
-      el.innerHTML = `<div class="channel-grid">${channels.slice(0, 60).map(c => channelCardHTML(c)).join("")}</div>`;
-    }
-    return;
-  }
-
-  // Firebase mode
-  let channels = state.allChannels;
-  if (state.searchQuery.trim()) {
-    const q = state.searchQuery.toLowerCase();
-    channels = channels.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      (c.nameAr && c.nameAr.includes(q)) ||
-      (c.category && c.category.toLowerCase().includes(q))
-    );
-  } else {
-    channels = channels.slice(0, 24);
-  }
-
-  if (state.loading) {
-    el.innerHTML = `<div class="skeleton-grid">${Array(6).fill('<div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>').join("")}</div>`;
-    return;
-  }
-
-  if (channels.length === 0) {
-    el.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">${ICONS.tv}</div>
-        <div class="empty-title">${t("noChannels")}</div>
-        <div class="empty-sub">${t("noChannelsSub")}</div>
-      </div>
-    `;
-    return;
-  }
-
-  el.innerHTML = `<div class="channel-grid">${channels.map(c => channelCardHTML(c)).join("")}</div>`;
-}
-
-function renderCategorySections() {
-  const el = document.getElementById("cat-sections");
-  if (!el) return;
-  if (state.dataSource === "xtream" || state.categories.length === 0) { el.innerHTML = ""; return; }
-  const cats = state.categories.filter(c => c.visible).slice(0, 8);
-  let html = "";
-  cats.forEach(cat => {
-    const channels = state.allChannels.filter(c => c.category === cat.id);
-    if (channels.length === 0) return;
-    const arrow = isRTL() ? ICONS.arrowLeft : ICONS.arrowRight;
-    html += `
-      <div style="margin-bottom:24px">
-        <div class="section-header">
-          <div class="section-bar" style="background:linear-gradient(to bottom,#3D8EFF,#00B4D8)"></div>
-          <h3>${escHtml(getCategoryName(cat))}</h3>
-          <span style="font-size:11px;color:var(--muted);margin-inline-start:4px">(${channels.length})</span>
-          <div class="section-actions">
-            <button class="btn-view-all" onclick="App.openCategory('${cat.id}')">
-              ${t("viewAll")} ${arrow}
-            </button>
-          </div>
-        </div>
-        <div class="ch-scroll no-scroll">
-          ${channels.slice(0, 12).map(c => channelCardHTML(c, true)).join("")}
-        </div>
-      </div>
-    `;
-  });
-  el.innerHTML = html;
-}
-
-function renderCategoriesTab() {
-  const el = document.getElementById("tab-categories");
-  if (!el) return;
-
-  // Xtream mode
-  if (state.dataSource === "xtream" && state.xtreamConnected) {
-    const cats = getActiveCategories();
-    if (state.searchQuery.trim()) {
-      const q = state.searchQuery.toLowerCase();
-      const filtered = cats.filter(c => getCategoryName(c).toLowerCase().includes(q));
-      renderXtreamCategoriesList(el, filtered, cats);
-      return;
-    }
-    renderXtreamCategoriesList(el, cats, cats);
-    return;
-  }
-
-  // Firebase mode - selected category
-  if (state.selectedCategory) {
-    const cat = state.categories.find(c => c.id === state.selectedCategory);
-    const catName = cat ? getCategoryName(cat) : "";
-    const arrow = isRTL() ? ICONS.arrowRight : ICONS.arrowLeft;
-    let channels = state.allChannels.filter(c => c.category === state.selectedCategory);
-    if (state.searchQuery.trim()) {
-      const q = state.searchQuery.toLowerCase();
-      channels = channels.filter(c => c.name.toLowerCase().includes(q) || (c.nameAr && c.nameAr.includes(q)));
-    }
-    el.innerHTML = `
-      <div style="padding:16px;max-width:1200px;margin:0 auto">
-        <button class="back-btn" onclick="App.closeCategory()">${arrow} ${t("categories")}</button>
-        <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">${escHtml(catName)}</h2>
-        <div class="search-wrap">
-          <div class="search-wrap-inner" style="position:relative">
-            ${ICONS.search}
-            <input id="search-input-cat" class="search-input" type="text" placeholder="${t("search")}" value="${escHtml(state.searchQuery)}" oninput="App.onSearch(this.value)">
-          </div>
-        </div>
-        ${channels.length > 0 ? `<div class="channel-grid">${channels.map(c => channelCardHTML(c)).join("")}</div>` : `
-          <div class="empty-state">
-            <div class="empty-icon">${ICONS.tv}</div>
-            <div class="empty-title">${t("noChannels")}</div>
-          </div>
-        `}
-      </div>
-    `;
-    const searchInner = el.querySelector(".search-wrap-inner");
-    if (searchInner) {
-      const svg = searchInner.querySelector("svg");
-      if (svg) {
-        if (isRTL()) { svg.style.cssText = "position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);right:12px;pointer-events:none"; }
-        else { svg.style.cssText = "position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);left:12px;pointer-events:none"; }
-      }
-    }
-    return;
-  }
-
-  // Firebase - category list
-  let cats = state.categories.filter(c => c.visible);
-  if (state.searchQuery.trim()) {
-    const q = state.searchQuery.toLowerCase();
-    cats = cats.filter(c => getCategoryName(c).toLowerCase().includes(q));
-  }
-  const arrow = isRTL() ? ICONS.arrowLeft : ICONS.arrowRight;
-
-  el.innerHTML = `
-    <div style="padding:16px;max-width:1200px;margin:0 auto">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">${t("categories")}</h2>
-      <div class="search-wrap">
-        <div class="search-wrap-inner" style="position:relative">
-          ${ICONS.search}
-          <input class="search-input" type="text" placeholder="${t("search")}" value="${escHtml(state.searchQuery)}" oninput="App.onSearch(this.value)">
-        </div>
-      </div>
-      ${state.loading ? Array(8).fill('<div class="skel-cat"></div>').join("") : cats.length > 0 ? `
-        <div class="cat-grid">
-          ${cats.map(c => {
-            const count = state.allChannels.filter(ch => ch.category === c.id).length;
-            return `
-              <button class="cat-card" onclick="App.openCategory('${c.id}')">
-                <div class="cat-icon">${c.icon || "📡"}</div>
-                <div class="cat-details">
-                  <div class="cat-name">${escHtml(getCategoryName(c))}</div>
-                  <div class="cat-count">${count} ${t("channelCount")}</div>
-                </div>
-                <div class="cat-arrow">${arrow}</div>
-              </button>
-            `;
-          }).join("")}
-        </div>
-      ` : `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.grid}</div>
-          <div class="empty-title">${t("noChannels")}</div>
-        </div>
-      `}
-    </div>
-  `;
-  const searchInner = el.querySelector(".search-wrap-inner");
-  if (searchInner) {
-    const svg = searchInner.querySelector("svg");
-    if (svg) {
-      if (isRTL()) { svg.style.cssText = "position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);right:12px;pointer-events:none"; }
-      else { svg.style.cssText = "position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);left:12px;pointer-events:none"; }
-    }
-  }
-}
-
-function renderXtreamCategoriesList(container, cats, allCats) {
-  const arrow = isRTL() ? ICONS.arrowLeft : ICONS.arrowRight;
-  const streams = getActiveChannels();
-  const typeLabel = state.xtreamContentType === "live" ? t("channelCount") : (state.xtreamContentType === "vod" ? t("movies") : t("series"));
-  const isSeries = state.xtreamContentType === "series";
-
-  if (state.selectedCategory) {
-    const cat = allCats.find(c => String(c.category_id) === String(state.selectedCategory) || c.id === state.selectedCategory);
-    const catName = cat ? getCategoryName(cat) : "";
-    let items = streams.filter(c => String(c.category) === String(state.selectedCategory));
-    if (state.searchQuery.trim()) {
-      const q = state.searchQuery.toLowerCase();
-      items = items.filter(c => (c.name || "").toLowerCase().includes(q));
-    }
-    container.innerHTML = `
-      <div style="padding:16px;max-width:1200px;margin:0 auto">
-        <button class="back-btn" onclick="App.closeCategory()">${arrow} ${t("categories")}</button>
-        <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">${escHtml(catName)}</h2>
-        ${items.length > 0 ? `<div class="channel-grid">${items.map(c => channelCardHTML(c)).join("")}</div>` : `
-          <div class="empty-state">
-            <div class="empty-icon">${ICONS.tv}</div>
-            <div class="empty-title">${t("noChannels")}</div>
-          </div>
-        `}
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = `
-    <div style="padding:16px;max-width:1200px;margin:0 auto">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">${t("categories")}</h2>
-      <div class="search-wrap">
-        <div class="search-wrap-inner" style="position:relative">
-          ${ICONS.search}
-          <input class="search-input" type="text" placeholder="${t("search")}" value="${escHtml(state.searchQuery)}" oninput="App.onSearch(this.value)">
-        </div>
-      </div>
-      ${cats.length > 0 ? `
-        <div class="cat-grid">
-          ${cats.map(c => {
-            const count = streams.filter(s => String(s.category) === String(c.category_id || c.id)).length;
-            return `
-              <button class="cat-card" onclick="App.openCategory('${c.category_id || c.id}')">
-                <div class="cat-icon">${isSeries ? "🎬" : "📡"}</div>
-                <div class="cat-details">
-                  <div class="cat-name">${escHtml(getCategoryName(c))}</div>
-                  <div class="cat-count">${count} ${typeLabel}</div>
-                </div>
-                <div class="cat-arrow">${arrow}</div>
-              </button>
-            `;
-          }).join("")}
-        </div>
-      ` : `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.grid}</div>
-          <div class="empty-title">${t("noChannels")}</div>
-        </div>
-      `}
-    </div>
-  `;
-  const searchInner = container.querySelector(".search-wrap-inner");
-  if (searchInner) {
-    const svg = searchInner.querySelector("svg");
-    if (svg) {
-      if (isRTL()) { svg.style.cssText = "position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);right:12px;pointer-events:none"; }
-      else { svg.style.cssText = "position:absolute;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);left:12px;pointer-events:none"; }
-    }
-  }
-}
-
-function renderFavoritesTab() {
-  const el = document.getElementById("tab-favorites");
-  if (!el) return;
-
-  // Collect favorites from both sources
-  let favChannels = [];
-  // Firebase favorites
-  favChannels.push(...state.allChannels.filter(c => state.favorites.has(c.id)));
-  // Xtream favorites
-  if (state.xtreamConnected) {
-    Object.values(state.xtreamStreams).forEach(streams => {
-      favChannels.push(...streams.filter(c => state.favorites.has(c.id)));
+    <div id="series-episodes"><div class="empty-state"><div class="empty-icon">${I.loader}</div></div></div>
+  </div>`;
+  const data=await xtSeriesInfo(seriesId);
+  const epEl=document.getElementById("series-episodes");if(!epEl)return;
+  if(!data||!data.episodes){epEl.innerHTML=`<div class="empty-state"><div class="empty-icon">${I.clap}</div><div class="empty-title">${t("noChannels")}</div></div>`;return}
+  const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
+  const seasons=data.episodes;let html="";
+  if(typeof seasons==="object"){
+    Object.keys(seasons).sort((a,b2)=>parseInt(a)-parseInt(b2)).forEach(sn=>{
+      const eps=seasons[sn];if(!Array.isArray(eps))return;
+      html+=`<div style="margin-bottom:20px"><div class="section-header"><div class="section-bar" style="background:linear-gradient(to bottom,#D53F8C,#B83280)"></div><h3>${t("season")} ${esc(sn)}</h3><span class="section-count">(${eps.length} ${t("episodes")})</span></div><div class="episode-list">`;
+      eps.forEach(ep=>{
+        const epUrl=`${b}/series/${u}/${p}/${ep.id}.${ep.container_extension||"mp4"}`;
+        const epName=ep.title||`${t("episode")} ${ep.episode_num||""}`;
+        html+=`<div class="episode-card" onclick="App.playDirect('${esc(epUrl)}','${esc(epName)}','${esc(s.logo||"")}','series')">
+          <div class="episode-play">${I.play}</div>
+          <div class="episode-details"><div class="episode-name">${esc(epName)}</div>
+          <div class="episode-meta">${ep.info&&ep.info.duration?`<span>${esc(ep.info.duration)} min</span>`:""}${ep.info&&ep.info.container_extension?`<span>${esc(ep.info.container_extension).toUpperCase()}</span>`:""}</div></div></div>`;
+      });
+      html+=`</div></div>`;
     });
   }
-
-  el.innerHTML = `
-    <div style="padding:16px;max-width:1200px;margin:0 auto">
-      <div class="fav-header">
-        ${ICONS.heart}
-        <h2>${t("favorites")}</h2>
-        <span class="fav-count">${favChannels.length}</span>
-      </div>
-      ${favChannels.length > 0 ? `
-        <div class="channel-grid">${favChannels.map(c => channelCardHTML(c)).join("")}</div>
-      ` : `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.heartEmpty}</div>
-          <div class="empty-title">${t("noFavorites")}</div>
-          <div class="empty-sub">${t("noFavoritesSub")}</div>
-        </div>
-      `}
-    </div>
-  `;
+  if(!html)html=`<div class="empty-state"><div class="empty-icon">${I.clap}</div><div class="empty-title">${t("noChannels")}</div></div>`;
+  epEl.innerHTML=html;
 }
 
-function renderSettingsTab() {
-  const el = document.getElementById("tab-settings");
-  if (!el) return;
-  const infoIcon = `<span style="color:#3D8EFF">${ICONS.info}</span>`;
-  const starIcon = `<span style="color:#F59E0B">${ICONS.star}</span>`;
-  const greenInfo = `<span style="color:#22C55E">${ICONS.info}</span>`;
-
-  const xc = state.xtreamConfig;
-
-  // Build Xtream server info section
-  let xtreamInfoHTML = "";
-  if (state.xtreamConnected && state.xtreamInfo) {
-    const info = state.xtreamInfo;
-    const si = state.xtreamServerInfo;
-    const statusColor = info.status === "Active" ? "var(--g)" : "var(--r)";
-    const statusText = info.status === "Active" ? t("xtreamActive") : t("xtreamExpired");
-    const expiryDate = info.exp_date ? new Date(parseInt(info.exp_date) * 1000).toLocaleDateString(isRTL() ? "ar-EG" : "en-US") : "—";
-    xtreamInfoHTML = `
-      <div class="xtream-status connected">
-        <div class="xtream-status-header">
-          <span style="color:var(--g)">${ICONS.wifi}</span>
-          <span style="font-weight:600;color:var(--g)">${t("xtreamConnected")}</span>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">${t("xtreamStatus")}</span>
-          <span class="settings-value" style="color:${statusColor}">${escHtml(statusText)}</span>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">${t("xtreamExpiry")}</span>
-          <span class="settings-value">${expiryDate}</span>
-        </div>
-        ${info.max_connections ? `
-        <div class="settings-row">
-          <span class="settings-label">${t("xtreamMaxConn")}</span>
-          <span class="settings-value">${info.max_connections}</span>
-        </div>
-        ` : ""}
-        ${info.active_cons !== undefined ? `
-        <div class="settings-row">
-          <span class="settings-label">${t("xtreamActiveConn")}</span>
-          <span class="settings-value">${info.active_cons}</span>
-        </div>
-        ` : ""}
-        ${si && si.url ? `
-        <div class="settings-row">
-          <span class="settings-label">${t("xtreamUrl")}</span>
-          <span class="settings-value" style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(si.url)}</span>
-        </div>
-        ` : ""}
-        <div style="margin-top:12px">
-          <button class="xtream-disconnect-btn" onclick="App.xtreamDisconnect()">
-            ${ICONS.wifiOff} ${t("xtreamDisconnect")}
-          </button>
-        </div>
-      </div>
-    `;
-  } else if (state.xtreamConnecting) {
-    xtreamInfoHTML = `
-      <div class="xtream-status connecting">
-        <div class="xtream-status-header">
-          <span style="color:var(--y)">${ICONS.loader}</span>
-          <span style="font-weight:600;color:var(--y)">${t("xtreamConnecting")}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  el.innerHTML = `
-    <div style="padding:16px;max-width:600px;margin:0 auto">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:18px">${t("settings")}</h2>
-
-      <!-- Xtream Codes -->
-      <div class="settings-section">
-        <div class="settings-title">
-          <span style="color:#7B2FFF">${ICONS.link}</span> ${t("xtreamCodes")}
-        </div>
-
-        ${xtreamInfoHTML}
-
-        <div class="xtream-login-form" style="${state.xtreamConnected ? "display:none" : ""}">
-          <div class="xtream-input-group">
-            <label class="xtream-label">${t("xtreamUrl")}</label>
-            <input id="xtream-url" class="xtream-input" type="url" placeholder="${t("xtreamUrlPlaceholder")}" value="${escHtml(xc.url)}">
-          </div>
-          <div class="xtream-input-group">
-            <label class="xtream-label">${t("xtreamUser")}</label>
-            <input id="xtream-user" class="xtream-input" type="text" placeholder="${t("xtreamUserPlaceholder")}" value="${escHtml(xc.user)}" autocomplete="username">
-          </div>
-          <div class="xtream-input-group">
-            <label class="xtream-label">${t("xtreamPass")}</label>
-            <input id="xtream-pass" class="xtream-input" type="password" placeholder="${t("xtreamPassPlaceholder")}" value="${escHtml(xc.pass)}" autocomplete="current-password">
-          </div>
-          <button id="xtream-connect-btn" class="xtream-connect-btn" onclick="App.xtreamLogin()">
-            ${ICONS.wifi} ${t("xtreamConnect")}
-          </button>
-        </div>
-      </div>
-
-      <!-- Language -->
-      <div class="settings-section">
-        <div class="settings-title">
-          <span style="color:#3D8EFF">${ICONS.globe}</span> ${t("language")}
-        </div>
-        <div class="lang-switcher">
-          <button class="lang-opt ${state.locale === "ar" ? "active" : ""}" onclick="App.setLang('ar')">${t("arabic")}</button>
-          <button class="lang-opt ${state.locale === "en" ? "active" : ""}" onclick="App.setLang('en')">${t("english")}</button>
-        </div>
-      </div>
-
-      <!-- App Settings -->
-      <div class="settings-section">
-        <div class="settings-title">${infoIcon} ${t("appSettings")}</div>
-        <div class="settings-row">
-          <span class="settings-label">${t("appName")}</span>
-          <span class="settings-value">${escHtml(state.settings.appName || "hammadshow")}</span>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">${t("version")}</span>
-          <span class="settings-value">2.0.0</span>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">${t("availableChannels")}</span>
-          <span class="settings-value">${getActiveChannels().length}</span>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label">${t("categoriesCount")}</span>
-          <span class="settings-value">${getActiveCategories().length}</span>
-        </div>
-      </div>
-
-      <!-- Developer -->
-      <div class="settings-section">
-        <div class="settings-title">${starIcon} ${t("developerInfo")}</div>
-        <div class="dev-card">
-          <div class="dev-avatar">م</div>
-          <div>
-            <div class="dev-name">${t("developerName")}</div>
-            <div class="dev-role">${t("developerRole")}</div>
-            <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener noreferrer" class="dev-link">
-              ${ICONS.facebook} ${t("followUs")}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- About -->
-      <div class="settings-section">
-        <div class="settings-title">${greenInfo} ${t("about")}</div>
-        <p class="about-text">${isRTL() ? t("aboutText") : t("aboutTextEn")}</p>
-      </div>
-
-      <!-- Footer -->
-      <div class="app-footer">
-        <p>${t("developer")}</p>
-        <p style="margin-top:4px">&copy; 2024 hammadshow — ${t("allRightsReserved")}</p>
-      </div>
-    </div>
-  `;
+// ── CARD HTML GENERATORS ────────────────────────────────────────────
+function chCardHTML(c){
+  const isFav=S.favs.has(c.id);const favI=isFav?I.heartF:I.heart;const favC=isFav?"active":"";
+  return`<div class="ch-card"><div class="ch-thumb" onclick="App.play('${esc(c.id)}')">
+    ${c.logo?`<img src="${esc(c.logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="ch-thumb-icon" style="display:none">${I.tv}</div>`:`<div class="ch-thumb-icon">${I.tv}</div>`}
+    <div class="ch-live-badge"><span class="ch-live-dot"></span>LIVE</div>
+    <div class="ch-play-overlay" onclick="App.play('${esc(c.id)}')"><div class="ch-play-btn">${I.play}</div></div></div>
+    <div class="ch-info"><div class="ch-name">${esc(c.name)}</div>
+    <button class="ch-fav-btn ${favC}" onclick="event.stopPropagation();App.toggleFav('${esc(c.id)}')">${favI}</button></div></div>`;
 }
 
-function renderSeriesDetail(seriesId) {
-  const el = document.getElementById("tab-home");
-  if (!el) return;
-  const series = (state.xtreamStreams.series || []).find(s => s.seriesId == seriesId);
-  if (!series) return;
-
-  const name = series.name || "";
-  const desc = series.plot || "";
-  const cover = series.cover || "";
-  const rating = series.rating || "";
-  const year = series.releaseDate || "";
-  const genre = series.genre || "";
-  const cast = series.cast || "";
-
-  el.innerHTML = `
-    <div style="padding:16px;max-width:800px;margin:0 auto">
-      <button class="back-btn" onclick="App.switchTab('home')">
-        ${isRTL() ? ICONS.arrowRight : ICONS.arrowLeft} ${t("back")}
-      </button>
-
-      <div class="series-detail">
-        <div class="series-cover">
-          ${cover ? `<img src="${escHtml(cover)}" alt="${escHtml(name)}" loading="lazy" onerror="this.parentElement.innerHTML='${ICONS.clapperboard}'">` : ICONS.clapperboard}
-        </div>
-        <div class="series-info">
-          <h2 class="series-title">${escHtml(name)}</h2>
-          ${rating ? `<span class="series-meta"><span style="color:#F59E0B">${ICONS.star}</span> ${escHtml(rating)}</span>` : ""}
-          ${year ? `<span class="series-meta">${escHtml(year)}</span>` : ""}
-          ${genre ? `<span class="series-meta">${escHtml(genre)}</span>` : ""}
-          ${cast ? `<p class="series-cast">${escHtml(cast)}</p>` : ""}
-          ${desc ? `<p class="series-desc">${escHtml(desc)}</p>` : ""}
-        </div>
-      </div>
-
-      <div id="series-episodes">
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.loader}</div>
-          <div class="empty-title">${t("xtreamLoading")}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Load series episodes
-  xtreamGetSeriesInfo(seriesId).then(data => {
-    const epEl = document.getElementById("series-episodes");
-    if (!epEl) return;
-    if (!data || !data.episodes) {
-      epEl.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.clapperboard}</div>
-          <div class="empty-title">${t("noEpisodes")}</div>
-        </div>
-      `;
-      return;
-    }
-
-    const base = xtreamBaseUrl();
-    const user = encodeURIComponent(state.xtreamConfig.user);
-    const pass = encodeURIComponent(state.xtreamConfig.pass);
-    const seasons = data.episodes;
-    let html = "";
-
-    if (typeof seasons === "object") {
-      // Sort seasons
-      const seasonKeys = Object.keys(seasons).sort((a, b) => parseInt(a) - parseInt(b));
-      seasonKeys.forEach(seasonNum => {
-        const eps = seasons[seasonNum];
-        if (!Array.isArray(eps)) return;
-        html += `
-          <div style="margin-bottom:24px">
-            <div class="section-header">
-              <div class="section-bar" style="background:linear-gradient(to bottom,#7B2FFF,#FF2D55)"></div>
-              <h3>${t("season")} ${escHtml(seasonNum)}</h3>
-              <span style="font-size:11px;color:var(--muted);margin-inline-start:4px">(${eps.length} ${t("episodes")})</span>
-            </div>
-            <div class="episode-list">
-              ${eps.map(ep => {
-                const epUrl = `${base}/series/${user}/${pass}/${ep.id}.${ep.container_extension || "mp4"}`;
-                const epId = "xt_ep_" + ep.id;
-                const epName = ep.title || `${t("episode")} ${ep.episode_num || ""}`;
-                const epInfo = ep.info ? ep.info : {};
-                const epDuration = epInfo.duration || "";
-                return `
-                  <div class="episode-card" onclick="App.playXtreamEpisode('${escHtml(epUrl)}', '${escHtml(epName)}', '${escHtml(cover || "")}')">
-                    <div class="episode-play">${ICONS.play}</div>
-                    <div class="episode-details">
-                      <div class="episode-name">${escHtml(epName)}</div>
-                      <div class="episode-meta">
-                        ${epDuration ? `<span>${escHtml(epDuration)} mins</span>` : ""}
-                        ${epInfo.container_extension ? `<span>${escHtml(epInfo.container_extension).toUpperCase()}</span>` : ""}
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join("")}
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    if (!html) {
-      html = `
-        <div class="empty-state">
-          <div class="empty-icon">${ICONS.clapperboard}</div>
-          <div class="empty-title">${t("noEpisodes")}</div>
-        </div>
-      `;
-    }
-
-    epEl.innerHTML = html;
-  });
+function posterCardHTML(c){
+  const isFav=S.favs.has(c.id);const favI=isFav?I.heartF:I.heart;const favC=isFav?"active":"";
+  const isSeries=c.type==="series";
+  const action=isSeries?`App.openSeries(${c.seriesId})`:`App.play('${esc(c.id)}')`;
+  return`<div class="poster-card" onclick="${action}">
+    <div class="poster-thumb">
+      ${c.logo?`<img src="${esc(c.logo)}" alt="" loading="lazy" onerror="this.style.display='none'">`:""}
+      <div class="poster-overlay"><div class="poster-play-btn">${isSeries?I.info:I.play}</div></div>
+      <button class="poster-fav ${favC}" onclick="event.stopPropagation();App.toggleFav('${esc(c.id)}')">${favI}</button></div>
+    <div class="poster-info"><span class="poster-title">${esc(c.name)}</span>
+    <div class="poster-meta">${c.rating?`<span class="poster-rating">${I.star} ${esc(c.rating)}</span>`:""}${c.year?`<span>${esc(c.year)}</span>`:""}</div></div></div>`;
 }
 
-function renderPlayer() {
-  const overlay = document.getElementById("player-overlay");
-  if (!overlay) return;
-  if (!state.playerOpen || !state.currentChannel) {
-    overlay.classList.remove("show");
-    return;
+// ── SETTINGS ────────────────────────────────────────────────────────
+function renderSettings(){
+  const el=document.getElementById("settings-panel");if(!el)return;
+  const xc=S.xtConfig;
+  let statusHTML="";
+  if(S.xtConnected&&S.xtInfo){
+    const info=S.xtInfo;const sc=info.status==="Active"?"var(--g)":"var(--r)";
+    const st=info.status==="Active"?t("active"):t("expired");
+    const exp=info.exp_date?new Date(parseInt(info.exp_date)*1000).toLocaleDateString(isRTL()?"ar-EG":"en-US"):"—";
+    statusHTML=`<div class="xt-status connected">${I.wifi}<span>${t("connected")}</span></div>
+    <div class="xt-server-info">
+      <div class="sp-row"><span class="sp-label">${t("status")}</span><span class="sp-value" style="color:${sc}">${esc(st)}</span></div>
+      <div class="sp-row"><span class="sp-label">${t("expiry")}</span><span class="sp-value">${exp}</span></div>
+      ${info.max_connections?`<div class="sp-row"><span class="sp-label">${t("maxConn")}</span><span class="sp-value">${info.max_connections}</span></div>`:""}
+    </div>
+    <button class="xt-disconnect-btn" onclick="App.xtDisconnect()">${I.wifiOff} ${t("disconnect")}</button>`;
+  }else if(S.xtConnecting){
+    statusHTML=`<div class="xt-status loading">${I.loader}<span>${t("connecting")}</span></div>`;
   }
-  const ch = state.currentChannel;
-  const name = getChannelName(ch);
-  const desc = getChannelDesc(ch);
-  const isFav = state.favorites.has(ch.id);
-  const url = xtreamStreamUrl(ch);
+  el.innerHTML=`
+    <div class="sp-header"><h2>${t("settings")}</h2><button class="sp-close" onclick="App.closeSettings()">${I.x}</button></div>
+    <div class="sp-section">
+      <div class="sp-title"><span style="color:#7B2FFF">${I.wifi}</span> ${t("xtreamCodes")}</div>
+      ${statusHTML}
+      <div style="${S.xtConnected?'display:none':''}">
+        <div class="xt-input-group"><label class="xt-label">${t("xtreamUrl")}</label><input id="xt-url" class="xt-input" type="url" placeholder="${t("xtreamUrlPh")}" value="${esc(xc.url)}"></div>
+        <div class="xt-input-group"><label class="xt-label">${t("xtreamUser")}</label><input id="xt-user" class="xt-input" type="text" placeholder="${t("xtreamUserPh")}" value="${esc(xc.user)}" autocomplete="username"></div>
+        <div class="xt-input-group"><label class="xt-label">${t("xtreamPass")}</label><input id="xt-pass" class="xt-input" type="password" placeholder="${t("xtreamPassPh")}" value="${esc(xc.pass)}" autocomplete="current-password"></div>
+        <button class="xt-connect-btn" onclick="App.xtLogin()">${I.wifi} ${t("connect")}</button>
+      </div>
+    </div>
+    <div class="sp-section">
+      <div class="sp-title"><span style="color:#3D8EFF">${I.globe}</span> ${t("language")}</div>
+      <div class="lang-switcher">
+        <button class="lang-opt ${S.locale==="ar"?"active":""}" onclick="App.setLang('ar')">${t("arabic")}</button>
+        <button class="lang-opt ${S.locale==="en"?"active":""}" onclick="App.setLang('en')">${t("english")}</button>
+      </div>
+    </div>
+    <div class="sp-section">
+      <div class="sp-title"><span style="color:#F59E0B">${I.star}</span> ${t("about")}</div>
+      <div class="dev-card"><div class="dev-avatar">م</div><div>
+        <div class="dev-name">${t("devName")}</div><div class="dev-role">${t("devRole")}</div>
+        <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener" class="dev-link">${I.facebook} ${t("followUs")}</a>
+      </div></div>
+    </div>
+    <div class="sp-footer"><p>${t("developer")}</p><p>v2.0.0 — © 2025 hammadshow</p></div>`;
+}
 
-  const videoEl = document.getElementById("player-video");
-  videoEl.src = "";
-  playStream(url, videoEl);
-
-  document.getElementById("player-ch-name").textContent = name;
-  document.getElementById("player-ch-desc").textContent = desc;
-  const logoEl = document.getElementById("player-logo");
-  if (ch.logo) {
-    logoEl.innerHTML = `<img src="${escHtml(ch.logo)}" alt="" onerror="this.parentElement.innerHTML='${ICONS.tv}'">`;
-    logoEl.style.display = "flex";
-  } else {
-    logoEl.innerHTML = ICONS.tv;
-    logoEl.style.display = "flex";
-  }
-  const favBtn = document.getElementById("player-fav");
-  favBtn.innerHTML = isFav ? ICONS.heartFilled : ICONS.heart;
-  favBtn.className = `player-fav-btn ${isFav ? "active" : ""}`;
-  favBtn.onclick = () => { toggleFav(ch.id); renderPlayer(); };
+// ── PLAYER ──────────────────────────────────────────────────────────
+function showPlayer(ch){
+  S.current=ch;S.playerOpen=true;
+  const overlay=document.getElementById("player-overlay");
+  const video=document.getElementById("player-video");
+  document.getElementById("pc-title").textContent=ch.name||"";
   overlay.classList.add("show");
+  playStream(ch.url,video);
+  addHistory(ch);
+  setupPlayerEvents(video);
+  showControls();
 }
 
-function renderInstallBanner() {
-  const el = document.getElementById("install-banner");
-  if (!el) return;
-  if (!state.deferredPrompt) { el.classList.add("hidden"); return; }
-  el.classList.remove("hidden");
-  el.innerHTML = `
-    <div class="install-banner">
-      <div class="install-icon">${ICONS.download}</div>
-      <div class="install-text">
-        <h4>${t("installApp")}</h4>
-        <p>${t("installSub")}</p>
-      </div>
-      <button class="install-btn" onclick="App.install()">${t("installBtn")}</button>
-    </div>
-  `;
-}
-
-function renderAll() {
-  renderHeader();
-  renderNavLabels();
-  renderSearch();
-  renderWelcome();
-  renderBanners();
-  renderSourceIndicator();
-  renderContentTypeTabs();
-  renderCategoryPills();
-  renderHomeChannels();
-  renderCategorySections();
-  renderCategoriesTab();
-  renderFavoritesTab();
-  renderSettingsTab();
-  renderPlayer();
-  renderInstallBanner();
-}
-
-// ── TAB SWITCHING ───────────────────────────────────────────────────
-function switchTab(tab) {
-  state.activeTab = tab;
-  state.selectedCategory = null;
-  state.searchQuery = "";
-  document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
-  const tabEl = document.getElementById("tab-" + tab);
-  if (tabEl) tabEl.classList.add("active");
-  document.querySelectorAll(".nav-item").forEach(el => {
-    el.classList.toggle("active", el.dataset.tab === tab);
-  });
-  if (tab === "favorites") renderFavoritesTab();
-  if (tab === "categories") renderCategoriesTab();
-  if (tab === "settings") renderSettingsTab();
-  if (tab === "home") {
-    renderSourceIndicator();
-    renderContentTypeTabs();
-    renderCategoryPills();
-    renderHomeChannels();
-    renderCategorySections();
+function hidePlayer(){
+  const v=document.getElementById("player-video");
+  const miniV=document.getElementById("mini-video");
+  if(S.hlsInst){S.hlsInst.destroy();S.hlsInst=null}
+  // If video was playing, switch to mini player
+  if(v&&v.currentTime>0&&!v.paused&&v.src){
+    miniV.src=v.src;miniV.play().catch(()=>{});
+    document.getElementById("mini-title").textContent=S.current?S.current.name:"";
+    document.getElementById("mini-player").style.display="flex";
+  }else{
+    if(miniV){miniV.pause();miniV.src=""}
+    document.getElementById("mini-player").style.display="none";
   }
+  v.pause();v.src="";S.playerOpen=false;S.current=null;
+  document.getElementById("player-overlay").classList.remove("show");
+  clearTimeout(S.controlsTimer);
 }
 
-// ── APP API (global) ────────────────────────────────────────────────
-window.App = {
+function expandPlayer(){
+  if(!S.current)return;
+  const miniV=document.getElementById("mini-video");
+  document.getElementById("mini-player").style.display="none";
+  miniV.pause();miniV.src="";
+  showPlayer(S.current);
+}
+
+function setupPlayerEvents(video){
+  // Remove old listeners by replacing
+  const nv=video.cloneNode(true);video.parentNode.replaceChild(nv,video);
+  const v=nv;
+  v.addEventListener("timeupdate",updateSeekBar);
+  v.addEventListener("progress",updateBuffer);
+  v.addEventListener("play",()=>{document.getElementById("pc-play-toggle").innerHTML=I.pause;document.getElementById("pc-play-btn").innerHTML=I.pause});
+  v.addEventListener("pause",()=>{document.getElementById("pc-play-toggle").innerHTML=I.play;document.getElementById("pc-play-btn").innerHTML=I.play});
+  v.addEventListener("ended",hidePlayer);
+  // Tap to show/hide controls
+  v.addEventListener("click",()=>{if(S.controlsVisible)hideControls();else showControls()});
+  // Double tap to seek
+  let lastTap=0;
+  v.addEventListener("touchend",(e)=>{
+    const now=Date.now();if(now-lastTap<300){
+      const rect=v.getBoundingClientRect();const x=e.changedTouches[0].clientX-rect.left;
+      if(x<rect.width/3)seekRel(-10);else if(x>rect.width*2/3)seekRel(10);
+    }lastTap=now;
+  });
+  showControls();
+}
+
+function showControls(){
+  S.controlsVisible=true;
+  document.getElementById("player-controls").classList.add("visible");
+  clearTimeout(S.controlsTimer);
+  S.controlsTimer=setTimeout(hideControls,3500);
+}
+function hideControls(){S.controlsVisible=false;document.getElementById("player-controls").classList.remove("visible");clearTimeout(S.controlsTimer)}
+function updateSeekBar(){
+  const v=document.getElementById("player-video");if(!v||!v.duration)return;
+  const pct=(v.currentTime/v.duration)*100;
+  document.getElementById("pc-progress").style.width=pct+"%";
+  document.getElementById("pc-thumb").style.insetInlineStart=`calc(${pct}% - 7px)`;
+  document.getElementById("pc-current").textContent=formatTime(v.currentTime);
+  document.getElementById("pc-duration").textContent=formatTime(v.duration);
+}
+function updateBuffer(){
+  const v=document.getElementById("player-video");if(!v||!v.buffered.length)return;
+  const end=v.buffered.end(v.buffered.length-1);const pct=(end/v.duration)*100;
+  document.getElementById("pc-buffered").style.width=pct+"%";
+}
+function seekTo(e){
+  const bar=document.getElementById("pc-seek-bar");const v=document.getElementById("player-video");if(!v||!v.duration)return;
+  const rect=bar.getBoundingClientRect();const x=(isRTL()?rect.right-e.clientX:e.clientX-rect.left)/rect.width;
+  v.currentTime=Math.max(0,Math.min(x*v.duration,v.duration));showControls();
+}
+function seekRel(sec){
+  const v=document.getElementById("player-video");if(!v)return;
+  v.currentTime=Math.max(0,Math.min(v.currentTime+sec,v.duration||0));
+  const ind=document.getElementById("seek-indicator");
+  const txt=document.getElementById("seek-indicator-text");
+  if(sec>0){ind.querySelector("svg").style.transform="scaleX(-1)";txt.textContent="+"+sec+"s"}
+  else{ind.querySelector("svg").style.transform="";txt.textContent=sec+"s"}
+  // Position
+  const isLeft=sec<0;
+  ind.style.cssText=`position:absolute;top:50%;${isLeft?"left":"right"}:15%;transform:translateY(-50%);background:rgba(0,0,0,.6);backdrop-filter:blur(10px);border-radius:50%;width:56px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;z-index:5;opacity:1;pointer-events:none`;
+  ind.querySelector("svg").style.cssText=`width:20px;height:20px;color:#fff`;
+  setTimeout(()=>{ind.style.opacity="0"},600);
+  showControls();
+}
+function togglePlayPause(){
+  const v=document.getElementById("player-video");if(!v)return;
+  if(v.paused)v.play().catch(()=>{});else v.pause();showControls();
+}
+function takeScreenshot(){
+  const v=document.getElementById("player-video");if(!v)return;
+  const c=document.getElementById("screenshot-canvas");c.width=v.videoWidth||640;c.height=v.videoHeight||360;
+  c.getContext("2d").drawImage(v,0,0,c.width,c.height);
+  c.toBlob(blob=>{const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="hammadshot_"+Date.now()+".png";a.click();URL.revokeObjectURL(url)},  "image/png");
+}
+function togglePiP(){
+  const v=document.getElementById("player-video");if(!v)return;
+  if(document.pictureInPictureElement){document.exitPictureInPicture().catch(()=>{})}
+  else if(v.requestPictureInPicture){v.requestPictureInPicture().catch(()=>{})}
+}
+function toggleFullscreen(){
+  const el=document.getElementById("player-container");
+  if(!document.fullscreenElement)el.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
+}
+
+// ── UTILITIES ───────────────────────────────────────────────────────
+function emptyNoXtream(){return`<div style="padding:16px"><div class="empty-state"><div class="empty-icon">${I.wifiOff}</div><div class="empty-title">${t("noChannels")}</div><div class="empty-sub">${t("noHistorySub")}</div></div></div>`}
+function fixSearchIcon(el){const si=el.querySelector(".search-wrap-inner");if(!si)return;const svg=si.querySelector("svg");if(!svg)return;if(isRTL())svg.style.cssText="position:absolute;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted);right:12px;pointer-events:none";else svg.style.cssText="position:absolute;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--muted);left:12px;pointer-events:none"}
+
+function renderAll(){renderNavLabels();renderLiveTab();renderMoviesTab();renderSeriesTab();renderFavoritesTab();renderHistoryTab();renderRecentTab();renderSettings()}
+
+function switchTab(tab){
+  S.activeTab=tab;S.selectedCat=null;S.searchQ="";
+  document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
+  const tabEl=document.getElementById("tab-"+tab);if(tabEl)tabEl.classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(el=>el.classList.toggle("active",el.dataset.tab===tab));
+  document.getElementById("main-content").scrollTop=0;
+  if(tab==="live")renderLiveTab();
+  else if(tab==="movies")renderMoviesTab();
+  else if(tab==="series")renderSeriesTab();
+  else if(tab==="favorites")renderFavoritesTab();
+  else if(tab==="history")renderHistoryTab();
+  else if(tab==="recent")renderRecentTab();
+}
+
+// ── APP API ─────────────────────────────────────────────────────────
+window.App={
+  _lang:S.locale,
   switchTab,
-  _lang: state.locale,
-  openCategory(id) {
-    state.selectedCategory = id;
-    state.searchQuery = "";
-    switchTab("categories");
+  onSearch(q){S.searchQ=q;const tab=S.activeTab;if(tab==="live")renderLiveTab();else if(tab==="movies")renderMoviesTab();else if(tab==="series")renderSeriesTab()},
+  selectCat(id){S.selectedCat=id;renderLiveTab()},
+  play(id){
+    let ch=[...S.xtStreams.live,...S.xtStreams.vod,...S.xtStreams.series].find(c=>c.id===id);
+    if(ch)showPlayer(ch);
   },
-  closeCategory() {
-    state.selectedCategory = null;
-    state.searchQuery = "";
-    renderCategoriesTab();
+  playById(id){
+    let ch=[...S.xtStreams.live,...S.xtStreams.vod,...S.xtStreams.series].find(c=>c.id===id);
+    if(ch)showPlayer(ch);
   },
-  selectCategory(id) {
-    state.selectedCategory = id;
-    renderCategoryPills();
-    renderHomeChannels();
+  playDirect(url,name,logo,type){
+    showPlayer({id:"direct_"+Date.now(),name,logo:logo||"",url,type:type||"direct",description:""});
   },
-  play(id) {
-    // Find in all sources
-    let ch = state.allChannels.find(c => c.id === id);
-    if (!ch && state.xtreamConnected) {
-      Object.values(state.xtreamStreams).forEach(streams => {
-        if (!ch) ch = streams.find(c => c.id === id);
-      });
-    }
-    if (ch) {
-      state.currentChannel = ch;
-      state.playerOpen = true;
-      renderPlayer();
-    }
-  },
-  playXtreamEpisode(url, name, logo) {
-    state.currentChannel = {
-      id: "xt_ep_" + Date.now(),
-      name: name,
-      logo: logo || "",
-      url: url,
-      type: "episode",
-      description: "",
-      _xtream: true,
-    };
-    state.playerOpen = true;
-    renderPlayer();
-  },
-  openSeries(seriesId) {
-    renderSeriesDetail(seriesId);
-  },
-  closePlayer() {
-    const v = document.getElementById("player-video");
-    if (v) { v.pause(); v.src = ""; }
-    if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
-    state.playerOpen = false;
-    state.currentChannel = null;
-    renderPlayer();
-  },
-  toggleFav(id) { toggleFav(id); },
-  setLang(lang) {
-    state.locale = lang;
-    this._lang = lang;
-    saveLocale();
-    document.documentElement.dir = isRTL() ? "rtl" : "ltr";
-    document.documentElement.lang = lang;
+  openSeries(sid){renderSeriesDetail(sid)},
+  openFolder(type,catId,catName){renderFolderDetail(type,catId,catName)},
+  toggleFav(id){if(S.favs.has(id))S.favs.delete(id);else S.favs.add(id);saveFavs();renderAll()},
+  closePlayer(){hidePlayer()},
+  expandPlayer,
+  togglePlayPause,seekTo,seekRelative:seekRel,takeScreenshot,togglePiP,toggleFullscreen,showControls,
+  clearHistory(){S.history=[];saveHistory();renderHistoryTab()},
+  setLang(lang){
+    S.locale=lang;this._lang=lang;
+    localStorage.setItem("hs-locale",lang);
+    document.documentElement.dir=isRTL()?"rtl":"ltr";document.documentElement.lang=lang;
+    const ll=document.getElementById("lang-label");if(ll)ll.textContent=lang==="ar"?"EN":"عربي";
     renderAll();
   },
-  onSearch(q) {
-    state.searchQuery = q;
-    if (state.activeTab === "home") { renderHomeChannels(); }
-    else if (state.activeTab === "categories") { renderCategoriesTab(); }
-  },
-  install() {
-    if (state.deferredPrompt) {
-      state.deferredPrompt.prompt();
-      state.deferredPrompt.userChoice.then(() => {
-        state.deferredPrompt = null;
-        renderInstallBanner();
-      });
+  openSettings(){S.settingsOpen=true;document.getElementById("settings-overlay").classList.add("show")},
+  closeSettings(){S.settingsOpen=false;document.getElementById("settings-overlay").classList.remove("show")},
+  async xtLogin(){
+    const url=document.getElementById("xt-url").value.trim();
+    const user=document.getElementById("xt-user").value.trim();
+    const pass=document.getElementById("xt-pass").value.trim();
+    S.xtConfig={url,user,pass};
+    const ok=await xtLogin();
+    if(!ok){
+      const btn=document.querySelector(".xt-connect-btn");
+      if(btn){btn.style.background="var(--r)";btn.innerHTML=I.x+" "+t("error");setTimeout(()=>{btn.style.background="";btn.innerHTML=I.wifi+" "+t("connect")},3000)}
     }
   },
-  // Xtream methods
-  async xtreamLogin() {
-    const url = document.getElementById("xtream-url").value.trim();
-    const user = document.getElementById("xtream-user").value.trim();
-    const pass = document.getElementById("xtream-pass").value.trim();
-    state.xtreamConfig = { url, user, pass };
-    const ok = await xtreamLogin();
-    if (ok) {
-      state.dataSource = "xtream";
-      saveDataSource();
-      renderAll();
-    } else {
-      // Show error
-      const btn = document.getElementById("xtream-connect-btn");
-      if (btn) {
-        btn.style.background = "var(--r)";
-        btn.innerHTML = `${ICONS.x} ${t("xtreamError")}`;
-        setTimeout(() => {
-          btn.style.background = "";
-          btn.innerHTML = `${ICONS.wifi} ${t("xtreamConnect")}`;
-        }, 3000);
-      }
-    }
-  },
-  xtreamDisconnect() {
-    xtreamDisconnect();
-  },
-  setDataSource(source) {
-    state.dataSource = source;
-    state.selectedCategory = null;
-    saveDataSource();
-    renderAll();
-  },
-  setContentType(type) {
-    state.xtreamContentType = type;
-    state.selectedCategory = null;
-    state.searchQuery = "";
-    renderAll();
-  },
+  xtDisconnect(){xtDisconnect();renderSettings()},
 };
 
-// ── SEARCH EVENT (home tab) ─────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("search-input");
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      state.searchQuery = e.target.value;
-      renderHomeChannels();
-    });
-  }
-});
-
-// ── PWA INSTALL PROMPT ──────────────────────────────────────────────
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  state.deferredPrompt = e;
-  renderInstallBanner();
-});
-
 // ── INIT ────────────────────────────────────────────────────────────
-async function init() {
-  loadLocale();
-  loadFavorites();
-  loadXtreamConfig();
-  loadDataSource();
-  document.documentElement.dir = isRTL() ? "rtl" : "ltr";
-  document.documentElement.lang = state.locale;
-
-  // Initial render
+async function init(){
+  S.locale=localStorage.getItem("hs-locale")||"ar";
+  document.documentElement.dir=isRTL()?"rtl":"ltr";document.documentElement.lang=S.locale;
+  loadFavs();loadHistory();
+  S.xtConfig=load("xtc",{url:"",user:"",pass:""});
   renderAll();
-
-  // Connect to Firebase
-  const ok = await loadFirebase();
-  if (ok) {
-    subscribeSettings(s => { state.settings = s; state.loading = false; renderAll(); });
-    subscribeCategories(c => { state.categories = c; renderCategoryPills(); renderCategorySections(); renderCategoriesTab(); });
-    subscribeChannels(c => { state.allChannels = c; renderHomeChannels(); renderCategorySections(); renderCategoriesTab(); renderFavoritesTab(); renderSettingsTab(); renderNavLabels(); });
-    subscribeBanners(b => { state.banners = b; renderBanners(); });
-  } else {
-    state.loading = false;
-    renderAll();
-  }
-
-  // Auto-reconnect to Xtream if credentials saved
-  if (state.xtreamConfig.url && state.xtreamConfig.user && state.xtreamConfig.pass && state.dataSource === "xtream") {
-    await xtreamLogin();
-  }
-
-  // Register Service Worker
-  if ("serviceWorker" in navigator) {
-    try { await navigator.serviceWorker.register("./sw.js"); } catch(e) {}
-  }
+  if(S.xtConfig.url&&S.xtConfig.user&&S.xtConfig.pass)await xtLogin();
+  if("serviceWorker"in navigator)try{await navigator.serviceWorker.register("./sw.js")}catch(e){}
 }
-
 init();

@@ -7,14 +7,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="hammadshow">
-  <meta name="description" content="hammadshow — تطبيق البث المباشر | من برمجة وتطوير المهندس محمد حماد">
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="hammadshow — تطبيق البث المباشر">
   <title>hammadshow</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" type="image/png" href="./icons/icon-192.png">
   <style>
-    /* Critical CSS — prevents flash */
     body{background:#0A0A0F;color:#F5F5F7;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans Arabic',Arial,sans-serif;overflow-x:hidden}
     #app{display:none}
     .splash{position:fixed;inset:0;z-index:9999;background:#0A0A0F;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .4s}
@@ -39,207 +37,179 @@
 
   <!-- APP -->
   <div id="app">
-
-    <!-- Background Orbs -->
-    <div class="bg-orbs">
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
-      <div class="orb orb-3"></div>
-    </div>
+    <div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 
     <!-- HEADER -->
     <header class="header">
       <div class="header-logo">
         <div class="header-gem">H</div>
-        <div class="header-info" id="header-info">
-          <h1>hammadshow</h1>
-          <p>من برمجة وتطوير المهندس محمد حماد</p>
-        </div>
+        <div class="header-info" id="header-info"><h1>hammadshow</h1></div>
       </div>
       <div class="header-actions">
         <button class="lang-btn" onclick="App.setLang(App._lang==='en'?'ar':'en')" id="lang-toggle-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
           <span id="lang-label">EN</span>
         </button>
+        <button class="settings-btn" onclick="App.openSettings()" id="settings-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
       </div>
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="main">
-
-      <!-- ─── HOME TAB ─── -->
-      <div class="tab active" id="tab-home">
-        <div style="padding:16px;max-width:1200px;margin:0 auto">
-
-          <!-- Search -->
-          <div class="search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input id="search-input" class="search-input" type="text" placeholder="بحث...">
-          </div>
-
-          <!-- Install Banner -->
-          <div id="install-banner" class="hidden"></div>
-
-          <!-- Source Indicator (Firebase / Xtream) -->
-          <div id="source-indicator" class="hidden"></div>
-
-          <!-- Content Type Tabs (Live / Movies / Series) -->
-          <div id="content-type-tabs" class="hidden"></div>
-
-          <!-- Welcome -->
-          <div id="welcome-section">
-            <div class="welcome">
-              <h2>مرحباً بك في hammadshow</h2>
-              <p>استمتع بأفضل تجربة بث مباشر</p>
-            </div>
-          </div>
-
-          <!-- Banners -->
-          <div id="banners-section" class="hidden" style="margin-bottom:24px"></div>
-
-          <!-- Category Pills -->
-          <div id="cat-pills" class="hidden" style="margin-bottom:24px"></div>
-
-          <!-- Live TV Section -->
-          <div style="margin-bottom:24px">
-            <div class="section-header">
-              <div class="section-bar"></div>
-              <h3 id="live-tv-title">بث مباشر</h3>
-              <div class="section-badge badge-live"><span class="ch-live-dot"></span> LIVE</div>
-            </div>
-            <div id="home-channels">
-              <div class="skeleton-grid">
-                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
-                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
-                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
-                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
-                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
-                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Category Sections -->
-          <div id="cat-sections"></div>
-
-        </div>
-      </div>
-
-      <!-- ─── CATEGORIES TAB ─── -->
-      <div class="tab" id="tab-categories"></div>
-
-      <!-- ─── FAVORITES TAB ─── -->
+    <main class="main" id="main-content">
+      <!-- Tab: Live TV (Home with 4 big cards) -->
+      <div class="tab active" id="tab-live"></div>
+      <!-- Tab: Movies -->
+      <div class="tab" id="tab-movies"></div>
+      <!-- Tab: Series -->
+      <div class="tab" id="tab-series"></div>
+      <!-- Tab: Favorites -->
       <div class="tab" id="tab-favorites"></div>
-
-      <!-- ─── SETTINGS TAB ─── -->
-      <div class="tab" id="tab-settings"></div>
-
+      <!-- Tab: Watch History -->
+      <div class="tab" id="tab-history"></div>
+      <!-- Tab: Recently Added -->
+      <div class="tab" id="tab-recent"></div>
     </main>
 
-    <!-- VIDEO PLAYER MODAL -->
-    <div class="player-overlay" id="player-overlay" onclick="if(event.target===this)App.closePlayer()">
-      <div class="player-modal">
-        <div class="player-video-wrap">
-          <video id="player-video" controls playsinline></video>
-          <button class="player-close" onclick="App.closePlayer()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
-        </div>
-        <div class="player-info-bar">
-          <div class="player-ch-info">
-            <div class="player-ch-logo" id="player-logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
-            </div>
-            <div style="min-width:0;flex:1">
-              <div class="player-ch-name" id="player-ch-name"></div>
-              <div class="player-ch-desc" id="player-ch-desc"></div>
+    <!-- SETTINGS PANEL (Slide-in) -->
+    <div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)App.closeSettings()">
+      <div class="settings-panel" id="settings-panel"></div>
+    </div>
+
+    <!-- FULL PLAYER -->
+    <div class="player-overlay" id="player-overlay">
+      <div class="player-container" id="player-container">
+        <video id="player-video" playsinline></video>
+        <!-- Custom Controls -->
+        <div class="player-controls" id="player-controls">
+          <div class="player-top-bar">
+            <button class="pc-btn" onclick="App.closePlayer()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <div class="pc-title" id="pc-title"></div>
+            <div style="display:flex;gap:6px">
+              <button class="pc-btn" onclick="App.takeScreenshot()" title="Screenshot">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              </button>
+              <button class="pc-btn" onclick="App.togglePiP()" title="PiP">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" opacity=".3"/></svg>
+              </button>
             </div>
           </div>
-          <button class="player-fav-btn" id="player-fav">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          <!-- Center Play -->
+          <div class="player-center" id="player-center" onclick="App.togglePlayPause()">
+            <div class="pc-play-btn" id="pc-play-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+          </div>
+          <!-- Bottom Controls -->
+          <div class="player-bottom-bar">
+            <div class="pc-seek-wrap">
+              <span class="pc-time" id="pc-current">0:00</span>
+              <div class="pc-seek-bar" id="pc-seek-bar" onclick="App.seekTo(event)">
+                <div class="pc-seek-buffered" id="pc-buffered"></div>
+                <div class="pc-seek-progress" id="pc-progress"></div>
+                <div class="pc-seek-thumb" id="pc-thumb"></div>
+              </div>
+              <span class="pc-time" id="pc-duration">0:00</span>
+            </div>
+            <div class="pc-actions">
+              <button class="pc-btn pc-sm" onclick="App.seekRelative(-10)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                <span>10</span>
+              </button>
+              <button class="pc-btn" onclick="App.togglePlayPause()" id="pc-play-toggle">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="pc-btn pc-sm" onclick="App.seekRelative(10)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg>
+                <span>10</span>
+              </button>
+              <div style="flex:1"></div>
+              <button class="pc-btn pc-sm" onclick="App.takeScreenshot()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              </button>
+              <button class="pc-btn pc-sm" onclick="App.toggleFullscreen()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Double-tap seek indicator -->
+        <div class="seek-indicator" id="seek-indicator" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span id="seek-indicator-text">-10s</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MINI PLAYER (Floating) -->
+    <div class="mini-player" id="mini-player" style="display:none">
+      <div class="mini-video-wrap" onclick="App.expandPlayer()">
+        <video id="mini-video" muted playsinline></video>
+        <div class="mini-play-overlay">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+      </div>
+      <div class="mini-info">
+        <div class="mini-title" id="mini-title"></div>
+        <div class="mini-actions">
+          <button onclick="App.closePlayer()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION -->
+    <!-- BOTTOM NAVIGATION (6 tabs) -->
     <nav class="bottom-nav">
       <div class="bottom-nav-inner">
-        <button class="nav-item active" data-tab="home" onclick="App.switchTab('home')">
+        <button class="nav-item active" data-tab="live" onclick="App.switchTab('live')">
           <div class="nav-indicator"></div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <span class="nav-label" data-tab="home">الرئيسية</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+          <span class="nav-label" data-tab="live">مباشر</span>
         </button>
-        <button class="nav-item" data-tab="categories" onclick="App.switchTab('categories')">
+        <button class="nav-item" data-tab="movies" onclick="App.switchTab('movies')">
           <div class="nav-indicator"></div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-          <span class="nav-label" data-tab="categories">التصنيفات</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          <span class="nav-label" data-tab="movies">أفلام</span>
+        </button>
+        <button class="nav-item" data-tab="series" onclick="App.switchTab('series')">
+          <div class="nav-indicator"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+          <span class="nav-label" data-tab="series">مسلسلات</span>
         </button>
         <button class="nav-item" data-tab="favorites" onclick="App.switchTab('favorites')">
           <div class="nav-indicator"></div>
-          <div class="nav-badge" id="fav-badge" style="display:none">0</div>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-          <span class="nav-label" data-tab="favorites">المفضلة</span>
+          <span class="nav-label" data-tab="favorites">مفضلة</span>
         </button>
-        <button class="nav-item" data-tab="settings" onclick="App.switchTab('settings')">
+        <button class="nav-item" data-tab="history" onclick="App.switchTab('history')">
           <div class="nav-indicator"></div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span class="nav-label" data-tab="settings">الإعدادات</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="nav-label" data-tab="history">المشاهدات</span>
+        </button>
+        <button class="nav-item" data-tab="recent" onclick="App.switchTab('recent')">
+          <div class="nav-indicator"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12"/><line x1="12" y1="16" x2="12.01" y2="16"/><path d="M12 2v4"/></svg>
+          <span class="nav-label" data-tab="recent">مضاف حديث</span>
         </button>
       </div>
     </nav>
-
   </div>
 
-  <!-- HLS.js for m3u8 streaming support -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+  <!-- Hidden canvas for screenshots -->
+  <canvas id="screenshot-canvas" style="display:none"></canvas>
 
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
   <script src="./app.js"></script>
   <script>
-    // Hide splash after app renders
-    function hideSplash() {
-      const splash = document.getElementById('splash');
-      const app = document.getElementById('app');
-      if (splash && app) {
-        splash.classList.add('hide');
-        app.style.display = 'flex';
-        setTimeout(() => splash.remove(), 500);
-      }
-    }
-    // Wait for app init
-    const checkInit = setInterval(() => {
-      if (window.App) {
-        clearInterval(checkInit);
-        setTimeout(hideSplash, 600);
-      }
-    }, 100);
-    // Fallback
-    setTimeout(hideSplash, 4000);
-
-    // Fix lang toggle
-    document.getElementById('lang-toggle-btn').addEventListener('click', function(e) {
-      e.stopPropagation();
-      const isAr = document.documentElement.lang === 'ar';
-      App.setLang(isAr ? 'en' : 'ar');
-    });
-    // Update lang label on init
-    const updateLangLabel = setInterval(() => {
-      const label = document.getElementById('lang-label');
-      if (label && window.App) {
-        label.textContent = document.documentElement.lang === 'ar' ? 'EN' : 'عربي';
-        clearInterval(updateLangLabel);
-      }
-    }, 200);
-    // Override setLang to also update lang label
-    const origSetLang = App.setLang;
-    App.setLang = function(lang) {
-      origSetLang(lang);
-      const label = document.getElementById('lang-label');
-      if (label) label.textContent = lang === 'ar' ? 'EN' : 'عربي';
-      // Update live tv title
-      const title = document.getElementById('live-tv-title');
-      if (title) title.textContent = lang === 'ar' ? 'بث مباشر' : 'Live TV';
-    };
+    function hideSplash(){const s=document.getElementById('splash'),a=document.getElementById('app');if(s&&a){s.classList.add('hide');a.style.display='flex';setTimeout(()=>s.remove(),500)}}
+    const ci=setInterval(()=>{if(window.App){clearInterval(ci);setTimeout(hideSplash,600)}},100);
+    setTimeout(hideSplash,4000);
+    document.getElementById('lang-toggle-btn').addEventListener('click',function(e){e.stopPropagation();App.setLang(document.documentElement.lang==='ar'?'en':'ar')});
+    const ul=setInterval(()=>{const l=document.getElementById('lang-label');if(l&&window.App){l.textContent=document.documentElement.lang==='ar'?'EN':'عربي';clearInterval(ul)}},200);
   </script>
 </body>
 </html>
