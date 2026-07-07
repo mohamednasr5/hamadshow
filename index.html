@@ -1,312 +1,237 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-theme="dark">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0a0f">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Hamad Show">
-  <meta name="description" content="Hamad Show — Premium IPTV Streaming Experience">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="msapplication-TileColor" content="#e50914">
-  <title>Hamad Show</title>
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- Icons -->
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Firebase Compat SDK (no build tools needed) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/player.css">
-  <link rel="stylesheet" href="css/responsive.css">
-  <link rel="stylesheet" href="css/admin.css">
+  <meta name="apple-mobile-web-app-title" content="hammadshow">
+  <meta name="description" content="hammadshow — تطبيق البث المباشر | من برمجة وتطوير المهندس محمد حماد">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>hammadshow</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <style>
+    /* Critical CSS — prevents flash */
+    body{background:#0A0A0F;color:#F5F5F7;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans Arabic',Arial,sans-serif;overflow-x:hidden}
+    #app{display:none}
+    .splash{position:fixed;inset:0;z-index:9999;background:#0A0A0F;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .4s}
+    .splash.hide{opacity:0;pointer-events:none}
+    .splash-gem{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#7B2FFF,#FF2D55);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;box-shadow:0 8px 32px rgba(123,47,255,.5);animation:gemPulse 2s ease-in-out infinite;position:relative;overflow:hidden}
+    .splash-gem::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:rgba(255,255,255,.15)}
+    @keyframes gemPulse{0%,100%{box-shadow:0 8px 32px rgba(123,47,255,.5)}50%{box-shadow:0 8px 48px rgba(123,47,255,.8)}}
+    .splash-text{font-size:18px;font-weight:700;letter-spacing:-.02em}
+    .splash-sub{font-size:11px;color:#52526A;animation:fadeLoop 1.5s ease-in-out infinite}
+    @keyframes fadeLoop{0%,100%{opacity:.4}50%{opacity:.8}}
+  </style>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════
-       SPLASH SCREEN
-       ═══════════════════════════════════════ -->
-  <div id="splash-screen" class="splash-screen">
-    <div class="splash-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="5,3 19,12 5,21"/>
-      </svg>
-    </div>
-    <div class="splash-app-name">Hamad Show</div>
-    <div class="splash-loader">
-      <div class="splash-loader-fill" id="splash-progress"></div>
-    </div>
+  <!-- SPLASH SCREEN -->
+  <div class="splash" id="splash">
+    <div class="splash-gem">H</div>
+    <div class="splash-text">hammadshow</div>
+    <div class="splash-sub">...جاري التحميل</div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       LOGIN SCREEN
-       ═══════════════════════════════════════ -->
-  <div id="login-screen" class="login-screen">
-    <div class="login-bg">
-      <video autoplay muted loop playsinline id="login-video">
-        <!-- Background video source will be set dynamically or falls back to gradient -->
-      </video>
+  <!-- APP -->
+  <div id="app">
+
+    <!-- Background Orbs -->
+    <div class="bg-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
     </div>
-    <div class="login-card glass-card">
-      <div class="login-logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
-        </div>
-        <h2>Hamad Show</h2>
-        <p>سجّل دخولك لبدء المشاهدة</p>
-      </div>
 
-      <div class="login-error" id="login-error">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-        </svg>
-        <span id="login-error-text">بيانات الدخول غير صحيحة</span>
-      </div>
-
-      <form class="login-form" id="login-form" autocomplete="off">
-        <div class="input-group">
-          <span class="input-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
-          <input type="url" class="input-field" id="login-server" placeholder="رابط السيرفر" required autocomplete="off" inputmode="url">
-        </div>
-        <div class="input-group">
-          <span class="input-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </span>
-          <input type="text" class="input-field" id="login-username" placeholder="اسم المستخدم" required autocomplete="off">
-        </div>
-        <div class="input-group">
-          <span class="input-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          </span>
-          <input type="password" class="input-field" id="login-password" placeholder="كلمة المرور" required autocomplete="off">
-        </div>
-        <label class="login-remember">
-          <input type="checkbox" id="login-remember" checked>
-          <span>تذكرني</span>
-        </label>
-        <button type="submit" class="btn btn-primary btn-lg login-btn" id="login-btn">
-          <span class="btn-text">تسجيل الدخول</span>
-        </button>
-      </form>
-      <div class="login-footer">
-        <p>Hamad Show v1.0.0 &mdash; Premium Streaming</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════
-       MAIN APPLICATION
-       ═══════════════════════════════════════ -->
-  <div id="app" class="app-container" style="display:none;">
-
-    <!-- Header -->
-    <header class="app-header" id="app-header">
+    <!-- HEADER -->
+    <header class="header">
       <div class="header-logo">
-        <div class="logo-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
+        <div class="header-gem">H</div>
+        <div class="header-info" id="header-info">
+          <h1>hammadshow</h1>
+          <p>من برمجة وتطوير المهندس محمد حماد</p>
         </div>
-        <span id="header-app-name">Hamad Show</span>
       </div>
       <div class="header-actions">
-        <button class="header-btn" id="btn-notifications" aria-label="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-          <span class="notif-dot" id="notif-dot" style="display:none;"></span>
-        </button>
-        <button class="header-btn" id="btn-profile-header" aria-label="Profile">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <button class="lang-btn" onclick="App.setLang(App._lang==='en'?'ar':'en')" id="lang-toggle-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          <span id="lang-label">EN</span>
         </button>
       </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="main-content" id="main-content">
+    <!-- MAIN CONTENT -->
+    <main class="main">
 
-      <!-- ── Home Page ── -->
-      <div id="page-home" class="page home-page active">
-        <div class="hero-section" id="hero-section">
-          <div class="hero-banner" id="hero-banner"></div>
+      <!-- ─── HOME TAB ─── -->
+      <div class="tab active" id="tab-home">
+        <div style="padding:16px;max-width:1200px;margin:0 auto">
+
+          <!-- Search -->
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="search-input" class="search-input" type="text" placeholder="بحث...">
+          </div>
+
+          <!-- Install Banner -->
+          <div id="install-banner" class="hidden"></div>
+
+          <!-- Welcome -->
+          <div id="welcome-section">
+            <div class="welcome">
+              <h2>مرحباً بك في hammadshow</h2>
+              <p>استمتع بأفضل تجربة بث مباشر</p>
+            </div>
+          </div>
+
+          <!-- Banners -->
+          <div id="banners-section" class="hidden" style="margin-bottom:24px"></div>
+
+          <!-- Category Pills -->
+          <div id="cat-pills" class="hidden" style="margin-bottom:24px"></div>
+
+          <!-- Live TV Section -->
+          <div style="margin-bottom:24px">
+            <div class="section-header">
+              <div class="section-bar"></div>
+              <h3 id="live-tv-title">بث مباشر</h3>
+              <div class="section-badge badge-live"><span class="ch-live-dot"></span> LIVE</div>
+            </div>
+            <div id="home-channels">
+              <div class="skeleton-grid">
+                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
+                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
+                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
+                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
+                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
+                <div class="skel-card"><div class="skel-thumb"></div><div class="skel-text"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Sections -->
+          <div id="cat-sections"></div>
+
         </div>
-        <div id="home-content"></div>
       </div>
 
-      <!-- ── Movies Page ── -->
-      <div id="page-movies" class="page movies-page"></div>
+      <!-- ─── CATEGORIES TAB ─── -->
+      <div class="tab" id="tab-categories"></div>
 
-      <!-- ── Series Page ── -->
-      <div id="page-series" class="page series-page"></div>
+      <!-- ─── FAVORITES TAB ─── -->
+      <div class="tab" id="tab-favorites"></div>
 
-      <!-- ── Live TV Page ── -->
-      <div id="page-livetv" class="page livetv-page"></div>
-
-      <!-- ── Search Page ── -->
-      <div id="page-search" class="page search-page"></div>
-
-      <!-- ── Favorites Page ── -->
-      <div id="page-favorites" class="page favorites-page"></div>
-
-      <!-- ── Settings Page ── -->
-      <div id="page-settings" class="page settings-page"></div>
-
-      <!-- ── Profile Page ── -->
-      <div id="page-profile" class="page profile-page"></div>
-
-      <!-- ── Detail Page (dynamic) ── -->
-      <div id="page-detail" class="page detail-page"></div>
-
-      <!-- ── Admin Page ── -->
-      <div id="page-admin" class="page admin-page"></div>
+      <!-- ─── SETTINGS TAB ─── -->
+      <div class="tab" id="tab-settings"></div>
 
     </main>
 
-    <!-- ── Bottom Navigation ── -->
-    <nav class="bottom-nav" id="bottom-nav">
-      <a class="nav-item active" data-page="home" href="#home">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>الرئيسية</span>
-      </a>
-      <a class="nav-item" data-page="movies" href="#movies">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
-        <span>أفلام</span>
-      </a>
-      <a class="nav-item" data-page="series" href="#series">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
-        <span>مسلسلات</span>
-      </a>
-      <a class="nav-item" data-page="livetv" href="#livetv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
-        <span>القنوات</span>
-      </a>
-      <a class="nav-item" data-page="search" href="#search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span>البحث</span>
-      </a>
-      <a class="nav-item" data-page="favorites" href="#favorites">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-        <span>المفضلة</span>
-      </a>
-      <a class="nav-item" data-page="settings" href="#settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        <span>الإعدادات</span>
-      </a>
-      <a class="nav-item" data-page="profile" href="#profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>حسابي</span>
-      </a>
-    </nav>
-
-    <!-- Scroll to Top -->
-    <button class="scroll-top-btn" id="scroll-top-btn" aria-label="Scroll to top">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-    </button>
-
-    <!-- Install Prompt -->
-    <div class="install-prompt" id="install-prompt">
-      <div class="install-info">
-        <div class="install-title">تثبيت حمد شو</div>
-        <div class="install-desc">أضف التطبيق للشاشة الرئيسية لأفضل تجربة</div>
+    <!-- VIDEO PLAYER MODAL -->
+    <div class="player-overlay" id="player-overlay" onclick="if(event.target===this)App.closePlayer()">
+      <div class="player-modal">
+        <div class="player-video-wrap">
+          <video id="player-video" controls playsinline></video>
+          <button class="player-close" onclick="App.closePlayer()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div class="player-info-bar">
+          <div class="player-ch-info">
+            <div class="player-ch-logo" id="player-logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+            </div>
+            <div style="min-width:0;flex:1">
+              <div class="player-ch-name" id="player-ch-name"></div>
+              <div class="player-ch-desc" id="player-ch-desc"></div>
+            </div>
+          </div>
+          <button class="player-fav-btn" id="player-fav">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </button>
+        </div>
       </div>
-      <button class="btn btn-primary btn-sm" id="install-btn">تثبيت</button>
-      <button class="install-close" id="install-close" aria-label="Close">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toast-container"></div>
-
-    <!-- Notification Panel -->
-    <div class="notif-panel" id="notif-panel">
-      <div class="notif-panel-header">
-        <h3>الإشعارات</h3>
-        <button class="btn btn-icon btn-glass btn-sm" id="notif-close-btn" aria-label="Close notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item active" data-tab="home" onclick="App.switchTab('home')">
+          <div class="nav-indicator"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span class="nav-label" data-tab="home">الرئيسية</span>
+        </button>
+        <button class="nav-item" data-tab="categories" onclick="App.switchTab('categories')">
+          <div class="nav-indicator"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="nav-label" data-tab="categories">التصنيفات</span>
+        </button>
+        <button class="nav-item" data-tab="favorites" onclick="App.switchTab('favorites')">
+          <div class="nav-indicator"></div>
+          <div class="nav-badge" id="fav-badge" style="display:none">0</div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          <span class="nav-label" data-tab="favorites">المفضلة</span>
+        </button>
+        <button class="nav-item" data-tab="settings" onclick="App.switchTab('settings')">
+          <div class="nav-indicator"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="nav-label" data-tab="settings">الإعدادات</span>
         </button>
       </div>
-      <div class="notif-list" id="notif-list"></div>
-    </div>
-    <div class="notif-panel-backdrop" id="notif-backdrop" style="display:none; position:fixed; inset:0; z-index:299; background:rgba(0,0,0,.5);" ></div>
+    </nav>
 
-  </div><!-- /app -->
-
-  <!-- ═══════════════════════════════════════
-       VIDEO PLAYER CONTAINER
-       ═══════════════════════════════════════ -->
-  <div class="player-container" id="player-container">
-    <!-- Player UI is generated dynamically by player.js -->
   </div>
 
-  <!-- ═══════════════════════════════════════
-       OFFLINE PAGE
-       ═══════════════════════════════════════ -->
-  <div class="offline-page" id="offline-page">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/><path d="M10.71 5.05A16 16 0 0122.56 9"/><path d="M1.42 9a15.91 15.91 0 014.7-2.88"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-    <h2>أنت غير متصل بالإنترنت</h2>
-    <p>تحقق من اتصال الإنترنت وحاول مرة أخرى</p>
-    <button class="btn btn-primary" id="offline-retry-btn">حاول مرة أخرى</button>
-  </div>
-
-  <!-- ═══════════════════════════════════════
-       SCRIPTS (order matters)
-       ═══════════════════════════════════════ -->
-  <script src="js/config.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/router.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/player.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/favorites.js"></script>
-  <script src="js/history.js"></script>
-  <script src="js/notifications.js"></script>
-  <script src="js/offline.js"></script>
-  <script src="js/admin.js"></script>
-  <script src="js/firebase-db.js"></script>
-  <script src="js/app.js"></script>
-
-  <!-- Service Worker Registration -->
+  <script src="./app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(function(reg) {
-            console.log('[HamadShow] Service Worker registered, scope:', reg.scope);
-            reg.onupdatefound = function() {
-              var newWorker = reg.installing;
-              newWorker.onstatechange = function() {
-                if (newWorker.state === 'activated') {
-                  console.log('[HamadShow] New service worker activated');
-                }
-              };
-            };
-          })
-          .catch(function(err) {
-            console.warn('[HamadShow] SW registration failed:', err);
-          });
-      });
+    // Hide splash after app renders
+    function hideSplash() {
+      const splash = document.getElementById('splash');
+      const app = document.getElementById('app');
+      if (splash && app) {
+        splash.classList.add('hide');
+        app.style.display = 'flex';
+        setTimeout(() => splash.remove(), 500);
+      }
     }
-  </script>
+    // Wait for app init
+    const checkInit = setInterval(() => {
+      if (window.App) {
+        clearInterval(checkInit);
+        setTimeout(hideSplash, 600);
+      }
+    }, 100);
+    // Fallback
+    setTimeout(hideSplash, 4000);
 
+    // Fix lang toggle
+    document.getElementById('lang-toggle-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isAr = document.documentElement.lang === 'ar';
+      App.setLang(isAr ? 'en' : 'ar');
+    });
+    // Update lang label on init
+    const updateLangLabel = setInterval(() => {
+      const label = document.getElementById('lang-label');
+      if (label && window.App) {
+        label.textContent = document.documentElement.lang === 'ar' ? 'EN' : 'عربي';
+        clearInterval(updateLangLabel);
+      }
+    }, 200);
+    // Override setLang to also update lang label
+    const origSetLang = App.setLang;
+    App.setLang = function(lang) {
+      origSetLang(lang);
+      const label = document.getElementById('lang-label');
+      if (label) label.textContent = lang === 'ar' ? 'EN' : 'عربي';
+      // Update live tv title
+      const title = document.getElementById('live-tv-title');
+      if (title) title.textContent = lang === 'ar' ? 'بث مباشر' : 'Live TV';
+      // Update splash sub
+    };
+  </script>
 </body>
 </html>
