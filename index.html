@@ -2,12 +2,21 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <!-- Phone + Tablet -->
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <!-- PWA -->
+  <meta name="theme-color" content="#0A0A0F" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#0A0A0F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="hammadshow">
-  <meta name="description" content="hammadshow — تطبيق البث المباشر">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="hammadshow">
+  <meta name="description" content="hammadshow — تطبيق البث المباشر والافلام والمسلسلات">
+  <!-- Samsung TV / Tizen -->
+  <meta name="tv-system" content="samsung">
+  <!-- Android TV / Fire TV -->
+  <meta name="description" content="IPTV Player for Smart TV and Mobile">
   <title>hammadshow</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
@@ -17,12 +26,15 @@
     #app{display:none}
     .splash{position:fixed;inset:0;z-index:9999;background:#0A0A0F;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .4s}
     .splash.hide{opacity:0;pointer-events:none}
-    .splash-gem{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#7B2FFF,#FF2D55);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;box-shadow:0 8px 32px rgba(123,47,255,.5);animation:gemPulse 2s ease-in-out infinite;position:relative;overflow:hidden}
-    .splash-gem::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:rgba(255,255,255,.15)}
-    @keyframes gemPulse{0%,100%{box-shadow:0 8px 32px rgba(123,47,255,.5)}50%{box-shadow:0 8px 48px rgba(123,47,255,.8)}}
-    .splash-text{font-size:18px;font-weight:700;letter-spacing:-.02em}
+    .splash-gem{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#0F0F1A,#1A1A2E);display:flex;align-items:center;justify-content:center;font-size:0;box-shadow:0 8px 32px rgba(123,47,255,.4);animation:gemPulse 2s ease-in-out infinite;position:relative;overflow:hidden;border:2px solid rgba(123,47,255,.3)}
+    .splash-gem::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:rgba(255,255,255,.08)}
+    @keyframes gemPulse{0%,100%{box-shadow:0 8px 32px rgba(123,47,255,.4)}50%{box-shadow:0 8px 48px rgba(123,47,255,.7)}}
+    .splash-text{font-size:20px;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .splash-sub{font-size:11px;color:#52526A;animation:fadeLoop 1.5s ease-in-out infinite}
     @keyframes fadeLoop{0%,100%{opacity:.4}50%{opacity:.8}}
+    .splash-icon-text{font-size:32px;font-weight:900;line-height:1}
+    .splash-icon-text .h-letter{color:#FFD700}
+    .splash-icon-text .plus-letter{color:#FF2D55;font-size:24px}
   </style>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -30,7 +42,9 @@
 
   <!-- SPLASH SCREEN -->
   <div class="splash" id="splash">
-    <div class="splash-gem">H</div>
+    <div class="splash-gem">
+      <div class="splash-icon-text"><span class="h-letter">H</span><span class="plus-letter">+</span></div>
+    </div>
     <div class="splash-text">hammadshow</div>
     <div class="splash-sub">...جاري التحميل</div>
   </div>
@@ -42,7 +56,7 @@
     <!-- HEADER -->
     <header class="header">
       <div class="header-logo">
-        <div class="header-gem">H</div>
+        <div class="header-gem">H<span style="color:#FF2D55;font-size:14px;margin-inline-start:-2px">+</span></div>
         <div class="header-info" id="header-info"><h1>hammadshow</h1></div>
       </div>
       <div class="header-actions">
@@ -58,21 +72,15 @@
 
     <!-- MAIN CONTENT -->
     <main class="main" id="main-content">
-      <!-- Tab: Live TV (Home with 4 big cards) -->
       <div class="tab active" id="tab-live"></div>
-      <!-- Tab: Movies -->
       <div class="tab" id="tab-movies"></div>
-      <!-- Tab: Series -->
       <div class="tab" id="tab-series"></div>
-      <!-- Tab: Favorites -->
       <div class="tab" id="tab-favorites"></div>
-      <!-- Tab: Watch History -->
       <div class="tab" id="tab-history"></div>
-      <!-- Tab: Recently Added -->
       <div class="tab" id="tab-recent"></div>
     </main>
 
-    <!-- SETTINGS PANEL (Slide-in) -->
+    <!-- SETTINGS PANEL -->
     <div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)App.closeSettings()">
       <div class="settings-panel" id="settings-panel"></div>
     </div>
@@ -81,7 +89,6 @@
     <div class="player-overlay" id="player-overlay">
       <div class="player-container" id="player-container">
         <video id="player-video" playsinline></video>
-        <!-- Custom Controls -->
         <div class="player-controls" id="player-controls">
           <div class="player-top-bar">
             <button class="pc-btn" onclick="App.closePlayer()">
@@ -97,13 +104,11 @@
               </button>
             </div>
           </div>
-          <!-- Center Play -->
           <div class="player-center" id="player-center" onclick="App.togglePlayPause()">
             <div class="pc-play-btn" id="pc-play-btn">
               <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             </div>
           </div>
-          <!-- Bottom Controls -->
           <div class="player-bottom-bar">
             <div class="pc-seek-wrap">
               <span class="pc-time" id="pc-current">0:00</span>
@@ -136,7 +141,6 @@
             </div>
           </div>
         </div>
-        <!-- Double-tap seek indicator -->
         <div class="seek-indicator" id="seek-indicator" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
           <span id="seek-indicator-text">-10s</span>
@@ -144,7 +148,7 @@
       </div>
     </div>
 
-    <!-- MINI PLAYER (Floating) -->
+    <!-- MINI PLAYER (Floating PiP) -->
     <div class="mini-player" id="mini-player" style="display:none">
       <div class="mini-video-wrap" onclick="App.expandPlayer()">
         <video id="mini-video" muted playsinline></video>

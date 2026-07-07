@@ -5,12 +5,13 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#0A0A0F",
-  "theme_color": "#7B2FFF",
+  "theme_color": "#0A0A0F",
   "dir": "auto",
   "lang": "ar",
-  "categories": ["entertainment", "streaming"],
+  "categories": ["entertainment", "streaming", "multimedia"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -37,6 +38,24 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [],
-  "prefer_related_applications": false
+  "shortcuts": [
+    {
+      "name": "بث مباشر",
+      "short_name": "مباشر",
+      "url": "./index.html#live",
+      "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "أفلام",
+      "short_name": "أفلام",
+      "url": "./index.html#movies",
+      "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "مسلسلات",
+      "short_name": "مسلسلات",
+      "url": "./index.html#series",
+      "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
+    }
+  ]
 }

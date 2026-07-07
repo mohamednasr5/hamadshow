@@ -142,7 +142,7 @@ async function xtLoadAll(){
     const[lS,vS,sS]=await Promise.all([xtFetch("get_live_streams").catch(()=>[]),xtFetch("get_vod_streams").catch(()=>[]),xtFetch("get_series").catch(()=>[])]);
     const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
     S.xtStreams.live=(Array.isArray(lS)?lS:[]).map(s=>({...s,_xt:1,id:"xl_"+s.stream_id,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"live",url:`${b}/live/${u}/${p}/${s.stream_id}.m3u8`,urlTs:`${b}/live/${u}/${p}/${s.stream_id}.ts`,description:""}));
-    S.xtStreams.vod=(Array.isArray(vS)?vS:[]).map(s=>({...s,_xt:1,id:"xv_"+s.stream_id,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"vod",url:`${b}/movie/${u}/${p}/${s.stream_id}.${s.container_extension||"mp4"}`,description:s.plot||"",rating:s.rating||"",year:s.year||"",genre:s.genre||"",added:s.added||""}));
+    S.xtStreams.vod=(Array.isArray(vS)?vS:[]).map(s=>{const ext=s.container_extension||"mp4";const sid=s.stream_id;return{...s,_xt:1,id:"xv_"+sid,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"vod",url:`${b}/movie/${u}/${p}/${sid}.${ext}`,urlM3u8:`${b}/movie/${u}/${p}/${sid}.m3u8`,urlTs:`${b}/movie/${u}/${p}/${sid}.ts`,description:s.plot||"",rating:s.rating||"",year:s.year||"",genre:s.genre||"",added:s.added||""}});
     S.xtStreams.series=(Array.isArray(sS)?sS:[]).map(s=>({...s,_xt:1,id:"xs_"+s.series_id,name:s.name||"",logo:s.cover||"",category:String(s.category_id),type:"series",seriesId:s.series_id,description:s.plot||"",rating:s.rating||"",year:s.releaseDate||"",genre:s.genre||"",cast:s.cast||"",added:s.added||""}));
     S.xtLoading=false;renderAll();
   }catch(e){console.error(e);S.xtLoading=false;renderAll()}
@@ -150,17 +150,48 @@ async function xtLoadAll(){
 async function xtSeriesInfo(sid){try{return await xtFetch("get_series_info&series_id="+sid)}catch(e){return null}}
 
 // ── HLS PLAYER ──────────────────────────────────────────────────────
-function playStream(url,video){
-  if(S.hlsInst){S.hlsInst.destroy();S.hlsInst=null}
-  if(url.includes(".m3u8")){
+function destroyHls(){if(S.hlsInst){S.hlsInst.destroy();S.hlsInst=null}}
+function playStream(url,video,item){
+  destroyHls();video.removeAttribute('src');video.load();
+  const m3u8Url=(item&&item.urlM3u8)?item.urlM3u8:null;
+  const tsUrl=(item&&item.urlTs)?item.urlTs:null;
+  const isVod=(item&&item.type==="vod")||(item&&item.type==="series");
+  // For VOD: try m3u8 first (most Xtream servers serve VOD as HLS)
+  // For Live: URL is already m3u8
+  // For direct play (episodes etc): use as-is
+  let primaryUrl=url;
+  if(isVod&&m3u8Url)primaryUrl=m3u8Url;
+  if(primaryUrl.includes('.m3u8')||primaryUrl.includes('m3u8')){
     if(typeof Hls!=="undefined"&&Hls.isSupported()){
-      S.hlsInst=new Hls({enableWorker:true,lowLatencyMode:true});
-      S.hlsInst.loadSource(url);S.hlsInst.attachMedia(video);
-      S.hlsInst.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));
-      S.hlsInst.on(Hls.Events.ERROR,(ev,d)=>{if(d.fatal){if(d.type===Hls.ErrorTypes.NETWORK_ERROR&&S.current&&S.current.urlTs){S.hlsInst.destroy();S.hlsInst=null;video.src=S.current.urlTs;video.play().catch(()=>{})}else if(d.type===Hls.ErrorTypes.MEDIA_ERROR)S.hlsInst.recoverMediaError();else{S.hlsInst.destroy();S.hlsInst=null}}});
-    }else if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=url;video.play().catch(()=>{})}
-    else if(S.current&&S.current.urlTs){video.src=S.current.urlTs;video.play().catch(()=>{})}
-  }else{video.src=url;video.play().catch(()=>{})}
+      const h=new Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:30,maxMaxBufferLength:120,fragLoadingTimeOut:20000,manifestLoadingTimeOut:15000,levelLoadingTimeOut:15000});
+      S.hlsInst=h;
+      h.loadSource(primaryUrl);h.attachMedia(video);
+      h.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>{})});
+      h.on(Hls.Events.ERROR,(ev,d)=>{
+        if(d.fatal){console.warn('[H+] HLS fatal:',d.type,d.details);
+          destroyHls();
+          if(d.type===Hls.ErrorTypes.MEDIA_ERROR){
+            // Try direct URL as fallback
+            tryDirectPlay(url,video,tsUrl);
+          }else{
+            tryDirectPlay(url,video,tsUrl);
+          }
+        }
+      });
+    }else if(video.canPlayType('application/vnd.apple.mpegurl')){
+      video.src=primaryUrl;video.play().catch(()=>{tryDirectPlay(url,video,tsUrl)});
+    }else{tryDirectPlay(url,video,tsUrl)}
+  }else{
+    tryDirectPlay(url,video,tsUrl);
+  }
+}
+function tryDirectPlay(url,video,tsUrl){
+  destroyHls();
+  video.onerror=function(){
+    console.warn('[H+] Direct play failed, trying .ts fallback');
+    if(tsUrl&&video.src!==tsUrl){video.onerror=null;video.src=tsUrl;video.play().catch(()=>{})}
+  };
+  video.src=url;video.play().catch(()=>{console.warn('[H+] Autoplay blocked or failed')});
 }
 
 // ── RENDERING ───────────────────────────────────────────────────────
@@ -355,9 +386,12 @@ async function renderSeriesDetail(seriesId){
       const eps=seasons[sn];if(!Array.isArray(eps))return;
       html+=`<div style="margin-bottom:20px"><div class="section-header"><div class="section-bar" style="background:linear-gradient(to bottom,#D53F8C,#B83280)"></div><h3>${t("season")} ${esc(sn)}</h3><span class="section-count">(${eps.length} ${t("episodes")})</span></div><div class="episode-list">`;
       eps.forEach(ep=>{
-        const epUrl=`${b}/series/${u}/${p}/${ep.id}.${ep.container_extension||"mp4"}`;
+        const epId=ep.id;const epExt=ep.container_extension||"mp4";
+        const epUrl=`${b}/series/${u}/${p}/${epId}.${epExt}`;
+        const epM3u8=`${b}/series/${u}/${p}/${epId}.m3u8`;
+        const epTs=`${b}/series/${u}/${p}/${epId}.ts`;
         const epName=ep.title||`${t("episode")} ${ep.episode_num||""}`;
-        html+=`<div class="episode-card" onclick="App.playDirect('${esc(epUrl)}','${esc(epName)}','${esc(s.logo||"")}','series')">
+        html+=`<div class="episode-card" onclick="App.playDirect('${esc(epUrl)}','${esc(epName)}','${esc(s.logo||"")}','series','${esc(epM3u8)}','${esc(epTs)}')">
           <div class="episode-play">${I.play}</div>
           <div class="episode-details"><div class="episode-name">${esc(epName)}</div>
           <div class="episode-meta">${ep.info&&ep.info.duration?`<span>${esc(ep.info.duration)} min</span>`:""}${ep.info&&ep.info.container_extension?`<span>${esc(ep.info.container_extension).toUpperCase()}</span>`:""}</div></div></div>`;
@@ -448,7 +482,7 @@ function showPlayer(ch){
   const video=document.getElementById("player-video");
   document.getElementById("pc-title").textContent=ch.name||"";
   overlay.classList.add("show");
-  playStream(ch.url,video);
+  playStream(ch.url,video,ch);
   addHistory(ch);
   setupPlayerEvents(video);
   showControls();
@@ -457,7 +491,7 @@ function showPlayer(ch){
 function hidePlayer(){
   const v=document.getElementById("player-video");
   const miniV=document.getElementById("mini-video");
-  if(S.hlsInst){S.hlsInst.destroy();S.hlsInst=null}
+  destroyHls();
   // If video was playing, switch to mini player
   if(v&&v.currentTime>0&&!v.paused&&v.src){
     miniV.src=v.src;miniV.play().catch(()=>{});
@@ -596,8 +630,8 @@ window.App={
     let ch=[...S.xtStreams.live,...S.xtStreams.vod,...S.xtStreams.series].find(c=>c.id===id);
     if(ch)showPlayer(ch);
   },
-  playDirect(url,name,logo,type){
-    showPlayer({id:"direct_"+Date.now(),name,logo:logo||"",url,type:type||"direct",description:""});
+  playDirect(url,name,logo,type,m3u8Url,tsUrl){
+    showPlayer({id:"direct_"+Date.now(),name,logo:logo||"",url,type:type||"direct",urlM3u8:m3u8Url||null,urlTs:tsUrl||null,description:""});
   },
   openSeries(sid){renderSeriesDetail(sid)},
   openFolder(type,catId,catName){renderFolderDetail(type,catId,catName)},
