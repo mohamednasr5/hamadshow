@@ -99,10 +99,6 @@
       <label class="form-label">كلمة المرور</label>
       <input class="form-input" id="xt-pass" type="password" placeholder="password" autocomplete="current-password">
     </div>
-    <div class="form-group">
-      <label class="form-label">رابط البروكسي (اختياري — لحل مشاكل تشغيل الأفلام/HLS)</label>
-      <input class="form-input" id="xt-proxy" type="url" placeholder="https://your-worker.workers.dev" autocomplete="off">
-    </div>
 
     <button class="connect-btn" id="connect-btn" onclick="doConnect()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
@@ -139,7 +135,6 @@
             document.getElementById("xt-url").value=c.url;
             document.getElementById("xt-user").value=c.user;
             document.getElementById("xt-pass").value=c.pass;
-            document.getElementById("xt-proxy").value=c.proxy||"";
             document.getElementById("has-config").style.display="block";
             document.getElementById("skip-link").style.display="block";
           }
@@ -154,7 +149,6 @@
             document.getElementById("xt-url").value=fb.url;
             document.getElementById("xt-user").value=fb.user;
             document.getElementById("xt-pass").value=fb.pass;
-            document.getElementById("xt-proxy").value=fb.proxy||"";
             document.getElementById("has-config").style.display="block";
             document.getElementById("skip-link").style.display="block";
           }
@@ -166,7 +160,6 @@
       const url=document.getElementById("xt-url").value.trim();
       const user=document.getElementById("xt-user").value.trim();
       const pass=document.getElementById("xt-pass").value.trim();
-      const proxy=document.getElementById("xt-proxy").value.trim().replace(/\/+$/,"");
       if(!url||!user||!pass){
         setStatus("يرجى ملء جميع الحقول","error");
         if(!url)document.getElementById("xt-url").classList.add("error");
@@ -193,7 +186,7 @@
         const data=await resp.json();
         if(data.user_info&&data.user_info.auth===1){
           // Success - save everywhere
-          const config={url:serverUrl,user,pass,proxy};
+          const config={url:serverUrl,user,pass};
           localStorage.setItem("hs-xtc",JSON.stringify(config));
           try{await getConfigRef().set(config)}catch(e){console.warn("Firebase save error:",e)}
           setStatus("تم الاتصال بنجاح! جاري التحويل...","success");
