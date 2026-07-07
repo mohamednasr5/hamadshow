@@ -75,6 +75,7 @@ const S={
   xtInfo:null,
   xtCats:{live:[],vod:[],series:[]},xtStreams:{live:[],vod:[],series:[]},
   xtLoading:false,
+  xtProxy:"",
   favs:new Set(),history:[],maxHistory:50,
   current:null,playerOpen:false,
   controlsTimer:null,controlsVisible:false,
@@ -97,6 +98,16 @@ function formatTime(s){if(isNaN(s)||!isFinite(s))return"0:00";const m=Math.floor
 
 // ── XTREAM API ──────────────────────────────────────────────────────
 function xtBase(){let u=S.xtConfig.url.trim().replace(/\/+$/,"");if(!u.startsWith("http"))u="http://"+u;return u}
+// Wrap a stream URL through the CORS proxy worker (if configured). Fixes
+// "HTTP Error 0 / networkError" from hls.js when the Xtream server redirects
+// segment/manifest requests to a host that doesn't send CORS headers.
+function proxify(url){
+  if(!url)return url;
+  const px=(S.xtProxy||"").trim();
+  if(!px)return url;
+  if(url.startsWith(px))return url; // already proxied
+  return `${px}${px.includes("?")?"&":"?"}u=${encodeURIComponent(url)}`;
+}
 async function xtFetch(action){
   const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
   let ep=`${b}/player_api.php?username=${u}&password=${p}`;if(action)ep+=`&action=${action}`;
@@ -142,9 +153,16 @@ function playStream(url,video,item){
   const tsUrl=(item&&item.urlTs)?item.urlTs:null;
   const isVod=(item&&item.type==="vod")||(item&&item.type==="series")||(item&&item.type==="direct");
   const chain=[];
-  if(isVod&&m3u8Url)chain.push({url:m3u8Url,hls:true});
+  // HLS (m3u8) is routed through the proxy worker when one is configured:
+  // hls.js loads the manifest/segments via XHR/fetch, which needs CORS
+  // headers that the origin stream server usually doesn't send — that's
+  // what causes "HTTP Error 0 / networkError" fragLoadError. Direct
+  // <video src> playback doesn't need CORS, so it's left as-is and only
+  // proxied as a last-resort fallback.
+  if(isVod&&m3u8Url)chain.push({url:proxify(m3u8Url),hls:true});
   chain.push({url:url,hls:false});
   if(tsUrl&&tsUrl!==url)chain.push({url:tsUrl,hls:false});
+  if(S.xtProxy)chain.push({url:proxify(url),hls:false}); // last resort: proxy the direct file
 
   let idx=0;
   function tryNext(){
@@ -624,6 +642,7 @@ async function init(){
   }
 
   S.xtConfig=config;
+  S.xtProxy=config.proxy||"";
   renderAll();
   await xtLogin();
 
