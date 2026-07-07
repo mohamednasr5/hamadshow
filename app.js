@@ -168,7 +168,7 @@ function playStream(url,video,item,isRetry){
       h.on(Hls.Events.MANIFEST_PARSED,()=>{autoplayVideo(video)});
       h.on(Hls.Events.ERROR,(ev,d)=>{
         if(d.fatal){
-          console.warn('[H+] HLS fatal:',d.type,d.details);
+          console.warn('[H+] HLS fatal:',d.type,d.details,'| url:',primaryUrl,'| response:',d.response||null,'| reason:',d.reason||d.error?.message||null);
           destroyHls();
           handlePlaybackFailure(url,video,item,isRetry);
         }
