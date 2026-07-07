@@ -43,6 +43,13 @@
     .form-input:focus{border-color:rgba(123,47,255,.5);box-shadow:0 0 0 3px rgba(123,47,255,.1)}
     .form-input.error{border-color:var(--r);box-shadow:0 0 0 3px rgba(255,45,85,.1)}
 
+    .input-eye-wrap{position:relative}
+    .input-eye-wrap .form-input{padding-inline-end:44px}
+    .eye-btn{position:absolute;top:0;bottom:0;inset-inline-end:4px;width:38px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:color .2s}
+    .eye-btn:hover{color:var(--sub)}
+    .eye-btn svg{width:18px;height:18px}
+    .eye-btn.active{color:var(--y)}
+
     .connect-btn{width:100%;height:50px;border-radius:14px;background:var(--grad);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;transition:transform .15s var(--ez),opacity .15s;box-shadow:0 6px 24px rgba(123,47,255,.3)}
     .connect-btn:active{transform:scale(.97);opacity:.9}
     .connect-btn:disabled{opacity:.5;pointer-events:none}
@@ -77,27 +84,51 @@
         <div class="setup-icon-text"><span class="hl">H</span><span class="pl">+</span></div>
       </div>
     </div>
-    <div class="setup-title">hammadshow</div>
-    <div class="setup-subtitle">أدخل بيانات سيرفر Xtream Codes للبدء</div>
+    <div class="setup-title">إعدادات السيرفر</div>
+    <div class="setup-subtitle">هذه الشاشة خاصة بالمالك فقط — بيانات السيرفر لا تظهر للمستخدمين</div>
 
     <div id="has-config" style="display:none">
       <div class="has-config-info">
         <div class="dot"></div>
-        <span>يوجد إعدادات محفوظة مسبقاً — يمكنك تعديلها أو المتابعة</span>
+        <span>يوجد إعدادات محفوظة مسبقاً — البيانات مخفية، اضغط 👁 لإظهارها عند الحاجة</span>
       </div>
     </div>
 
     <div class="form-group">
       <label class="form-label">رابط السيرفر</label>
-      <input class="form-input" id="xt-url" type="url" placeholder="http://example.com:8080" autocomplete="url">
+      <div class="input-eye-wrap">
+        <input class="form-input" id="xt-url" type="password" placeholder="http://example.com:8080" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="eye-btn" data-target="xt-url" onclick="toggleReveal(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">اسم المستخدم</label>
-      <input class="form-input" id="xt-user" type="text" placeholder="username" autocomplete="username">
+      <div class="input-eye-wrap">
+        <input class="form-input" id="xt-user" type="password" placeholder="username" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="eye-btn" data-target="xt-user" onclick="toggleReveal(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">كلمة المرور</label>
-      <input class="form-input" id="xt-pass" type="password" placeholder="password" autocomplete="current-password">
+      <div class="input-eye-wrap">
+        <input class="form-input" id="xt-pass" type="password" placeholder="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="eye-btn" data-target="xt-pass" onclick="toggleReveal(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">رابط البروكسي (اختياري — لحل مشاكل تشغيل البث)</label>
+      <div class="input-eye-wrap">
+        <input class="form-input" id="xt-proxy" type="password" placeholder="https://your-proxy.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="eye-btn" data-target="xt-proxy" onclick="toggleReveal(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
 
     <button class="connect-btn" id="connect-btn" onclick="doConnect()">
@@ -135,6 +166,7 @@
             document.getElementById("xt-url").value=c.url;
             document.getElementById("xt-user").value=c.user;
             document.getElementById("xt-pass").value=c.pass;
+            document.getElementById("xt-proxy").value=c.proxy||"";
             document.getElementById("has-config").style.display="block";
             document.getElementById("skip-link").style.display="block";
           }
@@ -149,6 +181,7 @@
             document.getElementById("xt-url").value=fb.url;
             document.getElementById("xt-user").value=fb.user;
             document.getElementById("xt-pass").value=fb.pass;
+            document.getElementById("xt-proxy").value=fb.proxy||"";
             document.getElementById("has-config").style.display="block";
             document.getElementById("skip-link").style.display="block";
           }
@@ -160,6 +193,7 @@
       const url=document.getElementById("xt-url").value.trim();
       const user=document.getElementById("xt-user").value.trim();
       const pass=document.getElementById("xt-pass").value.trim();
+      const proxy=document.getElementById("xt-proxy").value.trim().replace(/\/+$/,"");
       if(!url||!user||!pass){
         setStatus("يرجى ملء جميع الحقول","error");
         if(!url)document.getElementById("xt-url").classList.add("error");
@@ -186,7 +220,7 @@
         const data=await resp.json();
         if(data.user_info&&data.user_info.auth===1){
           // Success - save everywhere
-          const config={url:serverUrl,user,pass};
+          const config={url:serverUrl,user,pass,proxy:proxy||""};
           localStorage.setItem("hs-xtc",JSON.stringify(config));
           try{await getConfigRef().set(config)}catch(e){console.warn("Firebase save error:",e)}
           setStatus("تم الاتصال بنجاح! جاري التحويل...","success");
@@ -200,6 +234,15 @@
         btn.classList.add("error");
         setTimeout(()=>btn.classList.remove("error"),3000);
       }
+    }
+
+    function toggleReveal(btn){
+      const id=btn.getAttribute('data-target');
+      const input=document.getElementById(id);
+      if(!input)return;
+      const revealed=input.type==='text';
+      input.type=revealed?'password':'text';
+      btn.classList.toggle('active',!revealed);
     }
 
     function setStatus(msg,type){

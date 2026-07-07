@@ -1,4 +1,4 @@
-const CACHE_NAME="hammadshow-v6";
+const CACHE_NAME="hammadshow-v7";
 const PRECACHE_URLS=[
   "./","./index.html","./setup.html","./style.css","./app.js","./manifest.json",
   "./icons/icon-192.png","./icons/icon-512.png",

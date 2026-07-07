@@ -13,7 +13,7 @@
   <meta name="tv-system" content="samsung">
   <title>hammadshow</title>
   <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icons/icon-180.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="./icons/icon-192.png">
   <style>
     body{background:#0A0A0F;color:#F5F5F7;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans Arabic',Arial,sans-serif;overflow-x:hidden}
@@ -65,16 +65,13 @@
     <!-- HEADER -->
     <header class="header">
       <div class="header-logo">
-        <div class="header-gem">H<span style="color:#FF2D55;font-size:14px;margin-inline-start:-2px">+</span></div>
+        <div class="header-gem" id="header-gem">H<span style="color:#FF2D55;font-size:14px;margin-inline-start:-2px">+</span></div>
         <div class="header-info" id="header-info"><h1>hammadshow</h1></div>
       </div>
       <div class="header-actions">
         <button class="lang-btn" onclick="App.setLang(App._lang==='en'?'ar':'en')" id="lang-toggle-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
           <span id="lang-label">EN</span>
-        </button>
-        <button class="settings-btn" onclick="window.location.href='./setup.html'" title="الإعدادات">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
     </header>
@@ -117,6 +114,12 @@
           <div class="mute-hint" id="mute-hint" style="display:none" onclick="App.unmuteVideo()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
             <span>اضغط للصوت</span>
+          </div>
+          <!-- Playback error -->
+          <div class="player-error" id="player-error" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>تعذر تشغيل هذا المحتوى الآن</span>
+            <button onclick="App.retryPlayback()">إعادة المحاولة</button>
           </div>
           <div class="player-bottom-bar">
             <div class="pc-seek-wrap">
@@ -224,6 +227,21 @@
     setTimeout(hideSplash,5000);
     document.getElementById('lang-toggle-btn').addEventListener('click',function(e){e.stopPropagation();App.setLang(document.documentElement.lang==='ar'?'en':'ar')});
     const ul=setInterval(()=>{const l=document.getElementById('lang-label');if(l&&window.App){l.textContent=document.documentElement.lang==='ar'?'EN':'عربي';clearInterval(ul)}},200);
+
+    // Hidden owner/admin access — long-press the logo to reach server settings.
+    // Not exposed anywhere in the visible UI so regular viewers never see it.
+    (function(){
+      const gem=document.getElementById('header-gem');if(!gem)return;
+      let pressTimer=null;
+      const start=()=>{pressTimer=setTimeout(()=>{window.location.href='./setup.html'},1800)};
+      const cancel=()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null}};
+      gem.addEventListener('touchstart',start,{passive:true});
+      gem.addEventListener('touchend',cancel);
+      gem.addEventListener('touchmove',cancel);
+      gem.addEventListener('mousedown',start);
+      gem.addEventListener('mouseup',cancel);
+      gem.addEventListener('mouseleave',cancel);
+    })();
   </script>
 </body>
 </html>

@@ -72,7 +72,7 @@ const S={
   _ready:false,
   locale:"ar",activeTab:"live",selectedCat:null,searchQ:"",
   xtConfig:{url:"",user:"",pass:""},xtConnected:false,xtConnecting:false,
-  xtInfo:null,
+  xtInfo:null,xtServerInfo:null,
   xtCats:{live:[],vod:[],series:[]},xtStreams:{live:[],vod:[],series:[]},
   xtLoading:false,
   favs:new Set(),history:[],maxHistory:50,
@@ -97,6 +97,11 @@ function formatTime(s){if(isNaN(s)||!isFinite(s))return"0:00";const m=Math.floor
 
 // ── XTREAM API ──────────────────────────────────────────────────────
 function xtBase(){let u=S.xtConfig.url.trim().replace(/\/+$/,"");if(!u.startsWith("http"))u="http://"+u;return u}
+function proxied(url){
+  const px=(S.xtConfig.proxy||"").trim().replace(/\/+$/,"");
+  if(!px)return url;
+  return `${px}?u=${encodeURIComponent(url)}`;
+}
 async function xtFetch(action){
   const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
   let ep=`${b}/player_api.php?username=${u}&password=${p}`;if(action)ep+=`&action=${action}`;
@@ -108,15 +113,15 @@ async function xtLogin(){
   try{
     const data=await xtFetch();
     if(!data.user_info||data.user_info.auth!==1){S.xtConnecting=false;S.xtConnected=false;renderAll();return false}
-    S.xtInfo=data.user_info;S.xtConnected=true;S.xtConnecting=false;
+    S.xtInfo=data.user_info;S.xtServerInfo=data.server_info||null;S.xtConnected=true;S.xtConnecting=false;
     const[lC,vC,sC]=await Promise.all([xtFetch("get_live_categories").catch(()=>[]),xtFetch("get_vod_categories").catch(()=>[]),xtFetch("get_series_categories").catch(()=>[])]);
     S.xtCats.live=(Array.isArray(lC)?lC:[]).map(c=>({...c,id:String(c.category_id),name:c.category_name}));
     S.xtCats.vod=(Array.isArray(vC)?vC:[]).map(c=>({...c,id:String(c.category_id),name:c.category_name}));
     S.xtCats.series=(Array.isArray(sC)?sC:[]).map(c=>({...c,id:String(c.category_id),name:c.category_name}));
     const[lS,vS,sS]=await Promise.all([xtFetch("get_live_streams").catch(()=>[]),xtFetch("get_vod_streams").catch(()=>[]),xtFetch("get_series").catch(()=>[])]);
     const b=xtBase(),u=encodeURIComponent(S.xtConfig.user),p=encodeURIComponent(S.xtConfig.pass);
-    S.xtStreams.live=(Array.isArray(lS)?lS:[]).map(s=>({...s,id:"xl_"+s.stream_id,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"live",url:`${b}/live/${u}/${p}/${s.stream_id}.m3u8`,urlTs:`${b}/live/${u}/${p}/${s.stream_id}.ts`,description:""}));
-    S.xtStreams.vod=(Array.isArray(vS)?vS:[]).map(s=>{const ext=s.container_extension||"mp4";const sid=s.stream_id;return{...s,id:"xv_"+sid,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"vod",url:`${b}/movie/${u}/${p}/${sid}.${ext}`,urlM3u8:`${b}/movie/${u}/${p}/${sid}.m3u8`,urlTs:`${b}/movie/${u}/${p}/${sid}.ts`,description:s.plot||"",rating:s.rating||"",year:s.year||"",genre:s.genre||"",added:s.added||""}});
+    S.xtStreams.live=(Array.isArray(lS)?lS:[]).map(s=>({...s,id:"xl_"+s.stream_id,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"live",url:proxied(`${b}/live/${u}/${p}/${s.stream_id}.m3u8`),urlTs:proxied(`${b}/live/${u}/${p}/${s.stream_id}.ts`),description:""}));
+    S.xtStreams.vod=(Array.isArray(vS)?vS:[]).map(s=>{const ext=s.container_extension||"mp4";const sid=s.stream_id;return{...s,id:"xv_"+sid,name:s.name||"",logo:s.stream_icon||"",category:String(s.category_id),type:"vod",url:proxied(`${b}/movie/${u}/${p}/${sid}.${ext}`),urlM3u8:proxied(`${b}/movie/${u}/${p}/${sid}.m3u8`),urlTs:proxied(`${b}/movie/${u}/${p}/${sid}.ts`),description:s.plot||"",rating:s.rating||"",year:s.year||"",genre:s.genre||"",added:s.added||""}});
     S.xtStreams.series=(Array.isArray(sS)?sS:[]).map(s=>({...s,id:"xs_"+s.series_id,name:s.name||"",logo:s.cover||"",category:String(s.category_id),type:"series",seriesId:s.series_id,description:s.plot||"",rating:s.rating||"",year:s.releaseDate||"",genre:s.genre||"",cast:s.cast||"",added:s.added||""}));
     S.xtLoading=false;renderAll();return true;
   }catch(e){console.error(e);S.xtLoading=false;S.xtConnecting=false;S.xtConnected=false;renderAll();return false}
@@ -126,8 +131,25 @@ async function xtSeriesInfo(sid){try{return await xtFetch("get_series_info&serie
 // ── PLAYER ENGINE ───────────────────────────────────────────────────
 function destroyHls(){if(S.hlsInst){S.hlsInst.destroy();S.hlsInst=null}}
 
-function playStream(url,video,item){
+// If our page is https but a stream url is plain http (or vice versa),
+// try swapping scheme/port once before giving up — fixes many
+// mixed-content / misconfigured-panel playback failures automatically.
+function altScheme(u){
+  try{
+    const orig=new URL(u,location.href);
+    const si=S.xtServerInfo;
+    if(location.protocol==="https:"&&orig.protocol==="http:"){
+      const alt=new URL(u);alt.protocol="https:";
+      if(si&&si.https_port)alt.port=si.https_port;
+      return alt.toString();
+    }
+  }catch(e){}
+  return null;
+}
+
+function playStream(url,video,item,isRetry){
   destroyHls();
+  hidePlayerError();
   video.removeAttribute('src');video.load();
   video.muted=false;S.isMuted=false;
   document.getElementById("mute-hint").style.display="none";
@@ -145,12 +167,35 @@ function playStream(url,video,item){
       h.loadSource(primaryUrl);h.attachMedia(video);
       h.on(Hls.Events.MANIFEST_PARSED,()=>{autoplayVideo(video)});
       h.on(Hls.Events.ERROR,(ev,d)=>{
-        if(d.fatal){console.warn('[H+] HLS fatal:',d.type,d.details);destroyHls();tryDirectPlay(url,video,tsUrl)}
+        if(d.fatal){
+          console.warn('[H+] HLS fatal:',d.type,d.details);
+          destroyHls();
+          handlePlaybackFailure(url,video,item,isRetry);
+        }
       });
     }else if(video.canPlayType('application/vnd.apple.mpegurl')){
-      video.src=primaryUrl;video.addEventListener('loadeddata',()=>autoplayVideo(video),{once:true});
-    }else{tryDirectPlay(url,video,tsUrl)}
-  }else{tryDirectPlay(url,video,tsUrl)}
+      video.src=primaryUrl;
+      video.addEventListener('loadeddata',()=>autoplayVideo(video),{once:true});
+      video.addEventListener('error',()=>handlePlaybackFailure(url,video,item,isRetry),{once:true});
+    }else{tryDirectPlay(url,video,tsUrl,item,isRetry)}
+  }else{tryDirectPlay(url,video,tsUrl,item,isRetry)}
+}
+
+function handlePlaybackFailure(originalUrl,video,item,isRetry){
+  // The video node gets replaced (cloneNode) right after each playStream()
+  // call to strip old listeners, so always grab the *current* live element
+  // rather than reusing a possibly-orphaned reference from a closure.
+  const liveVideo=document.getElementById("player-video")||video;
+  if(!isRetry){
+    const alt=altScheme(originalUrl);
+    if(alt&&alt!==originalUrl){
+      console.warn('[H+] retrying with alternate scheme:',alt);
+      const altItem=item?{...item,urlM3u8:item.urlM3u8?altScheme(item.urlM3u8)||item.urlM3u8:item.urlM3u8,urlTs:item.urlTs?altScheme(item.urlTs)||item.urlTs:item.urlTs}:item;
+      playStream(alt,liveVideo,altItem,true);
+      return;
+    }
+  }
+  showPlayerError();
 }
 
 function autoplayVideo(video){
@@ -165,13 +210,33 @@ function autoplayVideo(video){
   });
 }
 
-function tryDirectPlay(url,video,tsUrl){
+function tryDirectPlay(url,video,tsUrl,item,isRetry){
   destroyHls();
+  let triedTs=false;
   video.onerror=function(){
+    if(tsUrl&&!triedTs){triedTs=true;video.onerror=null;video.src=tsUrl;autoplayVideo(video);
+      video.addEventListener('error',()=>handlePlaybackFailure(url,video,item,isRetry),{once:true});
+      return;
+    }
     console.warn('[H+] Direct play failed');
-    if(tsUrl&&video.src!==tsUrl){video.onerror=null;video.src=tsUrl;autoplayVideo(video)}
+    handlePlaybackFailure(url,video,item,isRetry);
   };
   video.src=url;autoplayVideo(video);
+}
+
+function showPlayerError(){
+  const el=document.getElementById("player-error");if(!el)return;
+  el.style.display="flex";
+}
+function hidePlayerError(){
+  const el=document.getElementById("player-error");if(!el)return;
+  el.style.display="none";
+}
+function retryPlayback(){
+  if(!S.current)return;
+  const video=document.getElementById("player-video");
+  hidePlayerError();
+  playStream(S.current.url,video,S.current,false);
 }
 
 // ── RENDERING ───────────────────────────────────────────────────────
@@ -347,9 +412,9 @@ async function renderSeriesDetail(seriesId){
       html+=`<div style="margin-bottom:20px"><div class="section-header"><div class="section-bar" style="background:linear-gradient(to bottom,#D53F8C,#B83280)"></div><h3>${t("season")} ${esc(sn)}</h3><span class="section-count">(${eps.length} ${t("episodes")})</span></div><div class="episode-list">`;
       eps.forEach(ep=>{
         const epId=ep.id;const epExt=ep.container_extension||"mp4";
-        const epUrl=`${b}/series/${u}/${p}/${epId}.${epExt}`;
-        const epM3u8=`${b}/series/${u}/${p}/${epId}.m3u8`;
-        const epTs=`${b}/series/${u}/${p}/${epId}.ts`;
+        const epUrl=proxied(`${b}/series/${u}/${p}/${epId}.${epExt}`);
+        const epM3u8=proxied(`${b}/series/${u}/${p}/${epId}.m3u8`);
+        const epTs=proxied(`${b}/series/${u}/${p}/${epId}.ts`);
         const epName=ep.title||`${t("episode")} ${ep.episode_num||""}`;
         html+=`<div class="episode-card" onclick="App.playDirect('${esc(epUrl)}','${esc(epName)}','${esc(s.logo||"")}','series','${esc(epM3u8)}','${esc(epTs)}')">
           <div class="episode-play">${I.play}</div>
@@ -406,6 +471,7 @@ function hidePlayer(){
   const v=document.getElementById("player-video");
   const miniV=document.getElementById("mini-video");
   destroyHls();
+  hidePlayerError();
   if(v&&v.currentTime>0&&!v.paused&&v.src){
     miniV.src=v.src;miniV.play().catch(()=>{});
     document.getElementById("mini-title").textContent=S.current?S.current.name:"";
@@ -551,6 +617,7 @@ window.App={
   closePlayer(){hidePlayer()},
   expandPlayer,
   togglePlayPause,seekTo,seekRelative:seekRel,takeScreenshot,togglePiP,toggleFullscreen,showControls,unmuteVideo,
+  retryPlayback,
   clearHistory(){S.history=[];saveHistory();renderHistoryTab()},
   setLang(lang){
     S.locale=lang;this._lang=lang;localStorage.setItem("hs-locale",lang);
