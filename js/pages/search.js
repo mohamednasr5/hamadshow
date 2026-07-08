@@ -248,9 +248,9 @@
       var id = card.dataset.id;
 
       if (type === 'live' && api && window.PlayerManager) {
-        var url = api.getStreamUrl(id, 'live');
+        var urls = api.getStreamUrlFallbacks(id, 'live');
         var name = card.querySelector('.channel-card-name, .content-card-title');
-        window.PlayerManager.play({ id: id, name: name ? name.textContent : '', streamUrl: url, type: 'live' });
+        window.PlayerManager.play({ id: id, name: name ? name.textContent : '', streamUrl: urls[0], streamUrlFallbacks: urls.slice(1), type: 'live' });
       } else if (type === 'movie' && api && window.PlayerManager) {
         var mUrl = api.getStreamUrl(id, 'movie');
         var mName = card.querySelector('.content-card-title');

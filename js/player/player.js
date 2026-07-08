@@ -178,6 +178,10 @@
         this.els.pip.classList.remove('hidden');
       }
 
+      // Store fallback URLs for live streams
+      this._fallbackUrls = options.streamUrlFallbacks || [];
+      this._fallbackIndex = 0;
+
       // Load stream
       this._loadStream(options.streamUrl);
 
@@ -289,6 +293,15 @@
 
     _handleNetworkError(url) {
       this.retryCount++;
+
+      // Try fallback URLs first (e.g. .ts when .m3u8 fails for live streams)
+      if (this._fallbackUrls && this._fallbackIndex < this._fallbackUrls.length) {
+        var fallbackUrl = this._fallbackUrls[this._fallbackIndex++];
+        console.warn('Primary stream failed, trying fallback:', fallbackUrl);
+        this._loadStream(fallbackUrl);
+        return;
+      }
+
       if (this.retryCount <= this.maxRetries) {
         setTimeout(() => {
           if (this.hls) this.hls.loadSource(url);
@@ -619,6 +632,13 @@
 
     _showError() {
       this.loading.classList.add('hidden');
+      // If this was a direct file source (non-HLS) error and we have fallback URLs, try them
+      if (!this.hls && !this.dash && this._fallbackUrls && this._fallbackIndex < this._fallbackUrls.length) {
+        var fallbackUrl = this._fallbackUrls[this._fallbackIndex++];
+        console.warn('Direct playback failed, trying fallback:', fallbackUrl);
+        this._loadStream(fallbackUrl);
+        return;
+      }
       this.errorEl.classList.remove('hidden');
     }
 

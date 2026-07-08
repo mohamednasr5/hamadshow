@@ -271,7 +271,7 @@
       overlay.querySelector('#movie-detail-close').addEventListener('click', closeDetail);
       overlay.querySelector('#movie-play-btn').addEventListener('click', function () {
         if (window.PlayerManager && api) {
-          var url = api.getStreamUrl(movie.stream_id, 'movie');
+          var url = api.getStreamUrl(movie.stream_id, 'movie', movie);
           window.PlayerManager.play({ id: movie.stream_id, name: movie.name, logo: movie.stream_icon, streamUrl: url, type: 'movie' });
         }
         closeDetail();

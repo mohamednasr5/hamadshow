@@ -273,9 +273,10 @@
         var ch = allChannels.find(function (c) { return String(c.stream_id) === String(id); });
         if (ch && window.PlayerManager && api) {
           _playingId = id;
-          var streamUrl = api.getStreamUrl(id, 'live');
+          // Pass the full channel object so getStreamUrl can use container_extension
+          var streamUrls = api.getStreamUrlFallbacks(id, 'live', ch);
           window.PlayerManager.play({
-            id: id, name: ch.name, logo: ch.stream_icon, streamUrl: streamUrl, type: 'live', epg_channel_id: id
+            id: id, name: ch.name, logo: ch.stream_icon, streamUrl: streamUrls[0], streamUrlFallbacks: streamUrls.slice(1), type: 'live', epg_channel_id: id
           });
           if (viewMode === 'list') renderChannelList(); else renderRows();
         }

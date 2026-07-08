@@ -344,7 +344,7 @@
           var ep = (seasons[activeSeason] || []).find(function (ep) { return String(ep.id) === String(epId); });
           if (!ep || !window.PlayerManager || !api) return;
 
-          var streamUrl = api.getStreamUrl(epId, 'series');
+          var streamUrl = api.getStreamUrl(epId, 'series', ep);
           _watchedEps[epId] = true;
           item.querySelector('.playlist-item-number').innerHTML =
             '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--success)" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';

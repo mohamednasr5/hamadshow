@@ -407,17 +407,56 @@
    * @returns {string} The full streaming URL.
    * @throws {Error} If an unsupported type is provided.
    */
-  XtreamAPI.prototype.getStreamUrl = function (streamId, type) {
+  XtreamAPI.prototype.getStreamUrl = function (streamId, type, streamObj) {
     switch (type) {
       case 'live':
-        return this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.m3u8';
+        // Use container_extension from the stream object if available (e.g. 'ts', 'm3u8')
+        // Otherwise default to 'm3u8' for HLS — the player will fallback to .ts if needed
+        var ext = (streamObj && streamObj.container_extension) ? streamObj.container_extension : 'm3u8';
+        // Strip leading dot if present (some servers return '.ts' instead of 'ts')
+        if (ext.charAt(0) === '.') ext = ext.substring(1);
+        return this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.' + ext;
       case 'movie':
-        return this.baseUrl + '/movie/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.mkv';
+        var movieExt = (streamObj && streamObj.container_extension) ? streamObj.container_extension.replace(/^\./, '') : 'mkv';
+        return this.baseUrl + '/movie/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.' + movieExt;
       case 'series':
-        return this.baseUrl + '/series/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.mkv';
+        var seriesExt = (streamObj && streamObj.container_extension) ? streamObj.container_extension.replace(/^\./, '') : 'mkv';
+        return this.baseUrl + '/series/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.' + seriesExt;
       default:
         throw new Error('XtreamAPI.getStreamUrl: unsupported type "' + type + '". Use "live", "movie", or "series".');
     }
+  };
+
+  /**
+   * Generates alternative stream URLs for fallback playback.
+   * For live streams, tries .ts if the primary .m3u8 fails, and vice versa.
+   *
+   * @param {string|number} streamId - The stream ID.
+   * @param {string} type - Content type: 'live', 'movie', or 'series'.
+   * @param {Object} [streamObj] - The full stream object from the API.
+   * @returns {string[]} Array of URLs to try in order.
+   */
+  XtreamAPI.prototype.getStreamUrlFallbacks = function (streamId, type, streamObj) {
+    var primary = this.getStreamUrl(streamId, type, streamObj);
+    if (type !== 'live') return [primary];
+
+    var ext = (streamObj && streamObj.container_extension) ? streamObj.container_extension.replace(/^\./, '') : 'm3u8';
+    var fallbacks = [primary];
+
+    // If primary is m3u8, add .ts as fallback
+    if (ext === 'm3u8') {
+      fallbacks.push(
+        this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.ts'
+      );
+    }
+    // If primary is ts, add .m3u8 as fallback
+    else if (ext === 'ts') {
+      fallbacks.push(
+        this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.m3u8'
+      );
+    }
+
+    return fallbacks;
   };
 
   // ═══════════════════════════════════════════════════════════════════════

@@ -1,37 +1,37 @@
-const CACHE_NAME = 'nasr-live-v7';
+const CACHE_NAME = 'nasr-live-v8';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/css/app.css',
-  '/manifest.json',
-  '/lang/ar.json',
-  '/lang/en.json',
-  '/js/services/firebase-config.js',
-  '/js/utils/i18n.js',
-  '/js/utils/crypto.js',
-  '/js/utils/focus-engine.js',
-  '/js/services/database.js',
-  '/js/services/xtream-api.js',
-  '/js/services/server-config.js',
-  '/js/services/playlist-parser.js',
-  '/js/services/playlist-source.js',
-  '/js/components/ui.js',
-  '/js/components/cards.js',
-  '/js/components/epg.js',
-  '/js/player/player.js',
-  '/js/pages/home.js',
-  '/js/pages/live-tv.js',
-  '/js/pages/movies.js',
-  '/js/pages/series.js',
-  '/js/pages/favorites.js',
-  '/js/pages/search.js',
-  '/js/pages/settings.js',
-  '/js/pages/playlist.js',
-  '/js/app.js'
+  './',
+  './index.html',
+  './css/app.css',
+  './manifest.json',
+  './lang/ar.json',
+  './lang/en.json',
+  './js/services/firebase-config.js',
+  './js/utils/i18n.js',
+  './js/utils/crypto.js',
+  './js/utils/focus-engine.js',
+  './js/services/database.js',
+  './js/services/xtream-api.js',
+  './js/services/server-config.js',
+  './js/services/playlist-parser.js',
+  './js/services/playlist-source.js',
+  './js/components/ui.js',
+  './js/components/cards.js',
+  './js/components/epg.js',
+  './js/player/player.js',
+  './js/pages/home.js',
+  './js/pages/live-tv.js',
+  './js/pages/movies.js',
+  './js/pages/series.js',
+  './js/pages/favorites.js',
+  './js/pages/search.js',
+  './js/pages/settings.js',
+  './js/pages/playlist.js',
+  './js/app.js'
 ];
 
-const DYNAMIC_CACHE = 'nasr-live-dynamic-v1';
-const IMAGE_CACHE = 'nasr-live-images-v1';
+const DYNAMIC_CACHE = 'nasr-live-dynamic-v2';
+const IMAGE_CACHE = 'nasr-live-images-v2';
 const MAX_DYNAMIC_ENTRIES = 100;
 const MAX_IMAGE_ENTRIES = 200;
 
@@ -41,7 +41,8 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn('Some static assets failed to cache:', err);
-        return cache.addAll(STATIC_ASSETS.filter((url) => url === '/'));
+        // Fallback: try caching just the index page
+        return cache.addAll(['./index.html']);
       });
     })
   );
@@ -77,13 +78,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip cross-origin requests (stream URLs, CDN resources, etc.)
+  if (url.origin !== self.location.origin) {
+    // For cross-origin stream URLs, pass through directly (no caching)
+    if (url.pathname.includes('/live/') ||
+        url.pathname.includes('/movie/') ||
+        url.pathname.includes('/series/')) {
+      event.respondWith(fetch(event.request).catch(() => new Response('Offline', {status: 503})));
+    }
+    return;
+  }
+
   // Image caching strategy
   if (reqUrl.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)/i)) {
     event.respondWith(cacheImage(event.request));
     return;
   }
 
-  // Xtream API / stream URLs - network only, no cache
+  // Xtream API / stream URLs on same origin - network only, no cache
   if (url.pathname.includes('player_api') ||
       url.pathname.includes('/live/') ||
       url.pathname.includes('/movie/') ||
@@ -92,22 +104,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // App JS/CSS - network first so updates show up immediately,
-  // falling back to cache only when offline (prevents stale-file bugs
-  // like the old cached player.js causing errors after deploys)
+  // App JS/CSS - network first so updates show up immediately
   if (reqUrl.match(/\.(js|css)($|\?)/i)) {
     event.respondWith(networkFirst(event.request));
     return;
   }
 
-  // Other static assets - cache first, then network
-  if (url.origin === self.location.origin) {
-    event.respondWith(cacheFirst(event.request));
-    return;
-  }
-
-  // Everything else - network first
-  event.respondWith(networkFirst(event.request));
+  // Other same-origin static assets - cache first, then network
+  event.respondWith(cacheFirst(event.request));
 });
 
 async function cacheFirst(request) {
@@ -122,9 +126,9 @@ async function cacheFirst(request) {
     }
     return response;
   } catch (err) {
-    // Return offline page for navigation requests
+    // For navigation requests, serve the cached index.html (SPA fallback)
     if (request.mode === 'navigate') {
-      const cached = await caches.match('/index.html');
+      const cached = await caches.match('./index.html');
       if (cached) return cached;
     }
     return new Response('Offline', {status: 503});
@@ -180,10 +184,10 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'NASR LIVE';
   const options = {
     body: data.body || 'New content available',
-    icon: '/assets/icons/icon-192.png',
-    badge: '/assets/icons/icon-72.png',
+    icon: './assets/icons/icon-192.png',
+    badge: './assets/icons/icon-72.png',
     vibrate: [100, 50, 100],
-    data: { url: data.url || '/' }
+    data: { url: data.url || './' }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
@@ -191,7 +195,7 @@ self.addEventListener('push', (event) => {
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/';
+  const url = event.notification.data?.url || './';
   event.waitUntil(
     clients.matchAll({type: 'window', includeUncontrolled: true}).then((clientList) => {
       for (const client of clientList) {
@@ -217,11 +221,9 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncFavorites() {
-  // Sync local favorites with server when back online
   console.log('Syncing favorites...');
 }
 
 async function syncHistory() {
-  // Sync watch history with server when back online
   console.log('Syncing watch history...');
 }

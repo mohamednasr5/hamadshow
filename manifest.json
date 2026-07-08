@@ -2,12 +2,12 @@
   "name": "NASR LIVE",
   "short_name": "NASR LIVE",
   "description": "Premium IPTV Experience - Live TV, Movies & Series",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0a0e17",
   "theme_color": "#d4af37",
-  "scope": "/",
+  "scope": "./",
   "lang": "ar",
   "dir": "rtl",
   "categories": ["entertainment", "multimedia"],
@@ -66,19 +66,19 @@
     {
       "name": "Live TV",
       "short_name": "Live",
-      "url": "/#/live-tv",
+      "url": "./#/live-tv",
       "icons": [{"src": "assets/icons/shortcut-live.png", "sizes": "96x96"}]
     },
     {
       "name": "Movies",
       "short_name": "Movies",
-      "url": "/#/movies",
+      "url": "./#/movies",
       "icons": [{"src": "assets/icons/shortcut-movies.png", "sizes": "96x96"}]
     },
     {
       "name": "Search",
       "short_name": "Search",
-      "url": "/#/search",
+      "url": "./#/search",
       "icons": [{"src": "assets/icons/shortcut-search.png", "sizes": "96x96"}]
     }
   ],

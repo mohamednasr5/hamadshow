@@ -159,8 +159,8 @@
       var api = getAPI();
 
       if (type === 'live' && api && window.PlayerManager) {
-        var streamUrl = api.getStreamUrl(id, 'live');
-        window.PlayerManager.play({ id: id, name: card.querySelector('.channel-card-name, .content-card-title').textContent, streamUrl: streamUrl, type: 'live' });
+        var streamUrls = api.getStreamUrlFallbacks(id, 'live');
+        window.PlayerManager.play({ id: id, name: card.querySelector('.channel-card-name, .content-card-title').textContent, streamUrl: streamUrls[0], streamUrlFallbacks: streamUrls.slice(1), type: 'live' });
       } else if (type === 'movie' && api && window.PlayerManager) {
         var url = api.getStreamUrl(id, 'movie');
         var item = allFavorites.find(function (f) { return String(f.id) === String(id) && f.type === 'movie'; });
