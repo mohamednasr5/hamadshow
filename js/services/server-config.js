@@ -1,13 +1,19 @@
 /**
  * NASR LIVE - Server Configuration Service
  *
- * Replaces the previous Firebase-based, multi-account authentication system.
- * This app is a personal, single-user IPTV client: there is no login/registration,
- * no cloud account, and no per-user server storage. The Xtream server
- * credentials (URL, username, password) are entered once on first launch,
- * validated against the server, then encrypted and stored ONLY on this
- * device (localStorage). Nothing is sent to, or stored on, any Anthropic-
- * unrelated third-party backend.
+ * This app is a personal, single-user IPTV client: there is no login or
+ * registration screen — just one "Setup" page where the Xtream server
+ * credentials (URL, username, password) are entered once. They are
+ * validated against the server, then:
+ *
+ *   1. Encrypted and stored on THIS device (localStorage) so the app can
+ *      reconnect instantly next time, going straight to the viewing screens.
+ *   2. If Firebase is configured (see js/services/firebase-config.js), the
+ *      same encrypted config is also backed up to Firebase Realtime
+ *      Database under an anonymous account, so reinstalling the app or
+ *      opening it on a new device can restore the connection automatically.
+ *      This step is best-effort and never blocks or breaks local usage if
+ *      Firebase is unavailable, unconfigured, or offline.
  *
  * Exposed globally as: window.ServerConfig
  *
@@ -18,6 +24,9 @@
 
   /** @constant {string} localStorage key for the encrypted server config */
   var STORAGE_KEY = 'nasr_server_config';
+
+  /** @constant {string} localStorage key caching the anonymous Firebase uid */
+  var FB_UID_KEY = 'nasr_fb_uid';
 
   /** @type {XtreamAPI|null} */
   var _client = null;
@@ -44,14 +53,81 @@
     }
   }
 
+  // ── Firebase backup/restore (best-effort, optional) ──────────────────────
+
+  function _firebaseReady() {
+    return !!(window.FIREBASE_ENABLED && typeof firebase !== 'undefined' && firebase.auth && firebase.database);
+  }
+
+  /** Signs in anonymously (or reuses the current session) and resolves the uid. */
+  function _fbEnsureUser() {
+    if (!_firebaseReady()) return Promise.reject(new Error('Firebase not configured'));
+    var auth = firebase.auth();
+    if (auth.currentUser) return Promise.resolve(auth.currentUser.uid);
+    return auth.signInAnonymously().then(function (cred) {
+      var uid = cred.user.uid;
+      try { localStorage.setItem(FB_UID_KEY, uid); } catch (e) {}
+      return uid;
+    });
+  }
+
+  /** Best-effort: pushes the given config to Firebase RTDB. Never throws. */
+  function _fbBackup(cfg) {
+    if (!_firebaseReady()) return;
+    _fbEnsureUser().then(function (uid) {
+      var payload = JSON.stringify(cfg);
+      var enc = window.Crypto ? window.Crypto.encrypt(payload) : payload;
+      return firebase.database().ref('users/' + uid + '/serverConfig').set({
+        data: enc,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }).catch(function (err) {
+      console.warn('ServerConfig: Firebase backup failed (ignored).', err);
+    });
+  }
+
+  /** Best-effort: tries to restore a config previously backed up to Firebase. */
+  function _fbRestore() {
+    if (!_firebaseReady()) return Promise.resolve(null);
+    return _fbEnsureUser().then(function (uid) {
+      return firebase.database().ref('users/' + uid + '/serverConfig').once('value');
+    }).then(function (snapshot) {
+      var data = snapshot.val();
+      if (!data || !data.data) return null;
+      var dec = window.Crypto ? window.Crypto.decrypt(data.data) : data.data;
+      return JSON.parse(dec);
+    }).catch(function (err) {
+      console.warn('ServerConfig: Firebase restore failed (ignored).', err);
+      return null;
+    });
+  }
+
+  /** Best-effort: removes the backed-up config from Firebase. */
+  function _fbClear() {
+    if (!_firebaseReady()) return;
+    _fbEnsureUser().then(function (uid) {
+      return firebase.database().ref('users/' + uid + '/serverConfig').remove();
+    }).catch(function () {});
+  }
+
   var ServerConfig = {
     /**
-     * Attempts to restore a previously saved server connection.
+     * Attempts to restore a previously saved server connection: checks this
+     * device first (fast path, works offline), and if nothing is saved
+     * locally, falls back to any Firebase backup so the app can still go
+     * straight to the viewing screens after a reinstall or on a new device.
      * @returns {Promise<boolean>} true if a valid saved connection was restored.
      */
     async init() {
       _config = _load();
+
+      if (!_config) {
+        _config = await _fbRestore();
+        if (_config) _save(_config); // cache locally for instant future launches
+      }
+
       if (!_config) return false;
+
       try {
         _client = new window.XtreamAPI(_config.serverUrl, _config.username, _config.password);
         await _client.authenticate();
@@ -76,7 +152,9 @@
 
     /**
      * Validates the given server credentials, and if successful, saves them
-     * (encrypted) to this device only, replacing any previous config.
+     * (encrypted) to this device, replacing any previous config, and backs
+     * them up to Firebase (if configured) so future installs/devices can
+     * restore the connection automatically.
      * @param {string} serverUrl
      * @param {string} username
      * @param {string} password
@@ -95,16 +173,18 @@
       _client = client;
       window.XtreamClient = client;
       _save(_config);
+      _fbBackup(_config); // best-effort, does not block or fail the connect flow
 
       document.dispatchEvent(new CustomEvent('server:connected'));
     },
 
     /**
-     * Removes the saved server configuration from this device and forgets
-     * the active client. Does not contact any server.
+     * Removes the saved server configuration from this device (and, best
+     * effort, from Firebase) and forgets the active client.
      */
     disconnect() {
       localStorage.removeItem(STORAGE_KEY);
+      _fbClear();
       _config = null;
       _client = null;
       window.XtreamClient = null;
@@ -118,7 +198,8 @@
     getStatus() {
       return {
         connected: !!(_client && _client.isAuthenticated()),
-        hasConfig: this.hasConfig()
+        hasConfig: this.hasConfig(),
+        firebaseSyncEnabled: _firebaseReady()
       };
     }
   };

@@ -52,7 +52,7 @@
     "playlist": "Playlist"
   },
   "home": {
-    "welcome": "Welcome",
+    "welcome": "Welcome, Engineer",
     "continueWatching": "Continue Watching",
     "liveTV": "Live TV",
     "trending": "Trending",
@@ -248,6 +248,6 @@
     "username": "Username",
     "password": "Password",
     "connect": "Connect & Start Watching",
-    "privacyNote": "Your data is encrypted and stored only on this device, never shared."
+    "privacyNote": "Your data is encrypted and stored on this device, with an encrypted backup on Firebase (if enabled) to restore your connection automatically after a reinstall."
   }
 }

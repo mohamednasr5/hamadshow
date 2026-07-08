@@ -34,17 +34,17 @@
         <div class="splash-logo-inner">
           <svg viewBox="0 0 120 120" fill="none" style="width:80px;height:80px;">
             <defs>
-              <linearGradient id="splash-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#6c5ce7"/>
-                <stop offset="100%" style="stop-color:#00cec9"/>
+              <linearGradient id="splash-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#f6d675"/>
+                <stop offset="100%" style="stop-color:#a8791f"/>
               </linearGradient>
             </defs>
-            <circle cx="60" cy="60" r="55" stroke="url(#splash-grad)" stroke-width="3" fill="none"/>
-            <polygon points="45,35 45,85 90,60" fill="url(#splash-grad)"/>
+            <circle cx="60" cy="60" r="55" stroke="url(#splash-gold)" stroke-width="3" fill="none"/>
+            <polygon points="45,35 45,85 90,60" fill="url(#splash-gold)"/>
           </svg>
         </div>
       </div>
-      <h1 class="splash-app-name">NASR LIVE</h1>
+      <h1 class="splash-app-name"><span style="color:#d4af37">NASR</span> <span style="color:#e5453f">LIVE</span></h1>
       <div class="splash-loading-bar"></div>
     </div>
   </div>
@@ -56,15 +56,15 @@
         <svg viewBox="0 0 120 120" fill="none" width="72" height="72">
           <defs>
             <linearGradient id="auth-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#6c5ce7"/>
-              <stop offset="100%" style="stop-color:#00cec9"/>
+              <stop offset="0%" style="stop-color:#f6d675"/>
+              <stop offset="100%" style="stop-color:#a8791f"/>
             </linearGradient>
           </defs>
           <circle cx="60" cy="60" r="55" stroke="url(#auth-grad)" stroke-width="3" fill="none"/>
           <polygon points="45,35 45,85 90,60" fill="url(#auth-grad)"/>
         </svg>
       </div>
-      <h1 class="auth-card-title" data-i18n="setup.title">NASR LIVE</h1>
+      <h1 class="auth-card-title" data-i18n="setup.title"><span style="color:#d4af37">NASR</span> <span style="color:#e5453f">LIVE</span></h1>
       <p class="auth-card-subtitle" data-i18n="setup.subtitle">أدخل بيانات السيرفر الخاصة بك للبدء</p>
 
       <form id="setup-form" class="auth-form active">
@@ -96,7 +96,7 @@
           <span class="btn-text" data-i18n="setup.connect">اتصال وبدء المشاهدة</span>
           <span class="btn-loader"></span>
         </button>
-        <p class="setup-privacy-note" data-i18n="setup.privacyNote">بياناتك تُحفظ مشفّرة على جهازك فقط، ولا تُشارك مع أي طرف آخر.</p>
+        <p class="setup-privacy-note" data-i18n="setup.privacyNote">تُحفظ بياناتك مشفّرة على جهازك، ونسخة احتياطية مشفّرة منها على Firebase (إن تم تفعيله) لاستعادة الاتصال تلقائياً عند إعادة تثبيت التطبيق.</p>
       </form>
 
       <div id="auth-error" class="auth-error"></div>
@@ -111,7 +111,7 @@
         <button id="menu-toggle" class="icon-btn" aria-label="Menu">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <h1 class="app-title">NASR LIVE</h1>
+        <h1 class="app-title"><span style="color:#d4af37">NASR</span> <span style="color:#e5453f">LIVE</span></h1>
       </div>
       <div class="top-bar-right">
         <button id="search-btn-top" class="icon-btn" aria-label="Search">
@@ -322,6 +322,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/dashjs@4/dist/dash.all.min.js"></script>
+  <!-- Firebase (optional): used only to back up/restore the server login. See js/services/firebase-config.js -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="js/services/firebase-config.js"></script>
   <script src="js/utils/i18n.js"></script>
   <script src="js/utils/crypto.js"></script>
   <script src="js/utils/focus-engine.js"></script>

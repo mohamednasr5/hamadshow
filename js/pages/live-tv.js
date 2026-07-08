@@ -1,6 +1,9 @@
 /**
  * NASR LIVE - Live TV Page
- * Category filtering, search, EPG display, favorites, sorting.
+ * Netflix-style layout: each category ("folder") is shown as its own titled
+ * row of channel cards with a "See All" link. Selecting "See All" (or
+ * searching / sorting) switches to a full channel list for that scope,
+ * with EPG, favorites, and a back button to return to the category rows.
  */
 (function () {
   'use strict';
@@ -14,6 +17,10 @@
   var _favCache = {};
   var _playingId = null;
 
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
   function channelCardHTML(ch, isPlaying, isFav) {
     var logo = ch.stream_icon || '';
     var name = ch.name || '';
@@ -22,10 +29,10 @@
     var favClass = isFav ? ' active' : '';
     return '<div class="channel-card" data-id="' + ch.stream_id + '">' +
       '<div class="channel-card-inner">' +
-        '<div class="channel-card-logo">' + (logo ? '<img src="' + logo + '" alt="' + name + '" loading="lazy">' : '') + '</div>' +
+        '<div class="channel-card-logo">' + (logo ? '<img src="' + esc(logo) + '" alt="' + esc(name) + '" loading="lazy">' : '') + '</div>' +
         '<div class="channel-card-info">' +
-          '<div class="channel-card-name">' + (num ? '<span style="color:var(--text-muted);margin-right:4px">' + num + '</span>' : '') + name + '</div>' +
-          '<div class="channel-card-category">' + cat + '</div>' +
+          '<div class="channel-card-name">' + (num ? '<span style="color:var(--text-muted);margin-right:4px">' + esc(num) + '</span>' : '') + esc(name) + '</div>' +
+          '<div class="channel-card-category">' + esc(cat) + '</div>' +
           '<div class="channel-card-now" data-epg-id="' + ch.stream_id + '"></div>' +
         '</div>' +
         (isPlaying ? '<div class="channel-card-live"></div>' : '') +
@@ -35,15 +42,29 @@
       '</div></div>';
   }
 
+  function channelCardRowHTML(ch, isPlaying, isFav) {
+    return '<div style="width:270px;flex-shrink:0;scroll-snap-align:start">' + channelCardHTML(ch, isPlaying, isFav) + '</div>';
+  }
+
   function skeletonChannels(count) {
     var s = '';
     for (var i = 0; i < count; i++) s += '<div class="skeleton-channel"></div>';
     return s;
   }
 
-  function loadEPGForVisible(api, container) {
-    var cards = container.querySelectorAll('.channel-card[data-id]');
-    var rect = container.getBoundingClientRect();
+  function skeletonRow() {
+    return '<div class="content-row skeleton-row">' +
+      '<div class="content-row-header"><div class="skeleton-row-header"></div></div>' +
+      '<div class="content-row-scroll">' +
+        '<div class="skeleton-channel" style="width:270px;flex-shrink:0"></div>' +
+        '<div class="skeleton-channel" style="width:270px;flex-shrink:0"></div>' +
+        '<div class="skeleton-channel" style="width:270px;flex-shrink:0"></div>' +
+      '</div></div>';
+  }
+
+  function loadEPGForVisible(api, scopeEl) {
+    var cards = scopeEl.querySelectorAll('.channel-card[data-id]');
+    var rect = scopeEl.getBoundingClientRect();
     cards.forEach(function (card) {
       var id = card.dataset.id;
       if (_epgCache[id] || _destroyed) return;
@@ -52,12 +73,11 @@
       _epgCache[id] = true;
       api.getEPG(id, 1).then(function (epg) {
         if (_destroyed) return;
-        var el = container.querySelector('[data-epg-id="' + id + '"]');
+        var el = scopeEl.querySelector('[data-epg-id="' + id + '"]');
         if (el && epg && epg.length > 0) {
           var now = epg[0];
           var title = now.title || now.name || '';
           var start = now.start || '';
-          var end = now.end || '';
           el.textContent = (start ? start + ' - ' : '') + title;
         }
       }).catch(function () {});
@@ -71,10 +91,16 @@
     var listeners = [];
     var allChannels = [];
     var categories = [];
+    var viewMode = 'rows'; // 'rows' | 'list'
     var activeCat = 'all';
+    var activeCatName = '';
     var searchTerm = '';
     var sortBy = 'name';
     var scrollDebounce = null;
+
+    var seeAllLabel = window.i18n ? window.i18n.t('home.seeAll') : 'See All';
+    var backLabel = window.i18n ? window.i18n.t('common.back') : 'Back';
+    var allLabel = window.i18n ? window.i18n.t('live.allChannels') : 'All';
 
     container.innerHTML =
       '<div class="live-page" style="padding:8px 16px 24px">' +
@@ -82,26 +108,36 @@
           '<div class="search-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>' +
           '<input type="text" id="live-search" data-i18n-placeholder="live.searchPlaceholder" placeholder="Search for a channel...">' +
         '</div>' +
-        '<div class="category-chips" id="live-cats"></div>' +
-        '<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">' +
+        '<div id="live-back-bar" style="display:none;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">' +
+          '<button class="btn btn-ghost btn-sm" id="live-back-btn">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg> ' + backLabel +
+          '</button>' +
+          '<h2 id="live-cat-title" style="font-size:1.1rem;font-weight:700;color:var(--text-primary);flex:1">' + '</h2>' +
           '<select id="live-sort" style="height:36px;padding:0 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.8125rem">' +
             '<option value="name">' + (window.i18n ? window.i18n.t('live.sortName') : 'Name') + '</option>' +
             '<option value="number">' + (window.i18n ? window.i18n.t('live.sortNumber') : 'Number') + '</option>' +
           '</select>' +
         '</div>' +
-        '<div id="live-channels" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">' +
-          skeletonChannels(12) +
-        '</div>' +
-        '<div id="live-empty" style="display:none" class="empty-state">' +
-          '<div class="empty-state-title">' + (window.i18n ? window.i18n.t('live.noChannels') : 'No channels') + '</div>' +
+        '<div id="live-rows"><div id="live-rows-skeletons">' + skeletonRow() + skeletonRow() + skeletonRow() + '</div></div>' +
+        '<div id="live-list-wrap" style="display:none">' +
+          '<div id="live-channels" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">' +
+            skeletonChannels(12) +
+          '</div>' +
+          '<div id="live-empty" style="display:none" class="empty-state">' +
+            '<div class="empty-state-title">' + (window.i18n ? window.i18n.t('live.noChannels') : 'No channels') + '</div>' +
+          '</div>' +
         '</div>' +
       '</div>';
 
-    var catsEl = container.querySelector('#live-cats');
+    var rowsEl = container.querySelector('#live-rows');
+    var listWrapEl = container.querySelector('#live-list-wrap');
     var channelsEl = container.querySelector('#live-channels');
     var emptyEl = container.querySelector('#live-empty');
     var searchInput = container.querySelector('#live-search');
     var sortSelect = container.querySelector('#live-sort');
+    var backBar = container.querySelector('#live-back-bar');
+    var backBtn = container.querySelector('#live-back-btn');
+    var catTitleEl = container.querySelector('#live-cat-title');
 
     function getFilteredChannels() {
       var list = allChannels;
@@ -121,7 +157,7 @@
       return list;
     }
 
-    function renderChannels() {
+    function renderChannelList() {
       var filtered = getFilteredChannels();
       if (filtered.length === 0) {
         channelsEl.style.display = 'none';
@@ -141,14 +177,60 @@
       loadEPGForVisible(api, channelsEl);
     }
 
-    function renderCategories() {
-      var html = '<button class="category-chip' + (activeCat === 'all' ? ' active' : '') + '" data-cat="all">' +
-        (window.i18n ? window.i18n.t('live.allChannels') : 'All') + '</button>';
+    function categoryRowHTML(cat, items) {
+      var ROW_SIZE = 10;
+      var shown = items.slice(0, ROW_SIZE);
+      var cards = shown.map(function (ch) {
+        var isPlaying = String(ch.stream_id) === String(_playingId);
+        var isFav = !!_favCache[ch.stream_id];
+        return channelCardRowHTML(ch, isPlaying, isFav);
+      }).join('');
+      return '<div class="content-row">' +
+        '<div class="content-row-header">' +
+          '<h2 class="content-row-title">' + esc(cat.category_name) + '</h2>' +
+          '<span class="content-row-more" data-cat="' + esc(cat.category_id) + '" data-catname="' + esc(cat.category_name) + '">' +
+            seeAllLabel +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '</span>' +
+        '</div>' +
+        '<div class="content-row-scroll">' + cards + '</div></div>';
+    }
+
+    function renderRows() {
+      var html = '';
       categories.forEach(function (cat) {
-        html += '<button class="category-chip' + (activeCat === cat.category_id ? ' active' : '') + '" data-cat="' + cat.category_id + '">' +
-          cat.category_name + '</button>';
+        var items = allChannels.filter(function (c) { return String(c.category_id) === String(cat.category_id); });
+        if (items.length === 0) return;
+        html += categoryRowHTML(cat, items);
       });
-      catsEl.innerHTML = html;
+      if (!html) {
+        html = '<div class="empty-state"><div class="empty-state-title">' + (window.i18n ? window.i18n.t('live.noChannels') : 'No channels') + '</div></div>';
+      }
+      rowsEl.innerHTML = html;
+      _epgCache = {};
+      loadEPGForVisible(api, rowsEl);
+    }
+
+    function showRowsView() {
+      viewMode = 'rows';
+      activeCat = 'all';
+      activeCatName = '';
+      searchTerm = '';
+      searchInput.value = '';
+      backBar.style.display = 'none';
+      listWrapEl.style.display = 'none';
+      rowsEl.style.display = 'block';
+    }
+
+    function showListView(catId, catName) {
+      viewMode = 'list';
+      activeCat = catId || 'all';
+      activeCatName = catName || (activeCat === 'all' ? allLabel : '');
+      rowsEl.style.display = 'none';
+      listWrapEl.style.display = 'block';
+      backBar.style.display = 'flex';
+      catTitleEl.textContent = searchTerm ? '' : activeCatName;
+      renderChannelList();
     }
 
     function handleClick(e) {
@@ -160,27 +242,28 @@
         if (isNowFav && window.AppDB) {
           window.AppDB.removeFavorite(favId, 'live').then(function () {
             delete _favCache[favId];
-            favBtn.classList.remove('active');
-            favBtn.querySelector('svg').setAttribute('fill', 'none');
+            container.querySelectorAll('.channel-card-fav-btn[data-fav-id="' + favId + '"]').forEach(function (btn) {
+              btn.classList.remove('active');
+              btn.querySelector('svg').setAttribute('fill', 'none');
+            });
           });
         } else if (window.AppDB) {
           var ch = allChannels.find(function (c) { return String(c.stream_id) === String(favId); });
           if (ch) {
             window.AppDB.addFavorite({ id: favId, type: 'live', name: ch.name, logo: ch.stream_icon, stream_id: ch.stream_id });
             _favCache[favId] = true;
-            favBtn.classList.add('active');
-            favBtn.querySelector('svg').setAttribute('fill', 'currentColor');
+            container.querySelectorAll('.channel-card-fav-btn[data-fav-id="' + favId + '"]').forEach(function (btn) {
+              btn.classList.add('active');
+              btn.querySelector('svg').setAttribute('fill', 'currentColor');
+            });
           }
         }
         return;
       }
 
-      var chip = e.target.closest('.category-chip');
-      if (chip) {
-        activeCat = chip.dataset.cat;
-        catsEl.querySelectorAll('.category-chip').forEach(function (c) { c.classList.remove('active'); });
-        chip.classList.add('active');
-        renderChannels();
+      var seeAll = e.target.closest('.content-row-more');
+      if (seeAll) {
+        showListView(seeAll.dataset.cat, seeAll.dataset.catname);
         return;
       }
 
@@ -194,25 +277,37 @@
           window.PlayerManager.play({
             id: id, name: ch.name, logo: ch.stream_icon, streamUrl: streamUrl, type: 'live', epg_channel_id: id
           });
-          renderChannels();
+          if (viewMode === 'list') renderChannelList(); else renderRows();
         }
       }
     }
 
     function handleSearch() {
       searchTerm = searchInput.value.trim();
-      renderChannels();
+      if (searchTerm) {
+        activeCat = 'all';
+        showListView('all', '');
+      } else if (viewMode === 'list' && activeCat === 'all' && !activeCatName) {
+        showRowsView();
+      } else {
+        renderChannelList();
+      }
     }
 
     function handleSort() {
       sortBy = sortSelect.value;
-      renderChannels();
+      if (viewMode === 'rows') showListView('all', allLabel);
+      else renderChannelList();
+    }
+
+    function handleBack() {
+      showRowsView();
     }
 
     function handleScroll() {
       clearTimeout(scrollDebounce);
       scrollDebounce = setTimeout(function () {
-        loadEPGForVisible(api, channelsEl);
+        loadEPGForVisible(api, viewMode === 'list' ? channelsEl : rowsEl);
       }, 200);
     }
 
@@ -220,25 +315,28 @@
     searchInput.addEventListener('input', handleSearch);
     sortSelect.addEventListener('change', handleSort);
     channelsEl.addEventListener('scroll', handleScroll, true);
+    backBtn.addEventListener('click', handleBack);
     listeners.push(
       { el: container, fn: handleClick, ev: 'click' },
       { el: searchInput, fn: handleSearch, ev: 'input' },
       { el: sortSelect, fn: handleSort, ev: 'change' },
-      { el: channelsEl, fn: handleScroll, ev: 'scroll' }
+      { el: channelsEl, fn: handleScroll, ev: 'scroll' },
+      { el: backBtn, fn: handleBack, ev: 'click' }
     );
 
     if (window.i18n && window.i18n.isReady()) window.i18n._applyTranslations();
 
     api.getLiveCategories().then(function (cats) {
       categories = cats || [];
-      renderCategories();
     }).catch(function () {});
 
     api.getLiveStreams().then(function (streams) {
       allChannels = streams || [];
-      renderChannels();
+      var rowsSkeletons = container.querySelector('#live-rows-skeletons');
+      if (rowsSkeletons) rowsSkeletons.remove();
+      renderRows();
     }).catch(function () {
-      channelsEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">' + (window.i18n ? window.i18n.t('common.error') : 'Error') + '</div></div>';
+      rowsEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">' + (window.i18n ? window.i18n.t('common.error') : 'Error') + '</div></div>';
     });
 
     if (window.AppDB) {

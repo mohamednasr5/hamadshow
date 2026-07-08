@@ -11,13 +11,6 @@
     return (window.ServerConfig && window.ServerConfig.getXtreamClient()) || null;
   }
 
-  function getUserDisplayName() {
-    var api = getAPI();
-    var info = api && api.getUserInfo();
-    if (info && info.username) return info.username;
-    return '';
-  }
-
   function skeletonRow() {
     return '<div class="content-row skeleton-row">' +
       '<div class="content-row-header"><div class="skeleton-row-header"></div></div>' +
@@ -117,11 +110,10 @@
       return function destroy() {};
     }
 
-    var userName = getUserDisplayName();
     container.innerHTML =
       '<div class="home-page" style="padding:8px 16px 24px">' +
         '<div style="margin-bottom:24px"><h1 style="font-size:1.5rem;font-weight:800;color:var(--text-primary)">' +
-          (window.i18n ? window.i18n.t('home.welcome') : 'Welcome') + (userName ? ', ' + userName : '') +
+          (window.i18n ? window.i18n.t('home.welcome') : 'مرحباً بالمهندس') +
         '</h1></div>' +
         '<div id="home-skeletons">' + skeletonRow() + skeletonRow() + skeletonRow() + skeletonRow() + skeletonRow() + '</div>' +
         '<div id="home-content"></div>' +
