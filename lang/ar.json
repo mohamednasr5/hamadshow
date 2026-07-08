@@ -213,7 +213,11 @@
     "maxConnections": "الحد الأقصى للاتصالات",
     "status": "الحالة",
     "active": "نشط",
-    "expired": "منتهي"
+    "expired": "منتهي",
+    "appName": "NASR LIVE",
+    "connected": "متصل بالسيرفر",
+    "disconnected": "غير متصل",
+    "disconnect": "قطع الاتصال بالسيرفر"
   },
   "install": {
     "title": "تثبيت NASR LIVE",
@@ -235,5 +239,14 @@
     "no": "لا",
     "noInternet": "لا يوجد اتصال بالإنترنت",
     "offline": "أنت غير متصل بالإنترنت"
+  },
+  "setup": {
+    "title": "NASR LIVE",
+    "subtitle": "أدخل بيانات السيرفر الخاصة بك للبدء",
+    "serverUrl": "رابط السيرفر",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "connect": "اتصال وبدء المشاهدة",
+    "privacyNote": "بياناتك تُحفظ مشفّرة على جهازك فقط، ولا تُشارك مع أي طرف آخر."
   }
 }

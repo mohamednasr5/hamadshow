@@ -1,11 +1,12 @@
 /**
  * NASR LIVE - Settings Page
- * General, Player, Cache, Server, and About sections with persistence.
+ * Shows only "Connected to Server" status — NO server details exposed.
+ * General, Player, Cache, About sections.
  */
 (function () {
   'use strict';
 
-  var APP_VERSION = '1.0.0';
+  var APP_VERSION = '2.0.0';
   var THEMES = [
     { value: 'dark', label: 'settings.dark' },
     { value: 'light', label: 'settings.light' },
@@ -26,17 +27,17 @@
   function icon(name) {
     var icons = {
       language: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>',
-      theme: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+      theme: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
       quality: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
       autoplay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
       hardware: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/></svg>',
-      cache: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
-      history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-      server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>',
+      cache: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0z"/></svg>',
+      history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><circle cx="12" cy="12" r="10"/></svg>',
       info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-      backup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
-      restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-      logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+      backup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 0-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+      restore: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 0-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+      logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+      server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>'
     };
     return icons[name] || icons.info;
   }
@@ -49,7 +50,7 @@
         (desc ? '<div class="setting-item-desc">' + desc + '</div>' : '') +
       '</div>' +
       '<div class="setting-item-action">' + actionHTML + '</div>' +
-    '</div>';
+      '</div>';
   }
 
   function toggleHTML(id, checked) {
@@ -57,7 +58,7 @@
       '<input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + '>' +
       '<span class="toggle-switch-track"></span>' +
       '<span class="toggle-switch-thumb"></span>' +
-    '</label>';
+      '</label>';
   }
 
   function selectHTML(id, options, selected) {
@@ -76,12 +77,22 @@
     container.innerHTML =
       '<div class="settings-container" style="padding:8px 16px 24px">' +
         '<h1 style="font-size:1.25rem;font-weight:700;color:var(--text-primary);margin-bottom:20px" data-i18n="settings.title">' +
-          (window.i18n ? window.i18n.t('settings.title') : 'Settings') +
+          (window.i18n ? window.i18n.t('settings.title') : 'الإعدادات') +
         '</h1>' +
+
+        '<!-- Connection Status — shows ONLY "Connected / Not Connected" -->' +
+        '<div class="settings-group">' +
+          '<div class="settings-group-title" data-i18n="settings.server">' +
+            (window.i18n ? window.i18n.t('settings.server') : 'السيرفر') +
+          '</div>' +
+          '<div class="settings-group-card" id="server-status-card"></div>' +
+        '</div>' +
 
         '<!-- General -->' +
         '<div class="settings-group">' +
-          '<div class="settings-group-title" data-i18n="settings.general">' + (window.i18n ? window.i18n.t('settings.general') : 'General') + '</div>' +
+          '<div class="settings-group-title" data-i18n="settings.general">' +
+            (window.i18n ? window.i18n.t('settings.general') : 'عام') +
+          '</div>' +
           '<div class="settings-group-card">' +
             '<div id="setting-language-item"></div>' +
             '<div id="setting-theme-item"></div>' +
@@ -90,7 +101,9 @@
 
         '<!-- Player -->' +
         '<div class="settings-group">' +
-          '<div class="settings-group-title" data-i18n="settings.player">' + (window.i18n ? window.i18n.t('settings.player') : 'Player') + '</div>' +
+          '<div class="settings-group-title" data-i18n="settings.player">' +
+            (window.i18n ? window.i18n.t('settings.player') : 'المشغل') +
+          '</div>' +
           '<div class="settings-group-card">' +
             '<div id="setting-quality-item"></div>' +
             '<div id="setting-autoplay-item"></div>' +
@@ -100,7 +113,9 @@
 
         '<!-- Cache & Storage -->' +
         '<div class="settings-group">' +
-          '<div class="settings-group-title" data-i18n="settings.cache">' + (window.i18n ? window.i18n.t('settings.cache') : 'Cache & Storage') + '</div>' +
+          '<div class="settings-group-title" data-i18n="settings.cache">' +
+            (window.i18n ? window.i18n.t('settings.cache') : 'الذاكرة') +
+          '</div>' +
           '<div class="settings-group-card">' +
             '<div id="setting-cache-item"></div>' +
             '<div id="setting-clearcache-item"></div>' +
@@ -108,15 +123,11 @@
           '</div>' +
         '</div>' +
 
-        '<!-- Server -->' +
-        '<div class="settings-group">' +
-          '<div class="settings-group-title" data-i18n="settings.server">' + (window.i18n ? window.i18n.t('settings.server') : 'Server') + '</div>' +
-          '<div class="settings-group-card" id="server-info-card"></div>' +
-        '</div>' +
-
         '<!-- About -->' +
         '<div class="settings-group">' +
-          '<div class="settings-group-title" data-i18n="settings.about">' + (window.i18n ? window.i18n.t('settings.about') : 'About') + '</div>' +
+          '<div class="settings-group-title" data-i18n="settings.about">' +
+            (window.i18n ? window.i18n.t('settings.about') : 'حول التطبيق') +
+          '</div>' +
           '<div class="settings-group-card">' +
             '<div id="setting-version-item"></div>' +
             '<div id="setting-backup-item"></div>' +
@@ -128,10 +139,16 @@
         '<!-- Logout Confirm Modal -->' +
         '<div class="modal-overlay" id="logout-modal">' +
           '<div class="modal-panel">' +
-            '<div class="modal-title">' + (window.i18n ? window.i18n.t('settings.confirmLogout') : 'Do you want to logout?') + '</div>' +
+            '<div class="modal-title">' +
+              (window.i18n ? window.i18n.t('settings.confirmLogout') : 'هل تريد قطع الاتصال؟') +
+            '</div>' +
             '<div class="modal-actions">' +
-              '<button class="btn btn-secondary" id="logout-cancel">' + (window.i18n ? window.i18n.t('common.cancel') : 'Cancel') + '</button>' +
-              '<button class="btn btn-danger" id="logout-confirm">' + (window.i18n ? window.i18n.t('settings.logout') : 'Logout') + '</button>' +
+              '<button class="btn btn-secondary" id="logout-cancel">' +
+                (window.i18n ? window.i18n.t('common.cancel') : 'إلغاء') +
+              '</button>' +
+              '<button class="btn btn-danger" id="logout-confirm">' +
+                (window.i18n ? window.i18n.t('settings.logout') : 'قطع الاتصال') +
+              '</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -161,91 +178,100 @@
 
         container.querySelector('#setting-language-item').innerHTML = settingItemHTML(
           'language',
-          window.i18n ? window.i18n.t('settings.language') : 'Language',
+          window.i18n ? window.i18n.t('settings.language') : 'اللغة',
           '',
           selectHTML('setting-language', LANGUAGES, lang)
         );
 
         container.querySelector('#setting-theme-item').innerHTML = settingItemHTML(
           'theme',
-          window.i18n ? window.i18n.t('settings.theme') : 'Theme',
+          window.i18n ? window.i18n.t('settings.theme') : 'السمة',
           '',
           selectHTML('setting-theme', THEMES, theme)
         );
 
         container.querySelector('#setting-quality-item').innerHTML = settingItemHTML(
           'quality',
-          window.i18n ? window.i18n.t('settings.defaultQuality') : 'Default Quality',
+          window.i18n ? window.i18n.t('settings.defaultQuality') : 'الجودة الافتراضية',
           '',
           selectHTML('setting-quality', QUALITIES, quality)
         );
 
         container.querySelector('#setting-autoplay-item').innerHTML = settingItemHTML(
           'autoplay',
-          window.i18n ? window.i18n.t('settings.autoplay') : 'Autoplay Next',
+          window.i18n ? window.i18n.t('settings.autoplay') : 'تشغيل تلقائي',
           '',
           toggleHTML('setting-autoplay', autoplay)
         );
 
         container.querySelector('#setting-hwaccel-item').innerHTML = settingItemHTML(
           'hardware',
-          window.i18n ? window.i18n.t('settings.hardwareAccel') : 'Hardware Acceleration',
+          window.i18n ? window.i18n.t('settings.hardwareAccel') : 'تسريع الأجهزة',
           '',
           toggleHTML('setting-hwaccel', hwaccel)
         );
 
         container.querySelector('#setting-cache-item').innerHTML = settingItemHTML(
           'cache',
-          window.i18n ? window.i18n.t('settings.storageUsed') : 'Cache Size',
+          window.i18n ? window.i18n.t('settings.storageUsed') : 'حجميع البيانات المخزنة',
           '<span id="cache-size-label">...</span>',
           ''
         );
 
         container.querySelector('#setting-clearcache-item').innerHTML = settingItemHTML(
           'cache',
-          window.i18n ? window.i18n.t('settings.clearCache') : 'Clear Cache',
+          window.i18n ? window.i18n.t('settings.clearCache') : 'مسح البيانات المخزنة',
           '',
-          '<button class="btn btn-secondary btn-sm" id="btn-clear-cache">' + (window.i18n ? window.i18n.t('settings.clearCache') : 'Clear Cache') + '</button>'
+          '<button class="btn btn-secondary btn-sm" id="btn-clear-cache">' +
+            (window.i18n ? window.i18n.t('settings.clearCache') : 'مسح') +
+          '</button>'
         );
 
         container.querySelector('#setting-clearhistory-item').innerHTML = settingItemHTML(
           'history',
-          window.i18n ? window.i18n.t('settings.cache') : 'Watch History',
-          (window.i18n ? window.i18n.t('settings.cache') : 'Cache') + ' & ' + (window.i18n ? window.i18n.t('settings.player') : 'History'),
-          '<button class="btn btn-secondary btn-sm" id="btn-clear-history">' + (window.i18n ? window.i18n.t('home.seeAll') : 'Clear History') + '</button>'
+          window.i18n ? window.i18n.t('settings.cache') : 'السجل المشاهدة',
+          '',
+          '<button class="btn btn-secondary btn-sm" id="btn-clear-history">' +
+            (window.i18n ? window.i18n.t('home.seeAll') : 'مسح السجل') +
+          '</button>'
         );
 
         container.querySelector('#setting-version-item').innerHTML = settingItemHTML(
           'info',
-          window.i18n ? window.i18n.t('settings.version') : 'Version',
-          APP_VERSION,
-          ''
+          window.i18n ? window.i18n.t('settings.version') : 'الإصدار',
+          APP_VERSION, ''
         );
 
         container.querySelector('#setting-backup-item').innerHTML = settingItemHTML(
           'backup',
-          window.i18n ? window.i18n.t('settings.backup') : 'Backup',
+          window.i18n ? window.i18n.t('settings.backup') : 'نسخ احتياطي',
           '',
-          '<button class="btn btn-secondary btn-sm" id="btn-backup">' + (window.i18n ? window.i18n.t('settings.backup') : 'Backup') + '</button>'
+          '<button class="btn btn-secondary btn-sm" id="btn-backup">' +
+            (window.i18n ? window.i18n.t('settings.backup') : 'نسخ احتياطي') +
+          '</button>'
         );
 
         container.querySelector('#setting-restore-item').innerHTML = settingItemHTML(
           'restore',
-          window.i18n ? window.i18n.t('settings.restore') : 'Restore',
+          window.i18n ? window.i18n.t('settings.restore') : 'استعادة',
           '',
-          '<button class="btn btn-secondary btn-sm" id="btn-restore">' + (window.i18n ? window.i18n.t('settings.restore') : 'Restore') + '</button>'
+          '<button class="btn btn-secondary btn-sm" id="btn-restore">' +
+            (window.i18n ? window.i18n.t('settings.restore') : 'استعادة') +
+          '</button>'
         );
 
         container.querySelector('#setting-logout-item').innerHTML = settingItemHTML(
           'logout',
-          window.i18n ? window.i18n.t('settings.logout') : 'Logout',
+          window.i18n ? window.i18n.t('settings.logout') : 'قطع الاتصال',
           '',
-          '<button class="btn btn-danger btn-sm" id="btn-logout">' + (window.i18n ? window.i18n.t('settings.logout') : 'Logout') + '</button>'
+          '<button class="btn btn-danger btn-sm" id="btn-logout">' +
+            (window.i18n ? window.i18n.t('settings.logout') : 'قطع الاتصال') +
+          '</button>'
         );
 
         bindEvents(lang, theme, quality, autoplay, hwaccel);
         loadCacheSize();
-        loadServerInfo();
+        loadServerStatus();
       });
     }
 
@@ -275,9 +301,7 @@
       if (clearCacheBtn) {
         clearCacheBtn.addEventListener('click', function () {
           if (window.AppDB) {
-            window.AppDB.clearCache().then(function () {
-              loadCacheSize();
-            });
+            window.AppDB.clearCache().then(function () { loadCacheSize(); });
           }
         });
       }
@@ -285,9 +309,7 @@
       var clearHistBtn = container.querySelector('#btn-clear-history');
       if (clearHistBtn) {
         clearHistBtn.addEventListener('click', function () {
-          if (window.AppDB) {
-            window.AppDB.clearHistory().then(function () {});
-          }
+          if (window.AppDB) { window.AppDB.clearHistory().then(function () {}); }
         });
       }
 
@@ -303,8 +325,7 @@
                     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     var url = URL.createObjectURL(blob);
                     var a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'nasr-live-backup.json';
+                    a.href = url; a.download = 'nasr-live-backup.json';
                     a.click();
                     URL.revokeObjectURL(url);
                   });
@@ -317,9 +338,7 @@
 
       var restoreBtn = container.querySelector('#btn-restore');
       if (restoreBtn) {
-        restoreBtn.addEventListener('click', function () {
-          restoreInput.click();
-        });
+        restoreBtn.addEventListener('click', function () { restoreInput.click(); });
         restoreInput.addEventListener('change', function (e) {
           var file = e.target.files[0];
           if (!file) return;
@@ -347,14 +366,14 @@
       var logoutBtn = container.querySelector('#btn-logout');
       var logoutCancel = container.querySelector('#logout-cancel');
       var logoutConfirm = container.querySelector('#logout-confirm');
-
       if (logoutBtn) logoutBtn.addEventListener('click', function () { logoutModal.classList.add('active'); });
       if (logoutCancel) logoutCancel.addEventListener('click', function () { logoutModal.classList.remove('active'); });
       if (logoutConfirm) {
         logoutConfirm.addEventListener('click', function () {
           logoutModal.classList.remove('active');
-          if (window.AuthService) window.AuthService.signOut();
-          if (window.AppRouter) window.AppRouter.navigate('login');
+          if (window.ServerConfig) window.ServerConfig.disconnect();
+          window.location.hash = '#/';
+          if (window.App && window.App._showSetup) window.App._showSetup();
         });
       }
       logoutModal.addEventListener('click', function (e) { if (e.target === logoutModal) logoutModal.classList.remove('active'); });
@@ -370,8 +389,7 @@
       req.onsuccess = function (e) {
         var db = e.target.result;
         var stores = ['cache', 'favorites', 'watchHistory', 'settings'];
-        var total = 0;
-        var counted = 0;
+        var total = 0; var counted = 0;
         stores.forEach(function (storeName) {
           if (!db.objectStoreNames.contains(storeName)) { counted++; if (counted === stores.length) showSize(total); return; }
           var tx = db.transaction(storeName, 'readonly');
@@ -387,52 +405,36 @@
       }
     }
 
-    function loadServerInfo() {
-      var api = (window.AuthService && window.AuthService.getXtreamClient()) || null;
-      var card = container.querySelector('#server-info-card');
+    function loadServerStatus() {
+      var api = (window.ServerConfig && window.ServerConfig.getXtreamClient()) || null;
+      var card = container.querySelector('#server-status-card');
       if (!api || !api.isAuthenticated()) {
         card.innerHTML = settingItemHTML('server',
-          window.i18n ? window.i18n.t('settings.serverStatus') : 'Server Status',
-          '<span style="color:var(--danger)">' + (window.i18n ? window.i18n.t('settings.disconnected') : 'Disconnected') + '</span>',
+          window.i18n ? window.i18n.t('settings.serverStatus') : 'حالة السيرفر',
+          '<span style="color:var(--danger)">' +
+          (window.i18n ? window.i18n.t('settings.disconnected') : 'غير متصل') + '</span>',
           ''
         );
         return;
       }
 
-      var info = api.getUserInfo() || {};
+      // Only show connection status — NO server details
       var statusText = info.status === 'Active'
-        ? '<span style="color:var(--success)">' + (window.i18n ? window.i18n.t('settings.connected') : 'Connected') + '</span>'
+        ? '<span style="color:var(--success);display:flex;align-items:center;gap:8px;">' +
+          '<span style="width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 8px rgba(0,184,148,0.5);display:inline-block;animation:livePulse 1.5s ease-in-out infinite;"></span>' +
+          (window.i18n ? window.i18n.t('settings.connected') : 'متصل بالسيرفر') +
+          '</span>'
         : '<span style="color:var(--danger)">' + (info.status || 'Unknown') + '</span>';
 
-      var expDate = info.exp_date ? new Date(info.exp_date * 1000).toLocaleDateString() : 'N/A';
-      var activeConn = info.active_cons || 0;
-      var maxConn = info.max_connections || '?';
-      var username = info.username || '';
-
-      card.innerHTML =
-        settingItemHTML('server',
-          window.i18n ? window.i18n.t('settings.serverStatus') : 'Server Status',
-          statusText, ''
-        ) +
-        settingItemHTML('server',
-          window.i18n ? window.i18n.t('auth.username') : 'Username',
-          username, ''
-        ) +
-        settingItemHTML('info',
-          window.i18n ? window.i18n.t('profile.expDate') : 'Account Expiry',
-          expDate, ''
-        ) +
-        settingItemHTML('info',
-          (window.i18n ? window.i18n.t('profile.activeConnections') : 'Active') + ' / ' + (window.i18n ? window.i18n.t('profile.maxConnections') : 'Max'),
-          activeConn + ' / ' + maxConn, ''
-        );
+      card.innerHTML = settingItemHTML('server',
+        window.i18n ? window.i18n.t('settings.serverStatus') : 'حالة السيرفر',
+        statusText, ''
+      );
     }
 
     if (window.i18n && window.i18n.isReady()) window.i18n._applyTranslations();
 
-    if (window.AppDB) {
-      initSettings();
-    }
+    if (window.AppDB) { initSettings(); }
 
     return function destroy() {
       listeners.forEach(function (l) { if (l.fn) l.el.removeEventListener(l.ev, l.fn); });

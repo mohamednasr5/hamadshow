@@ -17,8 +17,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hls.js@latest">
   <link rel="stylesheet" href="css/app.css">
+  <style>
+    /* Inline critical animations for faster first paint */
+    .skeleton-pulse{animation:skeleton-pulse-anim 1.5s ease-in-out infinite}
+    @keyframes skeleton-pulse-anim{0%,100%{opacity:.4}50%{opacity:1}}
+    @keyframes toast-progress{from{width:100%}to{width:0%}}
+    @keyframes epg-pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+  </style>
 </head>
 <body>
   <!-- Splash Screen -->
@@ -43,11 +49,11 @@
     </div>
   </div>
 
-  <!-- Auth Screen -->
-  <div id="auth-screen" class="auth-screen hidden">
-    <div class="auth-card">
-      <div class="auth-card-logo">
-        <svg viewBox="0 0 120 120" fill="none" width="64" height="64">
+  <!-- Setup Screen (first run only) -->
+  <div id="setup-screen" class="auth-screen hidden">
+    <div class="auth-card setup-card">
+      <div class="auth-card-logo setup-logo">
+        <svg viewBox="0 0 120 120" fill="none" width="72" height="72">
           <defs>
             <linearGradient id="auth-grad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style="stop-color:#6c5ce7"/>
@@ -58,93 +64,39 @@
           <polygon points="45,35 45,85 90,60" fill="url(#auth-grad)"/>
         </svg>
       </div>
-      <h1 class="auth-card-title" data-i18n="auth.title">NASR LIVE</h1>
-      <p class="auth-card-subtitle" data-i18n="auth.subtitle">Premium IPTV Experience</p>
+      <h1 class="auth-card-title" data-i18n="setup.title">NASR LIVE</h1>
+      <p class="auth-card-subtitle" data-i18n="setup.subtitle">أدخل بيانات السيرفر الخاصة بك للبدء</p>
 
-      <!-- Login Form -->
-      <form id="login-form" class="auth-form active">
+      <form id="setup-form" class="auth-form active">
         <div class="auth-input-group">
-          <label for="login-email" data-i18n="auth.email">البريد الإلكتروني</label>
+          <label for="setup-url" data-i18n="setup.serverUrl">رابط السيرفر</label>
           <div class="auth-input-wrapper">
-            <input type="email" id="login-email" required autocomplete="email" data-i18n-placeholder="auth.emailPlaceholder">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
+            <input type="url" id="setup-url" placeholder="http://example.com:8080" required autocomplete="off" spellcheck="false">
           </div>
         </div>
         <div class="auth-input-group">
-          <label for="login-password" data-i18n="auth.password">كلمة المرور</label>
+          <label for="setup-user" data-i18n="setup.username">اسم المستخدم</label>
           <div class="auth-input-wrapper">
-            <input type="password" id="login-password" required autocomplete="current-password" data-i18n-placeholder="auth.passwordPlaceholder">
-          </div>
-        </div>
-        <button type="submit" class="auth-btn"><span class="btn-text" data-i18n="auth.login">تسجيل الدخول</span><span class="btn-loader"></span></button>
-        <div class="auth-switch">
-          <span data-i18n="auth.noAccount">ليس لديك حساب؟</span>
-          <button type="button" id="show-register" data-i18n="auth.register">إنشاء حساب</button>
-        </div>
-      </form>
-
-      <!-- Register Form -->
-      <form id="register-form" class="auth-form">
-        <div class="auth-input-group">
-          <label for="reg-name" data-i18n="auth.name">الاسم</label>
-          <div class="auth-input-wrapper">
-            <input type="text" id="reg-name" required data-i18n-placeholder="auth.namePlaceholder">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="setup-user" required autocomplete="off" spellcheck="false">
           </div>
         </div>
         <div class="auth-input-group">
-          <label for="reg-email" data-i18n="auth.email">البريد الإلكتروني</label>
+          <label for="setup-pass" data-i18n="setup.password">كلمة المرور</label>
           <div class="auth-input-wrapper">
-            <input type="email" id="reg-email" required autocomplete="email" data-i18n-placeholder="auth.emailPlaceholder">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="setup-pass" required autocomplete="off">
+            <button type="button" class="toggle-password" aria-label="Toggle password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8-11 8 11 4 11 11-4-4 4-11 4-4 11-11 8-11 8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
         </div>
-        <div class="auth-input-group">
-          <label for="reg-password" data-i18n="auth.password">كلمة المرور</label>
-          <div class="auth-input-wrapper">
-            <input type="password" id="reg-password" required minlength="6" autocomplete="new-password" data-i18n-placeholder="auth.passwordPlaceholder">
-          </div>
-        </div>
-        <div class="auth-input-group">
-          <label for="reg-confirm" data-i18n="auth.confirmPassword">تأكيد كلمة المرور</label>
-          <div class="auth-input-wrapper">
-            <input type="password" id="reg-confirm" required minlength="6" autocomplete="new-password" data-i18n-placeholder="auth.confirmPasswordPlaceholder">
-          </div>
-        </div>
-        <button type="submit" class="auth-btn"><span class="btn-text" data-i18n="auth.createAccount">إنشاء حساب</span><span class="btn-loader"></span></button>
-        <div class="auth-switch">
-          <span data-i18n="auth.hasAccount">لديك حساب بالفعل؟</span>
-          <button type="button" id="show-login" data-i18n="auth.login">تسجيل الدخول</button>
-        </div>
-      </form>
-
-      <!-- Server Config -->
-      <div id="server-config-section" class="auth-divider" style="flex-direction:column;gap:12px;">
-        <span data-i18n="auth.orConfig">أو إعداد السيرفر</span>
-      </div>
-      <button type="button" id="show-server-config" class="auth-btn" style="background:var(--bg-surface);border:1px solid var(--border);margin-top:-4px;"><span class="btn-text" data-i18n="auth.serverConfig">إعداد سيرفر Xtream</span></button>
-
-      <!-- Xtream Login Form -->
-      <form id="xtream-form" class="auth-form">
-        <div class="auth-input-group">
-          <label for="xtream-url" data-i18n="auth.serverUrl">رابط السيرفر</label>
-          <div class="auth-input-wrapper">
-            <input type="url" id="xtream-url" placeholder="http://example.com:8080" required>
-          </div>
-        </div>
-        <div class="auth-input-group">
-          <label for="xtream-user" data-i18n="auth.username">اسم المستخدم</label>
-          <div class="auth-input-wrapper">
-            <input type="text" id="xtream-user" required data-i18n-placeholder="auth.usernamePlaceholder">
-          </div>
-        </div>
-        <div class="auth-input-group">
-          <label for="xtream-pass" data-i18n="auth.password">كلمة المرور</label>
-          <div class="auth-input-wrapper">
-            <input type="password" id="xtream-pass" required data-i18n-placeholder="auth.passwordPlaceholder">
-          </div>
-        </div>
-        <button type="submit" class="auth-btn"><span class="btn-text" data-i18n="auth.connect">اتصال</span><span class="btn-loader"></span></button>
-        <div class="auth-switch">
-          <button type="button" id="show-login-from-xtream" data-i18n="auth.backToLogin">العودة لتسجيل الدخول</button>
-        </div>
+        <button type="submit" class="auth-btn" id="setup-submit">
+          <span class="btn-text" data-i18n="setup.connect">اتصال وبدء المشاهدة</span>
+          <span class="btn-loader"></span>
+        </button>
+        <p class="setup-privacy-note" data-i18n="setup.privacyNote">بياناتك تُحفظ مشفّرة على جهازك فقط، ولا تُشارك مع أي طرف آخر.</p>
       </form>
 
       <div id="auth-error" class="auth-error"></div>
@@ -191,17 +143,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
           <span data-i18n="nav.series">المسلسلات</span>
         </a>
-        <a href="#/favorites" class="nav-item sidebar-nav-item" data-page="favorites" data-focusable>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span data-i18n="nav.favorites">المفضلة</span>
-        </a>
-        <a href="#/search" class="nav-item sidebar-nav-item" data-page="search" data-focusable>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span data-i18n="nav.search">البحث</span>
-        </a>
         <div class="nav-divider"></div>
         <a href="#/settings" class="nav-item sidebar-nav-item" data-page="settings" data-focusable>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2 2h-.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83l.06.06A1.65 1.65 0 0 0 .33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span data-i18n="nav.settings">الإعدادات</span>
         </a>
       </nav>
@@ -233,7 +177,7 @@
         <span data-i18n="nav.series">مسلسلات</span>
       </a>
       <a href="#/settings" class="bottom-nav-item" data-page="settings" data-focusable>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83l.06.06A1.65 1.65 0 0 0 .33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span data-i18n="nav.settings">إعدادات</span>
       </a>
     </nav>
@@ -283,10 +227,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
             </button>
             <button id="player-audio" class="icon-btn-lg" aria-label="Audio tracks">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
             </button>
             <button id="player-speed" class="icon-btn-lg" aria-label="Speed">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 19 22 12 13 5"/><polygon points="2 19 11 12 2 5"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke="width="2"><polygon points="13 19 22 12 13 5"/><polygon points="2 19 11 12 2 5"/></svg>
             </button>
             <button id="player-fullscreen" class="icon-btn-lg" aria-label="Fullscreen">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
@@ -302,7 +246,7 @@
         <div class="spinner"></div>
       </div>
       <div id="player-error" class="player-error hidden">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <p data-i18n="player.error">حدث خطأ في التشغيل</p>
         <button id="player-retry" class="btn-primary" data-i18n="player.retry">إعادة المحاولة</button>
       </div>
@@ -325,26 +269,21 @@
     </div>
   </div>
 
-  <!-- Profile Menu -->
+  <!-- Profile / Connection Menu -->
   <div id="profile-menu" class="profile-menu hidden">
     <div class="profile-menu-header">
       <div id="profile-avatar" class="profile-avatar"></div>
-      <div id="profile-name" class="profile-name"></div>
-      <div id="profile-email" class="profile-email"></div>
+      <div id="profile-name" class="profile-name" data-i18n="profile.appName">NASR LIVE</div>
+      <div class="profile-status-row">
+        <span class="status-dot" id="profile-status-dot"></span>
+        <span id="profile-email" class="profile-email" data-i18n="profile.connected">متصل بالسيرفر</span>
+      </div>
     </div>
     <div class="profile-menu-items">
-      <button id="profile-account-info" class="profile-menu-item" data-focusable>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span data-i18n="profile.accountInfo">معلومات الحساب</span>
-      </button>
-      <button id="profile-xtream-status" class="profile-menu-item" data-focusable>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span data-i18n="profile.xtreamStatus">حالة السيرفر</span>
-      </button>
       <div class="profile-menu-divider"></div>
       <button id="profile-logout" class="profile-menu-item logout" data-focusable>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        <span data-i18n="profile.logout">تسجيل الخروج</span>
+        <span data-i18n="profile.disconnect">قطع الاتصال بالسيرفر</span>
       </button>
     </div>
   </div>
@@ -357,7 +296,7 @@
     <div id="epg-content" class="epg-content"></div>
   </div>
 
-  <!-- Install Prompt (deferred) -->
+  <!-- Install Prompt -->
   <div id="install-banner" class="install-banner hidden">
     <div class="install-banner-content">
       <div class="install-icon">
@@ -377,31 +316,13 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-  <script>
-    // Initialize Firebase - must run before any service scripts
-    firebase.initializeApp({
-      apiKey: "AIzaSyAfImJ7x3pe0GYSrl7hDz_sMb_GarcpJ9E",
-      authDomain: "nasr-live.firebaseapp.com",
-      databaseURL: "https://nasr-live-default-rtdb.firebaseio.com",
-      projectId: "nasr-live",
-      storageBucket: "nasr-live.firebasestorage.app",
-      messagingSenderId: "215945991656",
-      appId: "1:215945991656:web:41ea1faa18496ff86cc05d",
-      measurementId: "G-L8YQYDL52E"
-    });
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="js/utils/i18n.js"></script>
   <script src="js/utils/crypto.js"></script>
   <script src="js/utils/focus-engine.js"></script>
   <script src="js/services/database.js"></script>
   <script src="js/services/xtream-api.js"></script>
-  <script src="js/services/auth.js"></script>
+  <script src="js/services/server-config.js"></script>
   <script src="js/components/ui.js"></script>
   <script src="js/components/cards.js"></script>
   <script src="js/components/epg.js"></script>

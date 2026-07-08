@@ -8,12 +8,10 @@
   var PAGE_SIZE = 15;
 
   function getAPI() {
-    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
+    return (window.ServerConfig && window.ServerConfig.getXtreamClient()) || null;
   }
 
   function getUserDisplayName() {
-    var user = window.AuthService && window.AuthService.getCurrentUser();
-    if (user && user.displayName) return user.displayName;
     var api = getAPI();
     var info = api && api.getUserInfo();
     if (info && info.username) return info.username;

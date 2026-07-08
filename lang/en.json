@@ -213,7 +213,11 @@
     "maxConnections": "Max Connections",
     "status": "Status",
     "active": "Active",
-    "expired": "Expired"
+    "expired": "Expired",
+    "appName": "NASR LIVE",
+    "connected": "Connected to server",
+    "disconnected": "Not connected",
+    "disconnect": "Disconnect server"
   },
   "install": {
     "title": "Install NASR LIVE",
@@ -235,5 +239,14 @@
     "no": "No",
     "noInternet": "No internet connection",
     "offline": "You are offline"
+  },
+  "setup": {
+    "title": "NASR LIVE",
+    "subtitle": "Enter your server details to get started",
+    "serverUrl": "Server URL",
+    "username": "Username",
+    "password": "Password",
+    "connect": "Connect & Start Watching",
+    "privacyNote": "Your data is encrypted and stored only on this device, never shared."
   }
 }

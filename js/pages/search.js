@@ -12,7 +12,7 @@
   var _recognition = null;
 
   function getAPI() {
-    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
+    return (window.ServerConfig && window.ServerConfig.getXtreamClient()) || null;
   }
 
   function getHistory() {

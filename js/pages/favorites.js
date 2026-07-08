@@ -13,7 +13,7 @@
   ];
 
   function getAPI() {
-    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
+    return (window.ServerConfig && window.ServerConfig.getXtreamClient()) || null;
   }
 
   function cardHTML(item) {
