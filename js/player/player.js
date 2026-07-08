@@ -70,8 +70,8 @@
     _bindEvents() {
       const v = this.video;
 
-      this._on(v, 'play', () => this._dispatch('play'));
-      this._on(v, 'pause', () => this._dispatch('pause'));
+      this._on(v, 'play', () => { this._updatePlayButton(); this._dispatch('play'); });
+      this._on(v, 'pause', () => { this._updatePlayButton(); this._dispatch('pause'); });
       this._on(v, 'ended', () => {
         this._dispatch('end');
         if (this.currentItem && this.currentItem.onEnded) this.currentItem.onEnded();
@@ -203,6 +203,26 @@
 
       const isHLS = url && (url.includes('.m3u8') || url.includes('m3u8'));
 
+      // Helper to attempt playback with unmute fallback for autoplay restrictions
+      const attemptPlay = () => {
+        const playPromise = this.video.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            // Playback started successfully
+            this.video.muted = false;
+          }).catch((err) => {
+            // Autoplay was prevented - try muted playback
+            console.warn('Autoplay blocked, trying muted:', err.message);
+            this.video.muted = true;
+            this.video.play().then(() => {
+              this._showGesture('volume', 'Muted - tap to unmute');
+            }).catch(() => {
+              this._showError();
+            });
+          });
+        }
+      };
+
       if (isHLS) {
         if (window.Hls && window.Hls.isSupported()) {
           this.hls = new window.Hls({
@@ -216,7 +236,7 @@
           this.hls.loadSource(url);
           this.hls.attachMedia(this.video);
           this.hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-            this.video.play().catch(() => {});
+            attemptPlay();
           });
           this.hls.on(window.Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
@@ -236,13 +256,13 @@
         } else if (this.video.canPlayType('application/vnd.apple.mpegurl')) {
           // Native HLS (Safari)
           this.video.src = url;
-          this.video.play().catch(() => {});
+          attemptPlay();
         } else {
           this._showError();
         }
       } else {
         this.video.src = url;
-        this.video.play().catch(() => {});
+        attemptPlay();
       }
     }
 
@@ -276,6 +296,10 @@
     isPlaying() { return !this.video.paused; }
 
     _togglePlay() {
+      // Unmute on first user interaction if video was auto-muted
+      if (this.video.muted && this.video.src) {
+        this.video.muted = false;
+      }
       if (this.video.paused) {
         this.video.play().catch(() => {});
       } else {
@@ -347,6 +371,11 @@
     }
 
     _onTap(e) {
+      // Ignore taps that land on control buttons (they handle themselves)
+      if (e.target.closest('.controls-top') || e.target.closest('.controls-center') || e.target.closest('.controls-bottom')) {
+        return;
+      }
+
       const now = Date.now();
       const rect = this.els.tapZone.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -374,9 +403,9 @@
       } else {
         this.lastTapTime = now;
         this.doubleTapTimer = setTimeout(() => {
-          // Single tap - toggle controls
+          // Single tap - show controls if hidden, toggle play/pause if visible
           if (this.controlsVisible) {
-            this._hideControls();
+            this._togglePlay();
           } else {
             this._showControls();
           }

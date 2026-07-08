@@ -808,12 +808,14 @@ body.theme-light .bottom-nav { background: rgba(240,242,248,0.85); }
 .controls-top {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 16px 40px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  position: relative; z-index: 3;
 }
-.controls-center { display: flex; align-items: center; justify-content: center; gap: 24px; }
+.controls-center { display: flex; align-items: center; justify-content: center; gap: 24px; position: relative; z-index: 3; }
 .controls-bottom {
   padding: 40px 16px 24px; padding-bottom: calc(24px + var(--safe-bottom));
   background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
   display: flex; align-items: center; gap: 12px;
+  position: relative; z-index: 3;
 }
 .controls-top-right { display: flex; gap: 8px; }
 .controls-bottom-right { display: flex; gap: 4px; align-items: center; margin-left: auto; }
