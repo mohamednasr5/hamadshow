@@ -367,7 +367,7 @@
 
       // Update Xtream status
       const statusBtn = document.getElementById('profile-xtream-status');
-      if (statusBtn && window.XtreamAPI?.isAuthenticated()) {
+      if (statusBtn && window.AuthService?.getXtreamClient()?.isAuthenticated()) {
         statusBtn.querySelector('span').textContent = 'Connected';
       }
     },
@@ -385,7 +385,7 @@
       // Check if already logged in
       if (window.AuthService?.getCurrentUser()) {
         // Check for Xtream config
-        if (window.XtreamAPI?.isAuthenticated()) {
+        if (window.AuthService?.getXtreamClient()?.isAuthenticated()) {
           this._showApp();
         } else {
           // Try to load saved Xtream config
