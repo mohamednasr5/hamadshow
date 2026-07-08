@@ -123,6 +123,12 @@
           '</div>' +
         '</div>' +
 
+        '<!-- Playlist Sources (M3U/M3U8/XSPF/PLS/ASX/WPL) -->' +
+        '<div class="settings-group">' +
+          '<div class="settings-group-title">مصدر إضافي (قائمة تشغيل)</div>' +
+          '<div class="settings-group-card" id="playlist-status-card"></div>' +
+        '</div>' +
+
         '<!-- About -->' +
         '<div class="settings-group">' +
           '<div class="settings-group-title" data-i18n="settings.about">' +
@@ -272,6 +278,7 @@
         bindEvents(lang, theme, quality, autoplay, hwaccel);
         loadCacheSize();
         loadServerStatus();
+        loadPlaylistStatus();
       });
     }
 
@@ -419,6 +426,7 @@
       }
 
       // Only show connection status — NO server details
+      var info = api.getUserInfo() || {};
       var statusText = info.status === 'Active'
         ? '<span style="color:var(--success);display:flex;align-items:center;gap:8px;">' +
           '<span style="width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 8px rgba(0,184,148,0.5);display:inline-block;animation:livePulse 1.5s ease-in-out infinite;"></span>' +
@@ -430,6 +438,68 @@
         window.i18n ? window.i18n.t('settings.serverStatus') : 'حالة السيرفر',
         statusText, ''
       );
+    }
+
+    function loadPlaylistStatus() {
+      var card = container.querySelector('#playlist-status-card');
+      if (!card || !window.PlaylistConfig) return;
+      var status = window.PlaylistConfig.getStatus();
+
+      if (!status.hasConfig) {
+        card.innerHTML = settingItemHTML('backup',
+          'لا يوجد مصدر إضافي',
+          'أضف رابط M3U / M3U8 / XSPF / PLS / ASX / WPL',
+          '<button class="btn btn-secondary btn-sm" id="btn-add-playlist">إضافة</button>'
+        );
+      } else {
+        card.innerHTML = settingItemHTML('backup',
+          (status.count + ' عنصر · ' + (status.format || '').toUpperCase()),
+          '<span style="color:var(--success)">متصل</span>',
+          '<button class="btn btn-secondary btn-sm" id="btn-refresh-playlist" style="margin-inline-end:6px">تحديث</button>' +
+          '<button class="btn btn-danger btn-sm" id="btn-remove-playlist">إزالة</button>'
+        );
+      }
+
+      var addBtn = card.querySelector('#btn-add-playlist');
+      if (addBtn) {
+        addBtn.addEventListener('click', async function () {
+          var url = window.prompt('أدخل رابط قائمة التشغيل (M3U/M3U8/XSPF/PLS/ASX/WPL):', 'https://');
+          if (!url) return;
+          addBtn.disabled = true;
+          addBtn.textContent = 'جارٍ التحميل...';
+          try {
+            var count = await window.PlaylistConfig.connect(url);
+            if (window.UIComponents) window.UIComponents.showToast('تم تحميل ' + count + ' عنصر بنجاح', 'success');
+          } catch (err) {
+            if (window.UIComponents) window.UIComponents.showToast(err.message || 'تعذر تحميل قائمة التشغيل', 'error');
+          } finally {
+            loadPlaylistStatus();
+          }
+        });
+      }
+
+      var refreshBtn = card.querySelector('#btn-refresh-playlist');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', async function () {
+          refreshBtn.disabled = true;
+          try {
+            var count = await window.PlaylistConfig.refresh();
+            if (window.UIComponents) window.UIComponents.showToast('تم التحديث: ' + count + ' عنصر', 'success');
+          } catch (err) {
+            if (window.UIComponents) window.UIComponents.showToast(err.message || 'تعذر التحديث', 'error');
+          } finally {
+            loadPlaylistStatus();
+          }
+        });
+      }
+
+      var removeBtn = card.querySelector('#btn-remove-playlist');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', function () {
+          window.PlaylistConfig.disconnect();
+          loadPlaylistStatus();
+        });
+      }
     }
 
     if (window.i18n && window.i18n.isReady()) window.i18n._applyTranslations();

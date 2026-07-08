@@ -265,6 +265,11 @@
     api.getVodStreams().then(function (streams) {
       allMovies = streams || [];
       renderGrid(true);
+      var pending = window.AppRouter && window.AppRouter.consumeNavParams();
+      if (pending && pending.action === 'detail' && pending.id) {
+        var movie = allMovies.find(function (m) { return String(m.stream_id) === String(pending.id); });
+        if (movie) showDetail(movie);
+      }
     }).catch(function () {
       gridEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">' + (window.i18n ? window.i18n.t('common.error') : 'Error') + '</div></div>';
     });

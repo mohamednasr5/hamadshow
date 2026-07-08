@@ -334,6 +334,11 @@
     api.getSeries().then(function (list) {
       allSeries = list || [];
       renderGrid(true);
+      var pending = window.AppRouter && window.AppRouter.consumeNavParams();
+      if (pending && pending.action === 'detail' && pending.id) {
+        var series = allSeries.find(function (s) { return String(s.series_id) === String(pending.id); });
+        if (series) showDetail(series);
+      }
     }).catch(function () {
       gridEl.innerHTML = '<div class="empty-state"><div class="empty-state-title">' + (window.i18n ? window.i18n.t('common.error') : 'Error') + '</div></div>';
     });

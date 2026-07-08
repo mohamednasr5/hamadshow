@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nasr-live-v3';
+const CACHE_NAME = 'nasr-live-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -11,6 +11,8 @@ const STATIC_ASSETS = [
   '/js/utils/focus-engine.js',
   '/js/services/database.js',
   '/js/services/xtream-api.js',
+  '/js/services/playlist-parser.js',
+  '/js/services/playlist-source.js',
   '/js/services/auth.js',
   '/js/components/ui.js',
   '/js/components/cards.js',
@@ -23,6 +25,7 @@ const STATIC_ASSETS = [
   '/js/pages/favorites.js',
   '/js/pages/search.js',
   '/js/pages/settings.js',
+  '/js/pages/playlist.js',
   '/js/app.js'
 ];
 

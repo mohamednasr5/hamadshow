@@ -20,6 +20,7 @@
       if (window.i18n) await window.i18n.init();
       if (window.FocusEngine) window.FocusEngine.init();
       if (window.ServerConfig) await window.ServerConfig.init();
+      if (window.PlaylistConfig) window.PlaylistConfig.init();
       this._detectPlatform();
       this._setupRouter();
       this._setupNavigation();
@@ -188,6 +189,27 @@
       const hash = window.location.hash || '#/';
       const route = hash.replace('#', '') || '/';
       this.navigateTo(route);
+    },
+
+    _pendingNavParams: null,
+
+    /**
+     * Navigate to a page, optionally passing params (e.g. { action: 'detail', id: 123 })
+     * that the destination page can read once via consumeNavParams().
+     */
+    navigate(route, params) {
+      this._pendingNavParams = params || null;
+      window.location.hash = '#/' + route.replace(/^\/+/, '');
+    },
+
+    /**
+     * Returns and clears any params passed via navigate(). Pages call this
+     * once on render to check if they should e.g. auto-open a detail view.
+     */
+    consumeNavParams() {
+      const params = this._pendingNavParams;
+      this._pendingNavParams = null;
+      return params;
     },
 
     navigateTo(route) {

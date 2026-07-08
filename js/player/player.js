@@ -17,6 +17,7 @@
       this.gestureFeedback = document.getElementById('player-gesture-feedback');
 
       this.hls = null;
+      this.dash = null;
       this.controlsTimeout = null;
       this.isLive = false;
       this.currentItem = null;
@@ -195,13 +196,19 @@
     }
 
     _loadStream(url) {
-      // Destroy previous HLS instance
+      // Destroy previous HLS/DASH instances
       if (this.hls) {
         this.hls.destroy();
         this.hls = null;
       }
+      if (this.dash) {
+        this.dash.destroy();
+        this.dash = null;
+      }
 
-      const isHLS = url && (url.includes('.m3u8') || url.includes('m3u8'));
+      var cleanUrl = (url || '').split('?')[0].split('#')[0];
+      const isHLS = /\.m3u8($|\?)/i.test(url) || cleanUrl.indexOf('m3u8') !== -1;
+      const isDASH = /\.(mpd|ism|ismv)($|\?)/i.test(url);
 
       // Helper to attempt playback with unmute fallback for autoplay restrictions
       const attemptPlay = () => {
@@ -223,7 +230,17 @@
         }
       };
 
-      if (isHLS) {
+      if (isDASH) {
+        if (window.dashjs) {
+          this.dash = window.dashjs.MediaPlayer().create();
+          this.dash.initialize(this.video, url, false);
+          this.dash.on(window.dashjs.MediaPlayer.events.CAN_PLAY, () => attemptPlay());
+          this.dash.on(window.dashjs.MediaPlayer.events.ERROR, () => this._showError());
+        } else {
+          console.warn('dash.js not loaded; cannot play DASH/Smooth Streaming source.');
+          this._showError();
+        }
+      } else if (isHLS) {
         if (window.Hls && window.Hls.isSupported()) {
           this.hls = new window.Hls({
             enableWorker: true,
@@ -261,6 +278,10 @@
           this._showError();
         }
       } else {
+        // Direct file playback (.mp4/.webm/.ts/etc.) - relies on the browser's
+        // native <video> codec support. Note: browsers generally do NOT support
+        // .mkv or .avi containers regardless of app-level code; this is a
+        // platform/codec limitation, not something fixable here.
         this.video.src = url;
         attemptPlay();
       }
@@ -283,6 +304,7 @@
       this.video.pause();
       this.video.src = '';
       if (this.hls) { this.hls.destroy(); this.hls = null; }
+      if (this.dash) { this.dash.destroy(); this.dash = null; }
       this.overlay.classList.add('hidden');
       this.miniPlayer.classList.add('hidden');
       this.currentItem = null;
