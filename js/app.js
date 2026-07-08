@@ -23,11 +23,67 @@
       this._detectPlatform();
       this._setupRouter();
       this._setupNavigation();
+      this._setupAuthForm();
       this._loadTheme();
       this._setupInstallPrompt();
       this._setupGlobalEvents();
       this._registerSW();
       this._checkAuthState();
+    },
+
+    _setupAuthForm() {
+      const form = document.getElementById('setup-form');
+      if (!form) return;
+
+      const submitBtn = document.getElementById('setup-submit');
+      const errorEl = document.getElementById('auth-error');
+      const togglePassBtn = form.querySelector('.toggle-password');
+      const passInput = document.getElementById('setup-pass');
+
+      if (togglePassBtn && passInput) {
+        togglePassBtn.addEventListener('click', () => {
+          passInput.type = passInput.type === 'password' ? 'text' : 'password';
+        });
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (submitBtn && submitBtn.classList.contains('loading')) return;
+
+        const url = document.getElementById('setup-url')?.value || '';
+        const user = document.getElementById('setup-user')?.value || '';
+        const pass = document.getElementById('setup-pass')?.value || '';
+
+        if (errorEl) {
+          errorEl.textContent = '';
+          errorEl.classList.remove('visible');
+        }
+
+        if (!url || !user || !pass) {
+          if (errorEl) {
+            errorEl.textContent = 'يرجى تعبئة جميع الحقول';
+            errorEl.classList.add('visible');
+          }
+          return;
+        }
+
+        if (submitBtn) submitBtn.classList.add('loading');
+
+        try {
+          if (!window.ServerConfig) throw new Error('ServerConfig غير متوفر');
+          await window.ServerConfig.connect(url, user, pass);
+          // ServerConfig.connect() dispatches 'server:connected', which
+          // _checkAuthState() listens for to reveal the app shell.
+        } catch (err) {
+          console.warn('Setup connect failed:', err);
+          if (errorEl) {
+            errorEl.textContent = 'تعذر الاتصال بالسيرفر. تحقق من الرابط واسم المستخدم وكلمة المرور.';
+            errorEl.classList.add('visible');
+          }
+        } finally {
+          if (submitBtn) submitBtn.classList.remove('loading');
+        }
+      });
     },
 
     _detectPlatform() {
