@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NASR LIVE">
+  <meta name="description" content="NASR LIVE - Premium IPTV Experience">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <title>NASR LIVE</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    /* Inline critical animations for faster first paint */
+    .skeleton-pulse{animation:skeleton-pulse-anim 1.5s ease-in-out infinite}
+    @keyframes skeleton-pulse-anim{0%,100%{opacity:.4}50%{opacity:1}}
+    @keyframes toast-progress{from{width:100%}to{width:0%}}
+    @keyframes epg-pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+  </style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="splash-logo">
+        <div class="splash-logo-inner">
+          <svg viewBox="0 0 120 120" fill="none" style="width:80px;height:80px;">
+            <defs>
+              <linearGradient id="splash-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#f6d675"/>
+                <stop offset="100%" style="stop-color:#a8791f"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="55" stroke="url(#splash-gold)" stroke-width="3" fill="none"/>
+            <polygon points="45,35 45,85 90,60" fill="url(#splash-gold)"/>
+          </svg>
+        </div>
+      </div>
+      <h1 class="splash-app-name"><span style="color:#d4af37">NASR</span> <span style="color:#e5453f">LIVE</span></h1>
+      <div class="splash-loading-bar"></div>
+    </div>
+  </div>
+
+  <!-- Setup Screen (first run only) -->
+  <div id="setup-screen" class="auth-screen hidden">
+    <div class="auth-card setup-card">
+      <div class="auth-card-logo setup-logo">
+        <svg viewBox="0 0 120 120" fill="none" width="72" height="72">
+          <defs>
+            <linearGradient id="auth-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#f6d675"/>
+              <stop offset="100%" style="stop-color:#a8791f"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="55" stroke="url(#auth-grad)" stroke-width="3" fill="none"/>
+          <polygon points="45,35 45,85 90,60" fill="url(#auth-grad)"/>
+        </svg>
+      </div>
+      <h1 class="auth-card-title" data-i18n="setup.title"><span style="color:#d4af37">NASR</span> <span style="color:#e5453f">LIVE</span></h1>
+      <p class="auth-card-subtitle" data-i18n="setup.subtitle">أدخل بيانات السيرفر الخاصة بك للبدء</p>
+
+      <form id="setup-form" class="auth-form active">
+        <div class="auth-input-group">
+          <label for="setup-url" data-i18n="setup.serverUrl">رابط السيرفر</label>
+          <div class="auth-input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
+            <input type="url" id="setup-url" placeholder="http://example.com:8080" required autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label for="setup-user" data-i18n="setup.username">اسم المستخدم</label>
+          <div class="auth-input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="setup-user" required autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label for="setup-pass" data-i18n="setup.password">كلمة المرور</label>
+          <div class="auth-input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="setup-pass" required autocomplete="off">
+            <button type="button" class="toggle-password" aria-label="Toggle password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8-11 8 11 4 11 11-4-4 4-11 4-4 11-11 8-11 8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="auth-btn" id="setup-submit">
+          <span class="btn-text" data-i18n="setup.connect">اتصال وبدء المشاهدة</span>
+          <span class="btn-loader"></span>
+        </button>
+        <p class="setup-privacy-note" data-i18n="setup.privacyNote">تُحفظ بياناتك مشفّرة على جهازك، ونسخة احتياطية مشفّرة منها على Firebase (إن تم تفعيله) لاستعادة الاتصال تلقائياً عند إعادة تثبيت التطبيق.</p>
+      </form>
+
+      <div id="auth-error" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div id="app-shell" class="app-shell hidden">
+    <!-- Top Bar -->
+    <header id="top-bar" class="top-bar app-topbar">
+      <div class="top-bar-left">
+        <button id="menu-toggle" class="icon-btn" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="app-title"><span style="color:#d4af37">NASR</span> <span style="color:#e5453f">LIVE</span></h1>
+      </div>
+      <div class="top-bar-right">
+        <button id="search-btn-top" class="icon-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button id="profile-btn" class="icon-btn" aria-label="Profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <!-- Sidebar (TV/Desktop) -->
+    <aside id="sidebar" class="sidebar app-sidebar">
+      <nav class="sidebar-nav">
+        <a href="#/" class="nav-item sidebar-nav-item active" data-page="home" data-focusable>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span data-i18n="nav.home">الرئيسية</span>
+        </a>
+        <a href="#/live-tv" class="nav-item sidebar-nav-item" data-page="live-tv" data-focusable>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span data-i18n="nav.live">التلفزيون المباشر</span>
+        </a>
+        <a href="#/movies" class="nav-item sidebar-nav-item" data-page="movies" data-focusable>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg>
+          <span data-i18n="nav.movies">الأفلام</span>
+        </a>
+        <a href="#/series" class="nav-item sidebar-nav-item" data-page="series" data-focusable>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+          <span data-i18n="nav.series">المسلسلات</span>
+        </a>
+        <a href="#/playlist" class="nav-item sidebar-nav-item" data-page="playlist" data-focusable>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+          <span data-i18n="nav.playlist">قائمة التشغيل</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="#/settings" class="nav-item sidebar-nav-item" data-page="settings" data-focusable>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2 2h-.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83l.06.06A1.65 1.65 0 0 0 .33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span data-i18n="nav.settings">الإعدادات</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="main-content app-main-wrapper">
+      <div id="app-content" class="app-content">
+        <div id="page-container" class="page-container"></div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav id="bottom-nav" class="bottom-nav app-bottom-nav">
+      <a href="#/" class="bottom-nav-item active" data-page="home" data-focusable>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span data-i18n="nav.home">الرئيسية</span>
+      </a>
+      <a href="#/live-tv" class="bottom-nav-item" data-page="live-tv" data-focusable>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span data-i18n="nav.live">مباشر</span>
+      </a>
+      <a href="#/movies" class="bottom-nav-item" data-page="movies" data-focusable>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/></svg>
+        <span data-i18n="nav.movies">أفلام</span>
+      </a>
+      <a href="#/series" class="bottom-nav-item" data-page="series" data-focusable>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+        <span data-i18n="nav.series">مسلسلات</span>
+      </a>
+      <a href="#/settings" class="bottom-nav-item" data-page="settings" data-focusable>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83l.06.06A1.65 1.65 0 0 0 .33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span data-i18n="nav.settings">إعدادات</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Player Overlay -->
+  <div id="player-overlay" class="player-overlay hidden">
+    <div id="player-container" class="player-container">
+      <video id="video-player" class="video-player" playsinline webkit-playsinline autoplay></video>
+      <div id="player-controls" class="player-controls">
+        <div class="controls-top">
+          <button id="player-back" class="icon-btn-lg" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div id="player-title" class="player-title"></div>
+          <div class="controls-top-right">
+            <button id="player-pip" class="icon-btn-lg hidden" aria-label="PiP">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="11" y="9" width="9" height="6" rx="1"/></svg>
+            </button>
+            <button id="player-cast" class="icon-btn-lg hidden" aria-label="Cast">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="player-tap-zone" class="tap-zone"></div>
+        <div class="controls-center">
+          <button id="player-prev" class="icon-btn-xl" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          <button id="player-play" class="icon-btn-xl play-btn" aria-label="Play/Pause">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+          </button>
+          <button id="player-next" class="icon-btn-xl" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+        </div>
+        <div class="controls-bottom">
+          <span id="player-current-time" class="time-display">0:00</span>
+          <div id="player-progress" class="progress-bar">
+            <div id="player-buffer" class="progress-buffer"></div>
+            <div id="player-progress-fill" class="progress-fill"></div>
+            <div id="player-progress-thumb" class="progress-thumb"></div>
+          </div>
+          <span id="player-duration" class="time-display">0:00</span>
+          <div class="controls-bottom-right">
+            <button id="player-subtitles" class="icon-btn-lg" aria-label="Subtitles">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
+            </button>
+            <button id="player-audio" class="icon-btn-lg" aria-label="Audio tracks">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </button>
+            <button id="player-speed" class="icon-btn-lg" aria-label="Speed">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke="width="2"><polygon points="13 19 22 12 13 5"/><polygon points="2 19 11 12 2 5"/></svg>
+            </button>
+            <button id="player-fullscreen" class="icon-btn-lg" aria-label="Fullscreen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="player-gesture-feedback" class="gesture-feedback hidden">
+        <div class="gesture-icon"></div>
+        <div class="gesture-value"></div>
+      </div>
+      <div id="player-loading" class="player-loading hidden">
+        <div class="spinner"></div>
+      </div>
+      <div id="player-error" class="player-error hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p data-i18n="player.error">حدث خطأ في التشغيل</p>
+        <button id="player-retry" class="btn-primary" data-i18n="player.retry">إعادة المحاولة</button>
+      </div>
+    </div>
+    <!-- Mini Player -->
+    <div id="mini-player" class="mini-player hidden">
+      <div id="mini-player-thumbnail" class="mini-player-thumb"></div>
+      <div class="mini-player-info">
+        <div id="mini-player-title" class="mini-player-title"></div>
+        <div id="mini-player-channel" class="mini-player-channel"></div>
+      </div>
+      <div class="mini-player-controls">
+        <button id="mini-play" class="icon-btn" aria-label="Play/Pause">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+        </button>
+        <button id="mini-close" class="icon-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile / Connection Menu -->
+  <div id="profile-menu" class="profile-menu hidden">
+    <div class="profile-menu-header">
+      <div id="profile-avatar" class="profile-avatar"></div>
+      <div id="profile-name" class="profile-name" data-i18n="profile.appName">NASR LIVE</div>
+      <div class="profile-status-row">
+        <span class="status-dot" id="profile-status-dot"></span>
+        <span id="profile-email" class="profile-email" data-i18n="profile.connected">متصل بالسيرفر</span>
+      </div>
+    </div>
+    <div class="profile-menu-items">
+      <div class="profile-menu-divider"></div>
+      <button id="profile-logout" class="profile-menu-item logout" data-focusable>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span data-i18n="profile.disconnect">قطع الاتصال بالسيرفر</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- EPG Overlay -->
+  <div id="epg-overlay" class="epg-overlay hidden">
+    <div id="epg-content" class="epg-content"></div>
+  </div>
+
+  <!-- Install Prompt -->
+  <div id="install-banner" class="install-banner hidden">
+    <div class="install-banner-content">
+      <div class="install-icon">
+        <svg viewBox="0 0 48 48" fill="none" width="40" height="40">
+          <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+          <polyline points="18,30 24,18 30,30" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <div class="install-title" data-i18n="install.title">تثبيت NASR LIVE</div>
+        <div class="install-desc" data-i18n="install.desc">أضف التطبيق إلى شاشتك الرئيسية</div>
+      </div>
+      <button id="install-btn" class="btn-primary btn-sm" data-i18n="install.btn">تثبيت</button>
+      <button id="install-dismiss" class="icon-btn" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dashjs@4/dist/dash.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
+  <!-- Firebase (optional): used only to back up/restore the server login. See js/services/firebase-config.js -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="js/services/firebase-config.js"></script>
+  <script src="js/utils/i18n.js"></script>
+  <script src="js/utils/crypto.js"></script>
+  <script src="js/utils/focus-engine.js"></script>
+  <script src="js/services/database.js"></script>
+  <script src="js/services/xtream-api.js"></script>
+  <script src="js/services/server-config.js"></script>
+  <script src="js/services/playlist-parser.js"></script>
+  <script src="js/services/playlist-source.js"></script>
+  <script src="js/components/ui.js"></script>
+  <script src="js/components/cards.js"></script>
+  <script src="js/components/epg.js"></script>
+  <script src="js/player/player.js"></script>
+  <script src="js/pages/home.js"></script>
+  <script src="js/pages/live-tv.js"></script>
+  <script src="js/pages/movies.js"></script>
+  <script src="js/pages/series.js"></script>
+  <script src="js/pages/favorites.js"></script>
+  <script src="js/pages/search.js"></script>
+  <script src="js/pages/settings.js"></script>
+  <script src="js/pages/playlist.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
