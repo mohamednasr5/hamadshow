@@ -23,130 +23,131 @@
 <body>
   <!-- Splash Screen -->
   <div id="splash-screen" class="splash-screen">
-    <div class="splash-content">
+    <div class="splash-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
       <div class="splash-logo">
-        <svg class="splash-icon" viewBox="0 0 120 120" fill="none">
-          <defs>
-            <linearGradient id="splash-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#6c5ce7"/>
-              <stop offset="100%" style="stop-color:#00cec9"/>
-            </linearGradient>
-          </defs>
-          <circle cx="60" cy="60" r="55" stroke="url(#splash-grad)" stroke-width="3" fill="none"/>
-          <polygon points="45,35 45,85 90,60" fill="url(#splash-grad)"/>
-        </svg>
+        <div class="splash-logo-inner">
+          <svg viewBox="0 0 120 120" fill="none" style="width:80px;height:80px;">
+            <defs>
+              <linearGradient id="splash-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#6c5ce7"/>
+                <stop offset="100%" style="stop-color:#00cec9"/>
+              </linearGradient>
+            </defs>
+            <circle cx="60" cy="60" r="55" stroke="url(#splash-grad)" stroke-width="3" fill="none"/>
+            <polygon points="45,35 45,85 90,60" fill="url(#splash-grad)"/>
+          </svg>
+        </div>
       </div>
-      <h1 class="splash-title">NASR LIVE</h1>
-      <div class="splash-loader">
-        <div class="splash-loader-bar"></div>
-      </div>
+      <h1 class="splash-app-name">NASR LIVE</h1>
+      <div class="splash-loading-bar"></div>
     </div>
   </div>
 
   <!-- Auth Screen -->
   <div id="auth-screen" class="auth-screen hidden">
-    <div class="auth-container">
-      <div class="auth-header">
-        <div class="auth-logo">
-          <svg viewBox="0 0 120 120" fill="none" width="80" height="80">
-            <defs>
-              <linearGradient id="auth-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#6c5ce7"/>
-                <stop offset="100%" style="stop-color:#00cec9"/>
-              </linearGradient>
-            </defs>
-            <circle cx="60" cy="60" r="55" stroke="url(#auth-grad)" stroke-width="3" fill="none"/>
-            <polygon points="45,35 45,85 90,60" fill="url(#auth-grad)"/>
-          </svg>
-        </div>
-        <h1 class="auth-title" data-i18n="auth.title">NASR LIVE</h1>
-        <p class="auth-subtitle" data-i18n="auth.subtitle">Premium IPTV Experience</p>
+    <div class="auth-card">
+      <div class="auth-card-logo">
+        <svg viewBox="0 0 120 120" fill="none" width="64" height="64">
+          <defs>
+            <linearGradient id="auth-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#6c5ce7"/>
+              <stop offset="100%" style="stop-color:#00cec9"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="55" stroke="url(#auth-grad)" stroke-width="3" fill="none"/>
+          <polygon points="45,35 45,85 90,60" fill="url(#auth-grad)"/>
+        </svg>
       </div>
+      <h1 class="auth-card-title" data-i18n="auth.title">NASR LIVE</h1>
+      <p class="auth-card-subtitle" data-i18n="auth.subtitle">Premium IPTV Experience</p>
 
       <!-- Login Form -->
-      <form id="login-form" class="auth-form">
-        <div class="form-group">
+      <form id="login-form" class="auth-form active">
+        <div class="auth-input-group">
           <label for="login-email" data-i18n="auth.email">البريد الإلكتروني</label>
-          <input type="email" id="login-email" required autocomplete="email" data-i18n-placeholder="auth.emailPlaceholder">
-        </div>
-        <div class="form-group">
-          <label for="login-password" data-i18n="auth.password">كلمة المرور</label>
-          <div class="password-input">
-            <input type="password" id="login-password" required autocomplete="current-password" data-i18n-placeholder="auth.passwordPlaceholder">
-            <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-              <span class="eye-icon"></span>
-            </button>
+          <div class="auth-input-wrapper">
+            <input type="email" id="login-email" required autocomplete="email" data-i18n-placeholder="auth.emailPlaceholder">
           </div>
         </div>
-        <button type="submit" class="btn-primary" data-i18n="auth.login">تسجيل الدخول</button>
+        <div class="auth-input-group">
+          <label for="login-password" data-i18n="auth.password">كلمة المرور</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="login-password" required autocomplete="current-password" data-i18n-placeholder="auth.passwordPlaceholder">
+          </div>
+        </div>
+        <button type="submit" class="auth-btn"><span class="btn-text" data-i18n="auth.login">تسجيل الدخول</span><span class="btn-loader"></span></button>
         <div class="auth-switch">
           <span data-i18n="auth.noAccount">ليس لديك حساب؟</span>
-          <a href="#" id="show-register" data-i18n="auth.register">إنشاء حساب</a>
+          <button type="button" id="show-register" data-i18n="auth.register">إنشاء حساب</button>
         </div>
       </form>
 
       <!-- Register Form -->
-      <form id="register-form" class="auth-form hidden">
-        <div class="form-group">
+      <form id="register-form" class="auth-form">
+        <div class="auth-input-group">
           <label for="reg-name" data-i18n="auth.name">الاسم</label>
-          <input type="text" id="reg-name" required data-i18n-placeholder="auth.namePlaceholder">
-        </div>
-        <div class="form-group">
-          <label for="reg-email" data-i18n="auth.email">البريد الإلكتروني</label>
-          <input type="email" id="reg-email" required autocomplete="email" data-i18n-placeholder="auth.emailPlaceholder">
-        </div>
-        <div class="form-group">
-          <label for="reg-password" data-i18n="auth.password">كلمة المرور</label>
-          <div class="password-input">
-            <input type="password" id="reg-password" required minlength="6" autocomplete="new-password" data-i18n-placeholder="auth.passwordPlaceholder">
-            <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-              <span class="eye-icon"></span>
-            </button>
+          <div class="auth-input-wrapper">
+            <input type="text" id="reg-name" required data-i18n-placeholder="auth.namePlaceholder">
           </div>
         </div>
-        <div class="form-group">
-          <label for="reg-confirm" data-i18n="auth.confirmPassword">تأكيد كلمة المرور</label>
-          <input type="password" id="reg-confirm" required minlength="6" autocomplete="new-password" data-i18n-placeholder="auth.confirmPasswordPlaceholder">
+        <div class="auth-input-group">
+          <label for="reg-email" data-i18n="auth.email">البريد الإلكتروني</label>
+          <div class="auth-input-wrapper">
+            <input type="email" id="reg-email" required autocomplete="email" data-i18n-placeholder="auth.emailPlaceholder">
+          </div>
         </div>
-        <button type="submit" class="btn-primary" data-i18n="auth.createAccount">إنشاء حساب</button>
+        <div class="auth-input-group">
+          <label for="reg-password" data-i18n="auth.password">كلمة المرور</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="reg-password" required minlength="6" autocomplete="new-password" data-i18n-placeholder="auth.passwordPlaceholder">
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label for="reg-confirm" data-i18n="auth.confirmPassword">تأكيد كلمة المرور</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="reg-confirm" required minlength="6" autocomplete="new-password" data-i18n-placeholder="auth.confirmPasswordPlaceholder">
+          </div>
+        </div>
+        <button type="submit" class="auth-btn"><span class="btn-text" data-i18n="auth.createAccount">إنشاء حساب</span><span class="btn-loader"></span></button>
         <div class="auth-switch">
           <span data-i18n="auth.hasAccount">لديك حساب بالفعل؟</span>
-          <a href="#" id="show-login" data-i18n="auth.login">تسجيل الدخول</a>
+          <button type="button" id="show-login" data-i18n="auth.login">تسجيل الدخول</button>
         </div>
       </form>
 
       <!-- Server Config -->
-      <div id="server-config-section" class="server-config-section">
-        <div class="divider"><span data-i18n="auth.orConfig">أو إعداد السيرفر</span></div>
-        <button type="button" id="show-server-config" class="btn-secondary" data-i18n="auth.serverConfig">إعداد سيرفر Xtream</button>
+      <div id="server-config-section" class="auth-divider" style="flex-direction:column;gap:12px;">
+        <span data-i18n="auth.orConfig">أو إعداد السيرفر</span>
       </div>
+      <button type="button" id="show-server-config" class="auth-btn" style="background:var(--bg-surface);border:1px solid var(--border);margin-top:-4px;"><span class="btn-text" data-i18n="auth.serverConfig">إعداد سيرفر Xtream</span></button>
 
       <!-- Xtream Login Form -->
-      <form id="xtream-form" class="auth-form hidden">
-        <div class="form-group">
+      <form id="xtream-form" class="auth-form">
+        <div class="auth-input-group">
           <label for="xtream-url" data-i18n="auth.serverUrl">رابط السيرفر</label>
-          <input type="url" id="xtream-url" placeholder="http://example.com:8080" required>
-        </div>
-        <div class="form-group">
-          <label for="xtream-user" data-i18n="auth.username">اسم المستخدم</label>
-          <input type="text" id="xtream-user" required data-i18n-placeholder="auth.usernamePlaceholder">
-        </div>
-        <div class="form-group">
-          <label for="xtream-pass" data-i18n="auth.password">كلمة المرور</label>
-          <div class="password-input">
-            <input type="password" id="xtream-pass" required data-i18n-placeholder="auth.passwordPlaceholder">
-            <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-              <span class="eye-icon"></span>
-            </button>
+          <div class="auth-input-wrapper">
+            <input type="url" id="xtream-url" placeholder="http://example.com:8080" required>
           </div>
         </div>
-        <button type="submit" class="btn-primary" data-i18n="auth.connect">اتصال</button>
+        <div class="auth-input-group">
+          <label for="xtream-user" data-i18n="auth.username">اسم المستخدم</label>
+          <div class="auth-input-wrapper">
+            <input type="text" id="xtream-user" required data-i18n-placeholder="auth.usernamePlaceholder">
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label for="xtream-pass" data-i18n="auth.password">كلمة المرور</label>
+          <div class="auth-input-wrapper">
+            <input type="password" id="xtream-pass" required data-i18n-placeholder="auth.passwordPlaceholder">
+          </div>
+        </div>
+        <button type="submit" class="auth-btn"><span class="btn-text" data-i18n="auth.connect">اتصال</span><span class="btn-loader"></span></button>
         <div class="auth-switch">
-          <a href="#" id="show-login-from-xtream" data-i18n="auth.backToLogin">العودة لتسجيل الدخول</a>
+          <button type="button" id="show-login-from-xtream" data-i18n="auth.backToLogin">العودة لتسجيل الدخول</button>
         </div>
       </form>
 
-      <div id="auth-error" class="auth-error hidden"></div>
+      <div id="auth-error" class="auth-error"></div>
     </div>
   </div>
 

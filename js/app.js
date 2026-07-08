@@ -192,33 +192,43 @@
       const registerForm = document.getElementById('register-form');
       const xtreamForm = document.getElementById('xtream-form');
       const serverConfigSection = document.getElementById('server-config-section');
+      const serverConfigBtn = document.getElementById('show-server-config');
+
+      function _showForm(show, hide1, hide2) {
+        if (hide1) { hide1.style.display = 'none'; hide1.classList.remove('active'); }
+        if (hide2) { hide2.style.display = 'none'; hide2.classList.remove('active'); }
+        if (serverConfigSection) serverConfigSection.style.display = 'none';
+        if (serverConfigBtn) serverConfigBtn.style.display = 'none';
+        if (show) { show.style.display = 'flex'; show.classList.add('active'); }
+      }
+
+      // Initially: show login, hide register & xtream
+      if (registerForm) { registerForm.style.display = 'none'; }
+      if (xtreamForm) { xtreamForm.style.display = 'none'; }
 
       document.getElementById('show-register')?.addEventListener('click', (e) => {
         e.preventDefault();
-        loginForm.classList.add('hidden');
-        registerForm.classList.remove('hidden');
-        serverConfigSection.classList.add('hidden');
+        _showForm(registerForm, loginForm, xtreamForm);
+        if (serverConfigSection) serverConfigSection.style.display = 'none';
+        if (serverConfigBtn) serverConfigBtn.style.display = 'none';
       });
 
       document.getElementById('show-login')?.addEventListener('click', (e) => {
         e.preventDefault();
-        registerForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-        serverConfigSection.classList.remove('hidden');
+        _showForm(loginForm, registerForm, xtreamForm);
+        if (serverConfigSection) serverConfigSection.style.display = 'flex';
+        if (serverConfigBtn) serverConfigBtn.style.display = 'flex';
       });
 
       document.getElementById('show-server-config')?.addEventListener('click', () => {
-        loginForm.classList.add('hidden');
-        registerForm.classList.add('hidden');
-        serverConfigSection.classList.add('hidden');
-        xtreamForm.classList.remove('hidden');
+        _showForm(xtreamForm, loginForm, registerForm);
       });
 
       document.getElementById('show-login-from-xtream')?.addEventListener('click', (e) => {
         e.preventDefault();
-        xtreamForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-        serverConfigSection.classList.remove('hidden');
+        _showForm(loginForm, registerForm, xtreamForm);
+        if (serverConfigSection) serverConfigSection.style.display = 'flex';
+        if (serverConfigBtn) serverConfigBtn.style.display = 'flex';
       });
 
       // Password toggles
@@ -280,8 +290,8 @@
     _showAuthError(msg) {
       const errEl = document.getElementById('auth-error');
       errEl.textContent = msg;
-      errEl.classList.remove('hidden');
-      setTimeout(() => errEl.classList.add('hidden'), 5000);
+      errEl.classList.add('visible');
+      setTimeout(() => errEl.classList.remove('visible'), 5000);
     },
 
     _getAuthErrorMessage(code) {

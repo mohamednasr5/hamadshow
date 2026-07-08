@@ -5,6 +5,20 @@
 (function () {
   'use strict';
 
+  // Global image error handler - avoids inline onerror quote nesting issues
+  window._cardImgError = function(img) {
+    img.style.display = 'none';
+    var parent = img.parentNode;
+    if (parent && !parent.querySelector('.card-img-fallback')) {
+      var span = document.createElement('span');
+      span.className = 'card-img-fallback';
+      var alt = img.getAttribute('alt') || '?';
+      span.textContent = alt.charAt(0).toUpperCase();
+      span.style.cssText = 'color:#555;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;width:100%;height:100%;';
+      parent.appendChild(span);
+    }
+  };
+
   function escapeAttr(str) {
     if (typeof str !== 'string') return '';
     return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -38,7 +52,7 @@
 
     return '<div class="card movie-card" data-stream-id="' + escapeAttr(String(movie.stream_id || '')) + '" data-type="movie" data-focusable tabindex="0" role="button" aria-label="' + escapeAttr(name) + '">' +
       '<div class="card-poster" style="position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:#1a1a2e;cursor:pointer;">' +
-      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display=\'none\'">' +
+      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="_cardImgError(this)">' +
       '<div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.2) 40%,transparent 60%);pointer-events:none;"></div>' +
       ratingBadge(rating) +
       yearBadge(year) +
@@ -56,7 +70,7 @@
 
     return '<div class="card series-card" data-series-id="' + escapeAttr(String(series.series_id || '')) + '" data-type="series" data-focusable tabindex="0" role="button" aria-label="' + escapeAttr(name) + '">' +
       '<div class="card-poster" style="position:relative;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:#1a1a2e;cursor:pointer;">' +
-      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display=\'none\'">' +
+      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="_cardImgError(this)">' +
       '<div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.2) 40%,transparent 60%);pointer-events:none;"></div>' +
       ratingBadge(rating) +
       '<div style="position:absolute;bottom:0;left:0;right:0;padding:12px;">' +
@@ -78,7 +92,7 @@
     return '<div class="card channel-card" data-stream-id="' + escapeAttr(String(channel.stream_id || '')) + '" data-type="channel" data-epg-channel-id="' + escapeAttr(String(channel.epg_channel_id || '')) + '" data-focusable tabindex="0" role="button" aria-label="' + escapeAttr(name) + '" style="flex-shrink:0;width:140px;">' +
       '<div style="text-align:center;padding:14px 8px;background:rgba(255,255,255,0.04);border-radius:12px;cursor:pointer;transition:background 0.2s;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">' +
       '<div style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:#1a1a2e;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:contain;padding:4px;" loading="lazy" onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'beforeend\',\'<span style=\'color:#555;font-size:24px;font-weight:700\'>\'+this.getAttribute(\'alt\').charAt(0).toUpperCase()+\'</span>\')">' +
+      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:contain;padding:4px;" loading="lazy" onerror="_cardImgError(this)">' +
       '</div>' +
       '<p class="card-title" style="margin:0;color:#ddd;font-size:12px;font-weight:500;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + escapeHtml(name) + '</p>' +
       (epgName ? '<p style="margin:0;color:#888;font-size:10px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;">' + escapeHtml(epgName) + '</p>' : '') +
@@ -98,7 +112,7 @@
     return '<div class="card channel-card-wide" data-stream-id="' + escapeAttr(String(channel.stream_id || '')) + '" data-type="channel" data-epg-channel-id="' + escapeAttr(String(channel.epg_channel_id || '')) + '" data-focusable tabindex="0" role="button" aria-label="' + escapeAttr(name) + '" style="flex-shrink:0;width:240px;">' +
       '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border-radius:12px;cursor:pointer;transition:background 0.2s;">' +
       '<div style="width:48px;height:48px;border-radius:10px;overflow:hidden;background:#1a1a2e;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:contain;padding:3px;" loading="lazy" onerror="this.style.display=\'none\'">' +
+      '<img data-src="' + escapeAttr(icon) + '" alt="' + escapeAttr(name) + '" style="width:100%;height:100%;object-fit:contain;padding:3px;" loading="lazy" onerror="_cardImgError(this)">' +
       '</div>' +
       '<div style="flex:1;min-width:0;">' +
       '<p class="card-title" style="margin:0;color:#ddd;font-size:13px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(name) + '</p>' +
