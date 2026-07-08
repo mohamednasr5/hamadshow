@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <rect width="96" height="96" rx="20" fill="#0a0e17"/>
+  <circle cx="48" cy="40" r="22" fill="none" stroke="#ff5252" stroke-width="4"/>
+  <polygon points="40,29 40,51 60,40" fill="#ff5252"/>
+  <text x="48" y="80" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" text-anchor="middle" fill="#ff5252" letter-spacing="2">LIVE</text>
+</svg>
