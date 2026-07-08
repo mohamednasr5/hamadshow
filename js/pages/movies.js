@@ -9,7 +9,7 @@
   var _destroyed = false;
 
   function getAPI() {
-    return window.XtreamAPI || (window.AuthService && window.AuthService.getXtreamClient());
+    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
   }
 
   function movieCardHTML(m) {

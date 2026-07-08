@@ -142,6 +142,12 @@
         menuToggle.addEventListener('click', () => this._toggleSidebar());
       }
 
+      // Sidebar overlay click to close
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => this._closeSidebar());
+      }
+
       // Sidebar nav items
       document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
@@ -320,14 +326,29 @@
 
     _toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
       this.sidebarOpen = !this.sidebarOpen;
       sidebar.classList.toggle('open', this.sidebarOpen);
+      if (overlay) {
+        if (this.sidebarOpen) {
+          overlay.style.display = 'block';
+          requestAnimationFrame(() => overlay.classList.add('visible'));
+        } else {
+          overlay.classList.remove('visible');
+          setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
+      }
     },
 
     _closeSidebar() {
       const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
       this.sidebarOpen = false;
       sidebar.classList.remove('open');
+      if (overlay) {
+        overlay.classList.remove('visible');
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      }
     },
 
     _updateProfileMenu() {

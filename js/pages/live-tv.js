@@ -6,7 +6,7 @@
   'use strict';
 
   function getAPI() {
-    return window.XtreamAPI || (window.AuthService && window.AuthService.getXtreamClient());
+    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
   }
 
   var _destroyed = false;

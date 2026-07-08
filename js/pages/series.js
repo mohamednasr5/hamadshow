@@ -10,7 +10,7 @@
   var _watchedEps = {};
 
   function getAPI() {
-    return window.XtreamAPI || (window.AuthService && window.AuthService.getXtreamClient());
+    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
   }
 
   function seriesCardHTML(s) {

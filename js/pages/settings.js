@@ -388,7 +388,7 @@
     }
 
     function loadServerInfo() {
-      var api = window.XtreamAPI || (window.AuthService && window.AuthService.getXtreamClient());
+      var api = (window.AuthService && window.AuthService.getXtreamClient()) || null;
       var card = container.querySelector('#server-info-card');
       if (!api || !api.isAuthenticated()) {
         card.innerHTML = settingItemHTML('server',

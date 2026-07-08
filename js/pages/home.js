@@ -8,7 +8,7 @@
   var PAGE_SIZE = 15;
 
   function getAPI() {
-    return window.XtreamAPI || (window.AuthService && window.AuthService.getXtreamClient());
+    return (window.AuthService && window.AuthService.getXtreamClient()) || null;
   }
 
   function getUserDisplayName() {
