@@ -29,7 +29,7 @@
     var favClass = isFav ? ' active' : '';
     return '<div class="channel-card" data-id="' + ch.stream_id + '">' +
       '<div class="channel-card-inner">' +
-        '<div class="channel-card-logo">' + (logo ? '<img src="' + esc(logo) + '" alt="' + esc(name) + '" loading="lazy">' : '') + '</div>' +
+        '<div class="channel-card-logo">' + (logo ? '<img src="' + esc(logo) + '" alt="' + esc(name) + '" loading="lazy" onerror="window._cardImgError(this)">' : '<span class="card-img-fallback" style="color:#555;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">' + esc(name.charAt(0).toUpperCase()) + '</span>') + '</div>' +
         '<div class="channel-card-info">' +
           '<div class="channel-card-name">' + (num ? '<span style="color:var(--text-muted);margin-right:4px">' + esc(num) + '</span>' : '') + esc(name) + '</div>' +
           '<div class="channel-card-category">' + esc(cat) + '</div>' +

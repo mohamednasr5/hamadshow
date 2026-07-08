@@ -441,20 +441,19 @@
     if (type !== 'live') return [primary];
 
     var ext = (streamObj && streamObj.container_extension) ? streamObj.container_extension.replace(/^\./, '') : 'm3u8';
+    var base = this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId);
     var fallbacks = [primary];
 
-    // If primary is m3u8, add .ts as fallback
-    if (ext === 'm3u8') {
-      fallbacks.push(
-        this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.ts'
-      );
+    // Add alternative extensions as fallbacks
+    var extensions = ['m3u8', 'ts'];
+    for (var i = 0; i < extensions.length; i++) {
+      if (extensions[i] !== ext) {
+        fallbacks.push(base + '.' + extensions[i]);
+      }
     }
-    // If primary is ts, add .m3u8 as fallback
-    else if (ext === 'ts') {
-      fallbacks.push(
-        this.baseUrl + '/live/' + encodeURIComponent(this.user) + '/' + encodeURIComponent(this.pass) + '/' + encodeURIComponent(streamId) + '.m3u8'
-      );
-    }
+
+    // Also try without any extension (some servers auto-negotiate format)
+    fallbacks.push(base);
 
     return fallbacks;
   };

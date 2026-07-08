@@ -1,6 +1,7 @@
 /**
  * NASR LIVE - Video Player Manager
  * HLS, MP4, Live Stream support with full controls
+ * Enhanced: multi-strategy live stream playback with smart fallbacks
  */
 (function() {
   'use strict';
@@ -34,6 +35,11 @@
       this.listeners = {};
       this.doubleTapTimer = null;
       this.lastTapTime = 0;
+
+      // Multi-strategy fallback for live streams
+      this._fallbackUrls = [];
+      this._fallbackIndex = 0;
+      this._triedStrategies = new Set();
 
       this._bindElements();
       this._bindEvents();
@@ -82,7 +88,7 @@
       this._on(v, 'waiting', () => this._showLoading());
       this._on(v, 'canplay', () => this._hideLoading());
       this._on(v, 'playing', () => this._hideLoading());
-      this._on(v, 'error', () => this._showError());
+      this._on(v, 'error', () => this._onVideoError());
       this._on(v, 'volumechange', () => this._updateVolumeIcon());
 
       this._on(this.els.playBtn, 'click', () => this._togglePlay());
@@ -181,6 +187,7 @@
       // Store fallback URLs for live streams
       this._fallbackUrls = options.streamUrlFallbacks || [];
       this._fallbackIndex = 0;
+      this._triedStrategies = new Set();
 
       // Load stream
       this._loadStream(options.streamUrl);
@@ -199,128 +206,437 @@
       this._dispatch('play');
     }
 
-    _loadStream(url) {
-      // Destroy previous HLS/DASH instances
+    /**
+     * Cleans up the video element and any active HLS/DASH instances.
+     */
+    _cleanup() {
       if (this.hls) {
-        this.hls.destroy();
+        try { this.hls.destroy(); } catch(e) {}
         this.hls = null;
       }
       if (this.dash) {
-        this.dash.destroy();
+        try { this.dash.destroy(); } catch(e) {}
         this.dash = null;
       }
+      // Remove any <source> elements we may have added
+      var sources = this.video.querySelectorAll('source');
+      for (var i = 0; i < sources.length; i++) sources[i].remove();
+      this.video.removeAttribute('src');
+      this.video.load(); // Reset the video element
+    }
 
-      var cleanUrl = (url || '').split('?')[0].split('#')[0];
-      const isHLS = /\.m3u8($|\?)/i.test(url) || cleanUrl.indexOf('m3u8') !== -1;
-      const isDASH = /\.(mpd|ism|ismv)($|\?)/i.test(url);
-
-      // Helper to attempt playback with unmute fallback for autoplay restrictions
-      const attemptPlay = () => {
-        const playPromise = this.video.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            // Playback started successfully
-            this.video.muted = false;
-          }).catch((err) => {
-            // Autoplay was prevented - try muted playback
-            console.warn('Autoplay blocked, trying muted:', err.message);
-            this.video.muted = true;
-            this.video.play().then(() => {
-              this._showGesture('volume', 'Muted - tap to unmute');
-            }).catch(() => {
-              this._showError();
-            });
+    /**
+     * Helper to attempt playback with unmute fallback for autoplay restrictions.
+     */
+    _attemptPlay() {
+      var self = this;
+      var playPromise = this.video.play();
+      if (playPromise !== undefined) {
+        playPromise.then(function() {
+          self.video.muted = false;
+        }).catch(function(err) {
+          console.warn('Autoplay blocked, trying muted:', err.message);
+          self.video.muted = true;
+          self.video.play().then(function() {
+            self._showGesture('volume', 'Muted - tap to unmute');
+          }).catch(function() {
+            // If even muted autoplay fails, try next fallback
+            self._tryNextFallback();
           });
-        }
-      };
+        });
+      }
+    }
+
+    /**
+     * Detects the URL type: 'hls', 'ts', 'dash', or 'other'.
+     */
+    _detectUrlType(url) {
+      var cleanUrl = (url || '').split('?')[0].split('#')[0];
+      if (/\.(m3u8)($|\?)/i.test(url) || cleanUrl.indexOf('m3u8') !== -1) return 'hls';
+      if (/\.(ts)($|\?)/i.test(url) || cleanUrl.endsWith('.ts')) return 'ts';
+      if (/\.(mpd|ism|ismv)($|\?)/i.test(url)) return 'dash';
+      return 'other';
+    }
+
+    /**
+     * Main stream loading method with multi-strategy support for live streams.
+     * 
+     * For live streams, it tries these strategies in order:
+     * 1. HLS.js (for .m3u8 URLs)
+     * 2. Native <video> with explicit MIME type
+     * 3. Native <video> with <source> element
+     * 
+     * If any strategy fails, it automatically tries the next one,
+     * and when all strategies for a URL are exhausted, moves to the next fallback URL.
+     */
+    _loadStream(url, strategy) {
+      this._cleanup();
+      this._showLoading();
+
+      var urlType = this._detectUrlType(url);
+      strategy = strategy || this._pickBestStrategy(urlType);
+
+      var strategyKey = url + '::' + strategy;
+      if (this._triedStrategies.has(strategyKey)) {
+        // Already tried this combination, move to next
+        this._tryNextFallback();
+        return;
+      }
+      this._triedStrategies.add(strategyKey);
+
+      console.log('[Player] Loading:', urlType, 'strategy:', strategy);
+
+      var isDASH = urlType === 'dash';
 
       if (isDASH) {
         if (window.dashjs) {
           this.dash = window.dashjs.MediaPlayer().create();
           this.dash.initialize(this.video, url, false);
-          this.dash.on(window.dashjs.MediaPlayer.events.CAN_PLAY, () => attemptPlay());
-          this.dash.on(window.dashjs.MediaPlayer.events.ERROR, () => this._showError());
+          this.dash.on(window.dashjs.MediaPlayer.events.CAN_PLAY, () => this._attemptPlay());
+          this.dash.on(window.dashjs.MediaPlayer.events.ERROR, () => this._tryNextFallback());
         } else {
-          console.warn('dash.js not loaded; cannot play DASH/Smooth Streaming source.');
-          this._showError();
+          this._tryNextFallback();
         }
-      } else if (isHLS) {
-        if (window.Hls && window.Hls.isSupported()) {
-          this.hls = new window.Hls({
-            enableWorker: true,
-            lowLatencyMode: this.isLive,
-            maxBufferLength: 30,
-            maxMaxBufferLength: 60,
-            startFragPrefetch: true,
-            testBandwidth: true
-          });
-          this.hls.loadSource(url);
-          this.hls.attachMedia(this.video);
-          this.hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-            attemptPlay();
-          });
-          this.hls.on(window.Hls.Events.ERROR, (event, data) => {
-            if (data.fatal) {
-              switch (data.type) {
-                case window.Hls.ErrorTypes.NETWORK_ERROR:
-                  this._handleNetworkError(url);
-                  break;
-                case window.Hls.ErrorTypes.MEDIA_ERROR:
-                  this.hls.recoverMediaError();
-                  break;
-                default:
-                  this._showError();
-                  break;
-              }
-            }
-          });
-        } else if (this.video.canPlayType('application/vnd.apple.mpegurl')) {
-          // Native HLS (Safari)
-          this.video.src = url;
-          attemptPlay();
-        } else {
-          this._showError();
-        }
-      } else {
-        // Direct file playback (.mp4/.webm/.ts/etc.) - relies on the browser's
-        // native <video> codec support. Note: browsers generally do NOT support
-        // .mkv or .avi containers regardless of app-level code; this is a
-        // platform/codec limitation, not something fixable here.
-        this.video.src = url;
-        attemptPlay();
-      }
-    }
-
-    _handleNetworkError(url) {
-      this.retryCount++;
-
-      // Try fallback URLs first (e.g. .ts when .m3u8 fails for live streams)
-      if (this._fallbackUrls && this._fallbackIndex < this._fallbackUrls.length) {
-        var fallbackUrl = this._fallbackUrls[this._fallbackIndex++];
-        console.warn('Primary stream failed, trying fallback:', fallbackUrl);
-        this._loadStream(fallbackUrl);
         return;
       }
 
-      if (this.retryCount <= this.maxRetries) {
-        setTimeout(() => {
-          if (this.hls) this.hls.loadSource(url);
-        }, 2000 * this.retryCount);
-      } else {
-        this._showError();
+      // ─── HLS Strategy (HLS.js) ───
+      if (strategy === 'hlsjs' && urlType === 'hls') {
+        this._playWithHlsJs(url);
+        return;
       }
+
+      // ─── HLS.js with generated manifest for .ts streams ───
+      if (strategy === 'hlsjs-manifest' && urlType === 'ts') {
+        this._playWithHlsJsManifest(url);
+        return;
+      }
+
+      // ─── Native video with src attribute ───
+      if (strategy === 'native-src') {
+        this._playNativeSrc(url);
+        return;
+      }
+
+      // ─── Native video with <source> element (better MIME detection) ───
+      if (strategy === 'native-source') {
+        this._playNativeSource(url, urlType);
+        return;
+      }
+
+      // ─── Native HLS (Safari / iOS) ───
+      if (strategy === 'native-hls') {
+        this.video.src = url;
+        this._attemptPlay();
+        return;
+      }
+
+      // Fallback: try native src
+      this._playNativeSrc(url);
+    }
+
+    /**
+     * Picks the best playback strategy for the given URL type.
+     */
+    _pickBestStrategy(urlType) {
+      if (urlType === 'hls') {
+        if (window.Hls && window.Hls.isSupported()) return 'hlsjs';
+        if (this.video.canPlayType('application/vnd.apple.mpegurl')) return 'native-hls';
+        return 'native-src';
+      }
+
+      if (urlType === 'ts') {
+        // For .ts live streams: native-src is the most compatible first try
+        return 'native-src';
+      }
+
+      // For other types (mkv, mp4, etc.)
+      return 'native-src';
+    }
+
+    /**
+     * Strategy: Play .m3u8 using HLS.js with robust settings for IPTV servers.
+     */
+    _playWithHlsJs(url) {
+      var self = this;
+
+      this.hls = new window.Hls({
+        enableWorker: true,
+        lowLatencyMode: this.isLive,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        startFragPrefetch: true,
+        // Robustness settings for IPTV servers
+        testBandwidth: false,
+        manifestLoadingTimeOut: 15000,
+        manifestLoadingMaxRetry: 2,
+        levelLoadingTimeOut: 15000,
+        levelLoadingMaxRetry: 3,
+        fragLoadingTimeOut: 20000,
+        fragLoadingMaxRetry: 5,
+        // Try to recover from network errors automatically
+        abrEwmaDefaultEstimate: 500000,
+        // Don't be strict about HLS spec compliance
+        strictMode: false
+      });
+
+      this.hls.loadSource(url);
+      this.hls.attachMedia(this.video);
+
+      this.hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
+        console.log('[Player] HLS manifest parsed successfully');
+        self._attemptPlay();
+      });
+
+      this.hls.on(window.Hls.Events.ERROR, function(event, data) {
+        console.warn('[Player] HLS error:', data.type, data.details, data.fatal);
+
+        if (data.fatal) {
+          switch (data.type) {
+            case window.Hls.ErrorTypes.NETWORK_ERROR:
+              // For live streams, try next fallback instead of just retrying
+              if (self.isLive) {
+                self._tryNextFallback();
+              } else {
+                // For VOD, retry the same URL a few times
+                self.retryCount++;
+                if (self.retryCount <= self.maxRetries) {
+                  setTimeout(function() {
+                    if (self.hls) self.hls.loadSource(url);
+                  }, 2000 * self.retryCount);
+                } else {
+                  self._tryNextFallback();
+                }
+              }
+              break;
+            case window.Hls.ErrorTypes.MEDIA_ERROR:
+              console.warn('[Player] HLS media error, trying recovery...');
+              if (self.hls) self.hls.recoverMediaError();
+              else self._tryNextFallback();
+              break;
+            default:
+              self._tryNextFallback();
+              break;
+          }
+        }
+      });
+    }
+
+    /**
+     * Strategy: For .ts live streams, create a fake HLS manifest and load
+     * through HLS.js. This allows HLS.js to handle the TS demuxing
+     * (using its built-in mux.js) which browsers can't do natively.
+     */
+    _playWithHlsJsManifest(url) {
+      if (!window.Hls || !window.Hls.isSupported()) {
+        console.warn('[Player] HLS.js not available, skipping manifest strategy');
+        this._tryNextFallback();
+        return;
+      }
+
+      var self = this;
+
+      // Create a minimal live HLS manifest pointing to the TS URL
+      var manifestContent = '#EXTM3U\n' +
+        '#EXT-X-VERSION:3\n' +
+        '#EXT-X-TARGETDURATION:10\n' +
+        '#EXTINF:10.0,\n' +
+        url + '\n';
+
+      var blob = new Blob([manifestContent], { type: 'application/vnd.apple.mpegurl' });
+      var manifestUrl = URL.createObjectURL(blob);
+
+      console.log('[Player] Trying .ts via HLS.js with generated manifest');
+
+      this.hls = new window.Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        startFragPrefetch: true,
+        testBandwidth: false,
+        manifestLoadingTimeOut: 10000,
+        manifestLoadingMaxRetry: 0,
+        levelLoadingTimeOut: 15000,
+        levelLoadingMaxRetry: 3,
+        fragLoadingTimeOut: 30000,
+        fragLoadingMaxRetry: 5,
+        strictMode: false
+      });
+
+      this.hls.loadSource(manifestUrl);
+      this.hls.attachMedia(this.video);
+
+      this.hls.on(window.Hls.Events.MANIFEST_PARSED, function() {
+        console.log('[Player] Generated HLS manifest parsed, playing .ts via HLS.js');
+        self._attemptPlay();
+      });
+
+      this.hls.on(window.Hls.Events.ERROR, function(event, data) {
+        console.warn('[Player] HLS manifest strategy error:', data.type, data.details);
+        URL.revokeObjectURL(manifestUrl);
+        if (data.fatal) {
+          self._tryNextFallback();
+        }
+      });
+
+      // Clean up blob URL when done
+      this.video.addEventListener('error', function() {
+        URL.revokeObjectURL(manifestUrl);
+      }, { once: true });
+    }
+
+    /**
+     * Strategy: Play URL using native video.src (works for mp4, webm, and some servers' .ts)
+     */
+    _playNativeSrc(url) {
+      var self = this;
+      console.log('[Player] Trying native video.src:', url);
+      this.video.src = url;
+      this._attemptPlay();
+      // The 'error' event on video will trigger _onVideoError → _tryNextFallback
+    }
+
+    /**
+     * Strategy: Play URL using <source> element with explicit MIME type.
+     * Better for format detection on mobile browsers.
+     */
+    _playNativeSource(url, urlType) {
+      var self = this;
+      console.log('[Player] Trying native <source> element:', url, 'type:', urlType);
+
+      // Remove any existing source elements
+      var existingSources = this.video.querySelectorAll('source');
+      for (var i = 0; i < existingSources.length; i++) existingSources[i].remove();
+
+      var sourceEl = document.createElement('source');
+      sourceEl.src = url;
+
+      // Set MIME type based on URL extension
+      if (urlType === 'ts') {
+        sourceEl.type = 'video/mp2t';  // MPEG-TS
+      } else if (urlType === 'hls') {
+        sourceEl.type = 'application/vnd.apple.mpegurl';
+      } else {
+        // Try to infer from extension
+        if (/\.mp4/i.test(url)) sourceEl.type = 'video/mp4';
+        else if (/\.webm/i.test(url)) sourceEl.type = 'video/webm';
+        else if (/\.mkv/i.test(url)) sourceEl.type = 'video/x-matroska';
+      }
+
+      this.video.appendChild(sourceEl);
+      this.video.load(); // Important: must call load() after adding <source>
+
+      this._attemptPlay();
+    }
+
+    /**
+     * Called when the native <video> element fires an 'error' event.
+     * Tries the next fallback strategy or URL.
+     */
+    _onVideoError() {
+      var error = this.video.error;
+      if (error) {
+        console.warn('[Player] Video error:', error.code, error.message);
+      }
+
+      // Don't try fallback if HLS.js or DASH is handling playback
+      // (they have their own error handlers)
+      if (this.hls || this.dash) return;
+
+      this._tryNextFallback();
+    }
+
+    /**
+     * Tries the next available fallback strategy or URL.
+     * For live streams, it cycles through all strategies for each URL
+     * before moving to the next URL.
+     */
+    _tryNextFallback() {
+      if (!this.currentItem) return;
+
+      // Clean up current playback
+      this._cleanup();
+
+      // Get all possible strategies for each URL
+      var allUrls = [this.currentItem.streamUrl].concat(this._fallbackUrls);
+      var strategies = {
+        'hls': ['hlsjs', 'native-src', 'native-hls'],
+        'ts': ['native-src', 'native-source', 'hlsjs-manifest'],
+        'other': ['native-src', 'native-source']
+      };
+
+      // Try each URL with each strategy
+      for (var i = 0; i < allUrls.length; i++) {
+        var url = allUrls[i];
+        var urlType = this._detectUrlType(url);
+        var urlStrategies = strategies[urlType] || strategies['other'];
+
+        for (var j = 0; j < urlStrategies.length; j++) {
+          var strategy = urlStrategies[j];
+          var key = url + '::' + strategy;
+
+          // Skip if we already tried this combination
+          if (this._triedStrategies.has(key)) continue;
+
+          // Skip native-hls on browsers that don't support it
+          if (strategy === 'native-hls' && !this.video.canPlayType('application/vnd.apple.mpegurl')) continue;
+
+          // Skip hlsjs on browsers that don't support it
+          if ((strategy === 'hlsjs' || strategy === 'hlsjs-manifest') && !(window.Hls && window.Hls.isSupported())) continue;
+
+          console.log('[Player] Trying fallback:', strategy, 'URL:', url);
+          this._loadStream(url, strategy);
+          return; // Return after starting the first untried combination
+        }
+      }
+
+      // All strategies exhausted — show error
+      console.error('[Player] All playback strategies exhausted');
+      this._showErrorFinal();
+    }
+
+    /**
+     * Shows the final error after all fallback strategies are exhausted.
+     */
+    _showErrorFinal() {
+      this.loading.classList.add('hidden');
+      this.errorEl.classList.remove('hidden');
+
+      // On mobile, offer to open in external player
+      if (this.isLive && this.currentItem && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        var errorDesc = this.errorEl.querySelector('p');
+        if (errorDesc) {
+          var externalLink = document.createElement('a');
+          externalLink.href = this.currentItem.streamUrl;
+          externalLink.target = '_blank';
+          externalLink.rel = 'noopener';
+          externalLink.textContent = '\n\n\u0627\u0641\u062A\u062D \u0641\u064A \u0645\u0634\u063A\u0644 \u062E\u0627\u0631\u062C\u064A';
+          externalLink.style.color = 'var(--accent)';
+          externalLink.style.display = 'block';
+          externalLink.style.marginTop = '12px';
+          externalLink.style.textDecoration = 'underline';
+          errorDesc.appendChild(document.createElement('br'));
+          errorDesc.appendChild(externalLink);
+        }
+      }
+    }
+
+    // Alias for compatibility
+    _showError() {
+      this.loading.classList.add('hidden');
+      this.errorEl.classList.remove('hidden');
     }
 
     pause() { this.video.pause(); }
     resume() { this.video.play().catch(() => {}); }
     stop() {
-      this.video.pause();
-      this.video.src = '';
-      if (this.hls) { this.hls.destroy(); this.hls = null; }
-      if (this.dash) { this.dash.destroy(); this.dash = null; }
+      this._cleanup();
       this.overlay.classList.add('hidden');
       this.miniPlayer.classList.add('hidden');
       this.currentItem = null;
+      this._fallbackUrls = [];
+      this._triedStrategies = new Set();
       document.title = 'NASR LIVE';
       this._dispatch('stop');
     }
@@ -331,7 +647,6 @@
     isPlaying() { return !this.video.paused; }
 
     _togglePlay() {
-      // Unmute on first user interaction if video was auto-muted
       if (this.video.muted && this.video.src) {
         this.video.muted = false;
       }
@@ -384,7 +699,6 @@
       }
       this._dispatch('timeupdate', {currentTime: cur, duration: dur});
 
-      // Save position for VOD
       if (!this.isLive && this.currentItem && this.currentItem.id && window.AppDB) {
         window.AppDB.updateHistoryPosition(this.currentItem.id, cur, dur);
       }
@@ -406,7 +720,6 @@
     }
 
     _onTap(e) {
-      // Ignore taps that land on control buttons (they handle themselves)
       if (e.target.closest('.controls-top') || e.target.closest('.controls-center') || e.target.closest('.controls-bottom')) {
         return;
       }
@@ -417,15 +730,14 @@
       const w = rect.width;
 
       if (now - this.lastTapTime < 300) {
-        // Double tap
         clearTimeout(this.doubleTapTimer);
         if (!this.isLive) {
           if (x < w / 3) {
             this._seekRelative(-10);
-            this._showGesture('seek', '← 10s');
+            this._showGesture('seek', '\u2190 10s');
           } else if (x > (w * 2 / 3)) {
             this._seekRelative(10);
-            this._showGesture('seek', '10s →');
+            this._showGesture('seek', '10s \u2192');
           } else {
             this._toggleFullscreen();
           }
@@ -438,7 +750,6 @@
       } else {
         this.lastTapTime = now;
         this.doubleTapTimer = setTimeout(() => {
-          // Single tap - show controls if hidden, toggle play/pause if visible
           if (this.controlsVisible) {
             this._togglePlay();
           } else {
@@ -492,9 +803,9 @@
       this.gestureFeedback.classList.remove('hidden');
       this.gestureFeedback.querySelector('.gesture-value').textContent = value;
       const icon = this.gestureFeedback.querySelector('.gesture-icon');
-      if (type === 'volume') icon.textContent = '🔊';
-      else if (type === 'brightness') icon.textContent = '☀️';
-      else if (type === 'seek') icon.textContent = '⏩';
+      if (type === 'volume') icon.textContent = '\uD83D\uDD0A';
+      else if (type === 'brightness') icon.textContent = '\u2600\uFE0F';
+      else if (type === 'seek') icon.textContent = '\u23E9';
     }
 
     _hideGesture() {
@@ -552,7 +863,6 @@
         return;
       }
       if (this.video.src && !this.video.paused) {
-        // Show mini player
         this.overlay.classList.add('hidden');
         this.miniPlayer.classList.remove('hidden');
       } else {
@@ -630,20 +940,11 @@
       this.loading.classList.add('hidden');
     }
 
-    _showError() {
-      this.loading.classList.add('hidden');
-      // If this was a direct file source (non-HLS) error and we have fallback URLs, try them
-      if (!this.hls && !this.dash && this._fallbackUrls && this._fallbackIndex < this._fallbackUrls.length) {
-        var fallbackUrl = this._fallbackUrls[this._fallbackIndex++];
-        console.warn('Direct playback failed, trying fallback:', fallbackUrl);
-        this._loadStream(fallbackUrl);
-        return;
-      }
-      this.errorEl.classList.remove('hidden');
-    }
-
     _retry() {
+      // Reset all tracking and try from scratch
       this.retryCount = 0;
+      this._fallbackIndex = 0;
+      this._triedStrategies = new Set();
       this.errorEl.classList.add('hidden');
       if (this.currentItem) {
         this._loadStream(this.currentItem.streamUrl);
@@ -668,7 +969,6 @@
       this.stop();
       clearTimeout(this.controlsTimeout);
       clearTimeout(this.doubleTapTimer);
-      // Remove all listeners
       Object.values(this.listeners).flat().forEach(({el, handler}) => {
         try { el.removeEventListener('click', handler); } catch(e) {}
       });
