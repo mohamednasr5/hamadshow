@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nasr-live-v2';
+const CACHE_NAME = 'nasr-live-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
