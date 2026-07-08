@@ -51,6 +51,131 @@
       if (!window.location.hash) window.location.hash = '#/';
     },
 
+    _setupNavigation() {
+      // Bottom nav click handling
+      document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = item.dataset.page;
+          if (page) window.location.hash = '#/' + page;
+        });
+      });
+
+      // Sidebar nav click handling
+      document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = item.dataset.page;
+          if (page) {
+            window.location.hash = '#/' + page;
+            if (window.innerWidth <= 768) this._closeSidebar();
+          }
+        });
+      });
+
+      // Sidebar overlay close
+      const overlay = document.getElementById('sidebar-overlay');
+      if (overlay) {
+        overlay.addEventListener('click', () => this._closeSidebar());
+      }
+
+      // Menu toggle button
+      const menuToggle = document.getElementById('menu-toggle');
+      if (menuToggle) {
+        menuToggle.addEventListener('click', () => this._toggleSidebar());
+      }
+
+      // Search button
+      const searchBtn = document.getElementById('search-btn-top');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', () => {
+          window.location.hash = '#/search';
+        });
+      }
+
+      // Profile button
+      const profileBtn = document.getElementById('profile-btn');
+      if (profileBtn) {
+        profileBtn.addEventListener('click', () => {
+          this._updateProfileMenu();
+          const menu = document.getElementById('profile-menu');
+          menu.classList.toggle('hidden');
+        });
+      }
+
+      // Close profile menu on outside click
+      document.addEventListener('click', (e) => {
+        const menu = document.getElementById('profile-menu');
+        const profileBtn = document.getElementById('profile-btn');
+        if (!menu.classList.contains('hidden') &&
+            !menu.contains(e.target) &&
+            !profileBtn.contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+
+      // Logout button
+      const logoutBtn = document.getElementById('profile-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          document.getElementById('profile-menu').classList.add('hidden');
+          this._logout();
+        });
+      }
+
+      // Setup form submission
+      const setupForm = document.getElementById('setup-form');
+      if (setupForm) {
+        setupForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          await this._handleSetupSubmit(setupForm);
+        });
+      }
+
+      // Toggle password visibility
+      const togglePass = document.querySelector('.toggle-password');
+      if (togglePass) {
+        togglePass.addEventListener('click', () => {
+          const passInput = document.getElementById('setup-pass');
+          const isPassword = passInput.type === 'password';
+          passInput.type = isPassword ? 'text' : 'password';
+          togglePass.querySelector('svg').style.opacity = isPassword ? '1' : '0.5';
+        });
+      }
+    },
+
+    async _handleSetupSubmit(form) {
+      const submitBtn = document.getElementById('setup-submit');
+      const errorEl = document.getElementById('auth-error');
+      const url = document.getElementById('setup-url').value.trim();
+      const user = document.getElementById('setup-user').value.trim();
+      const pass = document.getElementById('setup-pass').value;
+
+      // Validate inputs
+      if (!url || !user || !pass) {
+        errorEl.textContent = 'يرجى ملء جميع الحقول';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      // Show loading
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+      errorEl.classList.remove('show');
+
+      try {
+        // Test connection via ServerConfig
+        if (window.ServerConfig) {
+          await window.ServerConfig.connect(url, user, pass);
+        }
+      } catch (err) {
+        errorEl.textContent = 'فشل الاتصال: تحقق من البيانات وحاول مرة أخرى';
+        errorEl.classList.add('show');
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    },
+
     _onRouteChange() {
       const hash = window.location.hash || '#/';
       const route = hash.replace('#', '') || '/';
