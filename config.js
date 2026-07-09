@@ -7,7 +7,7 @@
 window.playername = "Nasr Live";
 
 /*----- DNS -----*/
-// IPTV provider DNS URL (for example "http://domain.com:80")
+// IPTV provider DNS URL (for example "https://tv.nv2.info")
 // Leave empty to let users enter it at login
 window.dns = "";
 
