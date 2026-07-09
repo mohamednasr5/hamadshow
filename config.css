@@ -1,0 +1,64 @@
+:root {
+    /* ===== NASR LIVE THEME ===== */
+    --second-color: #F5A623;       /* Gold Accent */
+    --second-color-shadow: #F5A62318;
+    --second-color-hover: #FFB833;
+    --first-color: #1A1A2E;        /* Dark Navy Primary */
+    --first-color-light: #16213E;
+    --first-color-lighter: #1E2A4A;
+
+    /* Backgrounds */
+    --bg-primary: #0F0F1A;
+    --bg-secondary: #1A1A2E;
+    --bg-card: #16213E;
+    --bg-hover: #1E2A4A;
+    --bg-input: #0D0D1A;
+    --bg-overlay: rgba(10, 10, 20, 0.85);
+
+    /* Text */
+    --text-primary: #EAEAEA;
+    --text-secondary: #A0A0B8;
+    --text-muted: #6B6B80;
+    --text-accent: #F5A623;
+
+    /* Borders */
+    --border-color: #2A2A40;
+    --border-light: #333350;
+
+    /* Status */
+    --success: #4CAF50;
+    --danger: #E74C3C;
+    --warning: #F5A623;
+    --info: #2196F3;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(245, 166, 35, 0.15);
+
+    /* Spacing */
+    --nav-height: 56px;
+    --sidebar-width: 260px;
+    --player-height: 60vh;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Font */
+    --font-ar: 'Cairo', sans-serif;
+    --font-en: 'Inter', sans-serif;
+    --font-size-xs: 0.7rem;
+    --font-size-sm: 0.8rem;
+    --font-size-md: 0.95rem;
+    --font-size-lg: 1.15rem;
+    --font-size-xl: 1.4rem;
+    --font-size-2xl: 1.8rem;
+    --font-size-3xl: 2.4rem;
+}
